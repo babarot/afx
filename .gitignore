@@ -1,0 +1,4 @@
+bin/*
+afx
+*.swp
+vendor
