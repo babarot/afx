@@ -40,12 +40,12 @@ type Link struct {
 func (l *Link) MarshalYAML() ([]byte, error) {
 	type alias Link
 
-	return yaml.Marshal(&struct {
+	return yaml.Marshal(struct {
 		*alias
-		AliasTo string `yaml:"to"`
+		To string `json:"to,optional"`
 	}{
-		alias:   (*alias)(l),
-		AliasTo: os.ExpandEnv(l.To),
+		alias: (*alias)(l),
+		To:    os.ExpandEnv(l.To),
 	})
 }
 
@@ -54,7 +54,8 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 
 	tmp := struct {
 		*alias
-		To string `yaml:"to,optional"`
+		From string `yaml:"from"`
+		To   string `yaml:"to,optional"`
 	}{
 		alias: (*alias)(l),
 	}
@@ -63,7 +64,9 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 		return err
 	}
 
+	l.From = tmp.From
 	l.To = os.ExpandEnv(tmp.To)
+
 	return nil
 }
 

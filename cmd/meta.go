@@ -30,7 +30,11 @@ func (m *meta) init(args []string) error {
 	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
 
 	var cfg config.Config
-	b, _ := os.ReadFile("afxw.yaml")
+	b, err := os.ReadFile("afxw.yaml")
+	if err != nil {
+		return err
+	}
+
 	if err := yaml.Unmarshal(b, &cfg); err != nil {
 		return err
 	}
