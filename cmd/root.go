@@ -29,7 +29,7 @@ var (
 // newRootCmd returns the root command
 func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:                "pkg",
+		Use:                "afx",
 		Short:              "Package manager for everything",
 		Long:               rootLong,
 		SilenceErrors:      true,
