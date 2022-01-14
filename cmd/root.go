@@ -39,20 +39,9 @@ func newRootCmd() *cobra.Command {
 		},
 	}
 
-	// var (
-	// 	version bool
-	// )
-	//
-	// p := rootCmd.PersistentFlags()
-	// p.BoolVar(&version, "version", false, "show version")
-	//
-	// if version {
-	// 	fmt.Printf("%s (%s) / %s\n", Version, BuildTag, BuildSHA)
-	// }
-
-	rootCmd.AddCommand(newInstallCmd())
 	rootCmd.AddCommand(newInitCmd())
-	rootCmd.AddCommand(newRemoveCmd())
+	rootCmd.AddCommand(newInstallCmd())
+	rootCmd.AddCommand(newUninstallCmd())
 	rootCmd.AddCommand(newGetCmd())
 
 	return rootCmd
@@ -71,6 +60,6 @@ func Execute() error {
 	log.Printf("[INFO] Build tag/SHA: %s/%s", BuildTag, BuildSHA)
 	log.Printf("[INFO] CLI args: %#v", os.Args)
 
-	defer log.Printf("[DEBUG] root command execution finished")
+	defer log.Printf("[INFO] root command execution finished")
 	return newRootCmd().Execute()
 }

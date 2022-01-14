@@ -14,7 +14,6 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-// meta is
 type meta struct {
 	// UI cli.Ui
 	data schema.Data

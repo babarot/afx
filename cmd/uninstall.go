@@ -9,31 +9,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type removeCmd struct {
+type uninstallCmd struct {
 	meta
 }
 
 var (
-	// removeLong is long description of remove command
-	removeLong = templates.LongDesc(``)
+	// uninstallLong is long description of uninstall command
+	uninstallLong = templates.LongDesc(``)
 
-	// removeExample is examples for remove command
-	removeExample = templates.Examples(`
+	// uninstallExample is examples for uninstall command
+	uninstallExample = templates.Examples(`
 		# Normal
-		afx remove
+		afx uninstall
 	`)
 )
 
-// newRemoveCmd creates a new remove command
-func newRemoveCmd() *cobra.Command {
-	c := &removeCmd{}
+// newUninstallCmd creates a new uninstall command
+func newUninstallCmd() *cobra.Command {
+	c := &uninstallCmd{}
 
-	removeCmd := &cobra.Command{
-		Use:                   "remove",
-		Short:                 "Remove installed packages",
-		Long:                  removeLong,
-		Example:               removeExample,
-		Aliases:               []string{"rm"},
+	uninstallCmd := &cobra.Command{
+		Use:                   "uninstall",
+		Short:                 "Uninstall installed packages",
+		Long:                  uninstallLong,
+		Example:               uninstallExample,
+		Aliases:               []string{"rm", "un"},
 		SuggestFor:            []string{"delete"},
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
@@ -50,16 +50,16 @@ func newRemoveCmd() *cobra.Command {
 		},
 	}
 
-	return removeCmd
+	return uninstallCmd
 }
 
-func (c *removeCmd) run(args []string) error {
+func (c *uninstallCmd) run(args []string) error {
 	pkg, err := c.Prompt()
 	if err != nil {
 		return err
 	}
 
-	s := spin.New("Removing "+pkg.GetSlug()+" %s", spin.WithDoneMessage("Removed\n"))
+	s := spin.New("Removing "+pkg.GetSlug()+" %s", spin.WithDoneMessage("Uninstalled\n"))
 	s.Start()
 	defer s.Stop()
 
