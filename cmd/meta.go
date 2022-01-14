@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/config/loader"
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/schema"
+	"github.com/goccy/go-yaml"
+	"github.com/k0kubun/pp"
 	"github.com/manifoldco/promptui"
 )
 
@@ -26,6 +27,10 @@ type meta struct {
 	parseErr error
 }
 
+// truck := Truck{}
+// b, _ := os.ReadFile("tmp.yaml")
+// yaml.Unmarshal(b, &truck)
+
 func (m *meta) init(args []string) error {
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
 	cfg := filepath.Join(os.Getenv("HOME"), ".config", "afx")
@@ -34,20 +39,27 @@ func (m *meta) init(args []string) error {
 	m.Env = env.New(cache)
 	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
 
-	data, err := loader.Load(cfg)
-	if err != nil {
-		return err
-	}
-	m.data = data
-	for file := range data.Files {
-		m.paths = append(m.paths, file)
-	}
+	var c config.Config
+	b, _ := os.ReadFile("afxw.yaml")
+	yaml.Unmarshal(b, &c)
 
-	pkgs, err := config.Parse(data)
-	if err != nil {
-		m.parseErr = err
-	}
-	m.Packages = pkgs
+	// data, err := loader.Load(cfg)
+	// if err != nil {
+	// 	return err
+	// }
+	// m.data = data
+	// for file := range data.Files {
+	// 	m.paths = append(m.paths, file)
+	// }
+	//
+	// pkgs, err := config.Parse(data)
+	// if err != nil {
+	// 	m.parseErr = err
+	// }
+	// m.Packages = pkgs
+	pp.Println(c)
+	panic("error")
+	var pkgs []config.Package
 
 	m.Env.Add(env.Variables{
 		"AFX_CONFIG_ROOT":  env.Variable{Value: cfg},

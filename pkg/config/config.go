@@ -3,10 +3,10 @@ package config
 // Config structure for file describing deployment. This includes the module source, inputs
 // dependencies, backend etc. One config element is connected to a single deployment
 type Config struct {
-	GitHub []*GitHub `hcl:"github,block"`
-	Gist   []*Gist   `hcl:"gist,block"`
-	Local  []*Local  `hcl:"local,block"`
-	HTTP   []*HTTP   `hcl:"http,block"`
+	GitHub []*GitHub `yaml:"github,block"`
+	Gist   []*Gist   `yaml:"gist,block"`
+	Local  []*Local  `yaml:"local,block"`
+	HTTP   []*HTTP   `yaml:"http,block"`
 }
 
 // Merge all sources into current configuration struct.

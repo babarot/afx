@@ -17,23 +17,23 @@ import (
 
 // Command is
 type Command struct {
-	Build     *Build            `hcl:"build,block"`
-	Link      []*Link           `hcl:"link,block"`
-	Env       map[string]string `hcl:"env,optional"`
-	Alias     map[string]string `hcl:"alias,optional"`
-	LoadBlock *Load             `hcl:"load,block"`
+	Build     *Build            `yaml:"build,block"`
+	Link      []*Link           `yaml:"link,block"`
+	Env       map[string]string `yaml:"env,optional"`
+	Alias     map[string]string `yaml:"alias,optional"`
+	LoadBlock *Load             `yaml:"load,block"`
 }
 
 // Build is
 type Build struct {
-	Env   map[string]string `hcl:"env,optional"`
-	Steps []string          `hcl:"steps"`
+	Env   map[string]string `yaml:"env,optional"`
+	Steps []string          `yaml:"steps"`
 }
 
 // Link is
 type Link struct {
-	From string `hcl:"from"`
-	To   string `hcl:"to,optional"`
+	From string `yaml:"from"`
+	To   string `yaml:"to,optional"`
 }
 
 // GetLink is
@@ -213,7 +213,7 @@ func (c Command) Install(pkg Package) error {
 
 // Load is
 type Load struct {
-	Scripts []string `hcl:"scripts,optional"`
+	Scripts []string `yaml:"scripts,optional"`
 }
 
 // Init returns necessary things which should be loaded when executing commands

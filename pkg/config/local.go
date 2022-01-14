@@ -8,13 +8,13 @@ import (
 
 // Local represents
 type Local struct {
-	Name string `hcl:"name,label"`
+	Name string `yaml:"name,label"`
 
-	Directory   string `hcl:"directory"`
-	Description string `hcl:"description,optional"`
+	Directory   string `yaml:"directory"`
+	Description string `yaml:"description,optional"`
 
-	Plugin  *Plugin  `hcl:"plugin,block"`
-	Command *Command `hcl:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin,block"`
+	Command *Command `yaml:"command,block"`
 }
 
 // Init is

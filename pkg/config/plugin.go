@@ -11,9 +11,9 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources   []string          `hcl:"sources"`
-	Env       map[string]string `hcl:"env,optional"`
-	LoadBlock *Load             `hcl:"load,block"`
+	Sources   []string          `yaml:"sources"`
+	Env       map[string]string `yaml:"env,optional"`
+	LoadBlock *Load             `yaml:"load,block"`
 }
 
 // Installed returns true ...

@@ -1,0 +1,64 @@
+http:
+- name: gcping
+  description: Like gcping.com but a command line tool
+  url: https://storage.googleapis.com/gcping-release/gcping_darwin_arm64_latest
+  command:
+    link:
+    - from: gcping_*
+      to: gcping
+
+local:
+- name: zsh
+  directory: /Users/babarot/.zsh
+  plugin:
+    sources:
+    - '[0-9]*.zsh'
+- name: google-cloud-sdk
+  directory: /Users/babarot/Downloads/google-cloud-sdk
+  plugin:
+    sources:
+    - '*.zsh.inc'
+
+gist:
+- name: misc
+  id: 79ee61f7c140c63d2786
+  owner: b4b4r07
+- name: hoge.sh
+  id: f26dd264f094e0ca834ce9feadc0c3f1
+  owner: b4b4r07
+  description: this is a test for gist
+  command:
+    link:
+    - from: hoge.sh
+      to: hoge
+
+github:
+- name: enhancd
+  owner: b4b4r07
+  repo: enhancd
+  description: A next-generation cd command with your interactive filter
+  plugin:
+    env:
+      ENHANCD_FILTER: fzf --height 25% --reverse --ansi:fzy
+    sources:
+    - init.sh
+- name: jq
+  owner: stedolan
+  repo: jq
+  description: Command-line JSON processor
+  release:
+    name: jq
+    tag: jq-1.6
+  command:
+    link:
+    - from: '*jq*'
+      to: jq
+- name: fzy
+  owner: jhawthorn
+  repo: fzy
+  description: A better fuzzy finder
+  command:
+    build:
+      steps:
+      - make
+      - sudo make install
