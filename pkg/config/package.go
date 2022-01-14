@@ -2,12 +2,8 @@ package config
 
 import (
 	"context"
-	"log"
 	"path/filepath"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/schema"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -47,29 +43,6 @@ type Package interface {
 	Loader
 	Manager
 	Installer
-}
-
-// Decode is
-func decode(data schema.Data) (Config, error) {
-	var cfg Config
-
-	decodedManifest, err := schema.Decode(data)
-	if err != nil {
-		log.Print("[ERROR] schema.Decode failed")
-		return cfg, err
-	}
-
-	ctx, diags := decodedManifest.BuildContext(data.Body)
-
-	decodeDiags := gohcl.DecodeBody(data.Body, ctx, &cfg)
-
-	diags = append(diags, decodeDiags...)
-	if diags.HasErrors() {
-		log.Print("[ERROR] gohcl.DecodeBody failed")
-		return cfg, errors.New(diags, data.Files)
-	}
-
-	return cfg, nil
 }
 
 // HasGitHubReleaseBlock is
@@ -119,38 +92,6 @@ func HasSudoInCommandBuildSteps(pkgs []Package) bool {
 		}
 	}
 	return false
-}
-
-// Parse is
-func Parse(data schema.Data) ([]Package, error) {
-	cfg, err := decode(data)
-	if err != nil {
-		return []Package{}, err
-	}
-
-	var pkgs []Package
-	for _, pkg := range cfg.GitHub {
-		// TODO: Remove?
-		if pkg.HasReleaseBlock() && !pkg.HasCommandBlock() {
-			pkg.Command = &Command{
-				Link: []*Link{
-					&Link{From: filepath.Join("**", pkg.Release.Name)},
-				},
-			}
-		}
-		pkgs = append(pkgs, pkg)
-	}
-	for _, pkg := range cfg.Gist {
-		pkgs = append(pkgs, pkg)
-	}
-	for _, pkg := range cfg.Local {
-		pkgs = append(pkgs, pkg)
-	}
-	for _, pkg := range cfg.HTTP {
-		pkgs = append(pkgs, pkg)
-	}
-
-	return pkgs, nil
 }
 
 // Defined returns true if the package is already defined in config files
