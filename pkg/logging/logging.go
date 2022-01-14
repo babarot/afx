@@ -90,6 +90,11 @@ func IsDebugOrHigher() bool {
 	return level == "DEBUG" || level == "TRACE"
 }
 
+// IsSet returns true if AFX_LOG is set
+func IsSet() bool {
+	return string(LogLevel()) != ""
+}
+
 func isValidLogLevel(level string) bool {
 	for _, l := range ValidLevels {
 		if strings.ToUpper(level) == string(l) {

@@ -189,7 +189,8 @@ func (c HTTP) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, err := c.Command.GetLink(c)
 		if err != nil {
-			return err
+			// no problem to handle error even if this links returns no value
+			// because base dir itself will be deleted below
 		}
 		for _, link := range links {
 			delete(link.From, &errs)

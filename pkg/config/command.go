@@ -38,7 +38,6 @@ type Link struct {
 
 // GetLink is
 func (c Command) GetLink(pkg Package) ([]Link, error) {
-	var links []Link
 	getTo := func(link *Link) string {
 		dest := link.To
 		if link.To == "" {
@@ -49,6 +48,8 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		}
 		return dest
 	}
+
+	var links []Link
 	for _, link := range c.Link {
 		if link.From == "." {
 			links = append(links, Link{
@@ -70,15 +71,20 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		case 1:
 			// OK pattern: matches should be only one
 			src = matches[0]
+		case 2:
+			// TODO: Update this with more flexiblities
+			msg := fmt.Sprintf("[ERROR] %s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
+			log.Printf(msg)
+			return links, errors.New(msg)
 		default:
-			log.Printf("[ERROR] %s: no matches\n", file)
-			continue
+			return links, errors.New("unknown error occured")
 		}
 		links = append(links, Link{
 			From: src,
 			To:   getTo(link),
 		})
 	}
+
 	return links, nil
 }
 
@@ -169,6 +175,7 @@ func (c Command) Install(pkg Package) error {
 
 	links, err := c.GetLink(pkg)
 	if len(links) == 0 {
+		log.Printf("[ERROR] no links: %s\n", pkg.GetName())
 		return err
 	}
 
@@ -183,6 +190,7 @@ func (c Command) Install(pkg Package) error {
 
 		fi, err := os.Stat(link.From)
 		if err != nil {
+			log.Printf("[ERROR] link.from %q: no such file or directory\n", link.From)
 			continue
 		}
 		switch fi.Mode() {

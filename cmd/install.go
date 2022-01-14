@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/b4b4r07/afx/pkg/config"
+	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -100,7 +101,7 @@ func (c *installCmd) run(args []string) error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
 			err := pkg.Install(ctx, completion)
-			if err != nil {
+			if err != nil && !logging.IsSet() {
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
 			}

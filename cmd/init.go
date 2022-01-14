@@ -54,6 +54,9 @@ func newInitCmd() *cobra.Command {
 
 func (c *initCmd) run(args []string) error {
 	for _, pkg := range c.Packages {
+		// if has init config,
+		// print pkg name, e.g. fmt.Printf("# %s\n", pkg.GetHome())
+		// endif
 		if err := pkg.Init(); err != nil {
 			log.Printf("[ERROR] %s: failed to init pacakge: %v\n", pkg.GetName(), err)
 			continue
