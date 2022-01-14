@@ -374,6 +374,8 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 		return regexp.MustCompile(expr).MatchString(asset.Name)
 	})
 
+	saved := r
+
 	r.filter(func(asset Asset) bool {
 		expr := ""
 		// TODO: need to improve: neovim case (nemvim doesn't have GOARCH)
@@ -387,8 +389,9 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	})
 
 	if len(r.Assets) == 0 {
-		log.Printf("[DEBUG] no assets: %#v\n", r)
-		return nil
+		// log.Printf("[DEBUG] no assets: %#v\n", r)
+		// return nil
+		r = saved
 	}
 	// TODO: avoid to panic
 	asset := r.Assets[0]
