@@ -54,8 +54,6 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newInitCmd())
 	rootCmd.AddCommand(newRemoveCmd())
 	rootCmd.AddCommand(newGetCmd())
-	rootCmd.AddCommand(newConfigCmd())
-	rootCmd.AddCommand(newOpenCmd())
 
 	return rootCmd
 }
@@ -68,7 +66,7 @@ func Execute() error {
 	}
 	log.SetOutput(logWriter)
 
-	log.Printf("[INFO] pkg version: %s", Version)
+	log.Printf("[INFO] afx version: %s", Version)
 	log.Printf("[INFO] Go runtime version: %s", runtime.Version())
 	log.Printf("[INFO] Build tag/SHA: %s/%s", BuildTag, BuildSHA)
 	log.Printf("[INFO] CLI args: %#v", os.Args)

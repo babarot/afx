@@ -21,7 +21,7 @@ var (
 	// initExample is examples for init command
 	initExample = templates.Examples(`
 		# Start to use pkg
-		pkg init
+		afx init
 	`)
 )
 

@@ -20,7 +20,7 @@ var (
 	// removeExample is examples for remove command
 	removeExample = templates.Examples(`
 		# Normal
-		pkg remove
+		afx remove
 	`)
 )
 

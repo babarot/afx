@@ -34,7 +34,7 @@ var (
 	// getExample is examples for get command
 	getExample = templates.Examples(`
 		# This command gets the definition based on given link
-		pkg get https://github.com/b4b4r07/enhancd
+		afx get https://github.com/b4b4r07/enhancd
 	`)
 )
 

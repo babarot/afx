@@ -25,7 +25,7 @@ var (
 	// installExample is examples for fmt command
 	installExample = templates.Examples(`
 		# Normal
-		pkg install
+		afx install
 	`)
 )
 
