@@ -64,7 +64,6 @@ func (c *removeCmd) run(args []string) error {
 	defer s.Stop()
 
 	var errs errors.Errors
-	errs.Append(os.RemoveAll(pkg.GetHome()))
 
 	switch {
 	case pkg.HasPluginBlock():
@@ -81,5 +80,6 @@ func (c *removeCmd) run(args []string) error {
 		}
 	}
 
+	errs.Append(os.RemoveAll(pkg.GetHome()))
 	return errs.ErrorOrNil()
 }
