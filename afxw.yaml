@@ -62,3 +62,229 @@ github:
       steps:
       - make
       - sudo make install
+- name: kubectx
+  owner: ahmetb
+  repo: kubectx
+  description: Switch faster between clusters and namespaces in kubectl
+  command:
+    link:
+    - from: kubectx
+      to: kubectl-ctx
+    - from: kubens
+      to: kubectl-ns
+- name: kubetail
+  owner: johanhaleby
+  repo: kubetail
+  description: Bash script to tail Kubernetes logs from multiple pods at the same time
+  command:
+    link:
+    - from: kubetail
+- name: history-search-multi-word
+  owner: zdharma-continuum
+  repo: history-search-multi-word
+  description: Multi-word, syntax highlighted history searching for Zsh
+  plugin:
+    sources:
+    - history-search-multi-word.plugin.zsh
+- name: prok
+  owner: mutantcornholio
+  repo: prok
+  description: easy process grep with ps output
+  command:
+    link:
+    - from: prok.sh
+      to: prok
+- name: zsh-vimode-visual
+  owner: b4b4r07
+  repo: zsh-vimode-visual
+  description: Implement the vim-like visual mode to vi-mode of zsh
+  plugin:
+    sources:
+    - zsh-vimode-visual.zsh
+- name: colordiff
+  owner: daveewart
+  repo: colordiff
+  description: Primary development for colordiff
+  command:
+    alias:
+      diff: colordiff -u
+    link:
+    - from: colordiff.pl
+      to: colordiff
+- name: diff-so-fancy
+  owner: so-fancy
+  repo: diff-so-fancy
+  description: Good-lookin' diffs. Actually… nah… The best-lookin' diffs.
+  command:
+    link:
+    - from: diff-so-fancy
+- name: tpm
+  owner: tmux-plugins
+  repo: tpm
+  description: Tmux Plugin Manager
+  command:
+    link:
+    - from: .
+      to: $HOME/.tmux/plugins/tpm
+- name: red
+  owner: antonmedv
+  repo: red
+  description: Terminal log analysis tools
+  command:
+    build:
+      steps:
+      - go build -o red
+    link:
+    - from: red
+- name: kubectl-trace
+  owner: iovisor
+  repo: kubectl-trace
+  description: Schedule bpftrace programs on your kubernetes cluster using the kubectl
+  command:
+    build:
+      steps:
+      - go build -o kubectl-trace cmd/kubectl-trace/root.go
+    link:
+    - from: kubectl-trace
+      to: kubectl-trace
+
+- name: gobump
+  owner: motemen
+  repo: gobump
+  description: Bumps up Go program version
+  command:
+    build:
+      steps:
+      - go build -o gobump cmd/gobump/main.go
+    link:
+    - from: gobump
+      to: gobump
+- name: git-open
+  owner: paulirish
+  repo: git-open
+  description: Type `git open` to open the GitHub page or website for a repository in your browser.
+  command:
+    link:
+    - from: git-open
+      to: git-open
+- name: fast-syntax-highlighting # Similar to zsh-users/zsh-syntax-highlighting
+  owner: zdharma-continuum
+  repo: fast-syntax-highlighting
+  description: Syntax-highlighting for Zshell
+  plugin:
+    sources:
+    - fast-syntax-highlighting.plugin.zsh
+- name: distribution
+  owner: philovivero
+  repo: distribution
+  description: New Canonical Project for this is wizzat / distribution
+  branch: master
+  command:
+    link:
+    - from: distribution.py
+      to: distribution
+- name: zsh-prompt-minimal
+  owner: b4b4r07
+  repo: zsh-prompt-minimal
+  description: Super super super minimal prompt for zsh
+  plugin:
+    env:
+      PROMPT_PATH_STYLE: minimal
+      PROMPT_USE_VIM_MODE: true
+    sources:
+    - '*.zsh-theme'
+- name: shlide
+  owner: icyphox
+  repo: shlide
+  description: a slide deck presentation tool written in pure bash
+  branch: master
+  command:
+    link:
+    - from: shlide
+      to: shlide
+- name: neovim
+  owner: neovim
+  repo: neovim
+  description: Vim-fork focused on extensibility and usability
+  release:
+    name: nvim
+    tag: v0.6.1
+  command:
+    alias:
+      vim: nvim
+    link:
+    - from: '**/bin/nvim'
+      to: nvim
+- name: stein
+  owner: b4b4r07
+  repo: stein
+  description: ""
+  release:
+    name: stein
+    tag: v0.2.4
+- name: blog
+  owner: b4b4r07
+  repo: blog
+  description: A CLI tool for editing blog built by hugo etc
+  branch: master
+  release:
+    name: blog
+    tag: v0.1.4
+  command:
+    env:
+      BLOG_EDITOR: vim
+      BLOG_POST_DIR: content/post
+      BLOG_ROOT: $HOME/src/github.com/b4b4r07/tellme.tokyo
+    link:
+    - from: blog
+      to: blog
+- name: conftest
+  owner: instrumenta
+  repo: conftest
+  description: |
+    Write tests against structured configuration data using the Open
+    Policy Agent Rego query language
+  branch: master
+  release:
+    name: conftest
+    tag: v0.16.0
+  command:
+    link:
+    - from: conftest
+      to: conftest
+- name: opa
+  owner: open-policy-agent
+  repo: opa
+  description: An open source, general-purpose policy engine.
+  branch: master
+  command:
+    link:
+    - from: opa
+      to: opa
+  release:
+    name: opa
+    tag: v0.16.2
+- name: exa
+  owner: ogham
+  repo: exa
+  description: A modern version of 'ls'.
+  release:
+    name: exa
+    tag: v0.9.0
+  command:
+    alias:
+      l: exa --group-directories-first -T --git-ignore --level 2
+      la: exa --group-directories-first -a --header --git
+      ll: exa --group-directories-first -l --header --git
+      lla: exa --group-directories-first -la --header --git
+      ls: exa --group-directories-first
+    link:
+    - from: '*exa*'
+      to: exa
+- name: ghq
+  owner: motemen
+  repo: ghq
+  description: Remote repository management made easy
+  release:
+    name: ghq
+    tag: v0.17.3

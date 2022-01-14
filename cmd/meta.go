@@ -33,17 +33,19 @@ type meta struct {
 
 func (m *meta) init(args []string) error {
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
-	cfg := filepath.Join(os.Getenv("HOME"), ".config", "afx")
+	dir := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, ".cache.json")
 
 	m.Env = env.New(cache)
 	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
 
-	var c config.Config
+	var cfg config.Config
 	b, _ := os.ReadFile("afxw.yaml")
-	yaml.Unmarshal(b, &c)
+	if err := yaml.Unmarshal(b, &cfg); err != nil {
+		return err
+	}
 
-	// data, err := loader.Load(cfg)
+	// data, err := loader.Load(dir)
 	// if err != nil {
 	// 	return err
 	// }
@@ -57,12 +59,18 @@ func (m *meta) init(args []string) error {
 	// 	m.parseErr = err
 	// }
 	// m.Packages = pkgs
-	pp.Println(c)
-	panic("error")
-	var pkgs []config.Package
+
+	pkgs, err := config.ParseYAML(cfg)
+	if err != nil {
+		m.parseErr = err
+	}
+	m.Packages = pkgs
+
+	pp.Println(pkgs)
+	// panic("error")
 
 	m.Env.Add(env.Variables{
-		"AFX_CONFIG_ROOT":  env.Variable{Value: cfg},
+		"AFX_CONFIG_ROOT":  env.Variable{Value: dir},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},

@@ -184,3 +184,29 @@ func ConvertsFrom(pkgs ...Package) Config {
 	}
 	return cfg
 }
+
+func ParseYAML(cfg Config) ([]Package, error) {
+	var pkgs []Package
+	for _, pkg := range cfg.GitHub {
+		// TODO: Remove?
+		if pkg.HasReleaseBlock() && !pkg.HasCommandBlock() {
+			pkg.Command = &Command{
+				Link: []*Link{
+					&Link{From: filepath.Join("**", pkg.Release.Name)},
+				},
+			}
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	for _, pkg := range cfg.Gist {
+		pkgs = append(pkgs, pkg)
+	}
+	for _, pkg := range cfg.Local {
+		pkgs = append(pkgs, pkg)
+	}
+	for _, pkg := range cfg.HTTP {
+		pkgs = append(pkgs, pkg)
+	}
+
+	return pkgs, nil
+}

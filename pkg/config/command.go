@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
 )
@@ -34,6 +35,36 @@ type Build struct {
 type Link struct {
 	From string `yaml:"from"`
 	To   string `yaml:"to,optional"`
+}
+
+func (l *Link) MarshalYAML() ([]byte, error) {
+	type alias Link
+
+	return yaml.Marshal(&struct {
+		*alias
+		AliasTo string `yaml:"to"`
+	}{
+		alias:   (*alias)(l),
+		AliasTo: os.ExpandEnv(l.To),
+	})
+}
+
+func (l *Link) UnmarshalYAML(b []byte) error {
+	type alias Link
+
+	tmp := struct {
+		*alias
+		To string `yaml:"to,optional"`
+	}{
+		alias: (*alias)(l),
+	}
+
+	if err := yaml.Unmarshal(b, &tmp); err != nil {
+		return err
+	}
+
+	l.To = os.ExpandEnv(tmp.To)
+	return nil
 }
 
 // GetLink is
