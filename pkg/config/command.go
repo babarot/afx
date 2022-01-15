@@ -42,7 +42,7 @@ func (l *Link) MarshalYAML() ([]byte, error) {
 
 	return yaml.Marshal(struct {
 		*alias
-		To string `json:"to,optional"`
+		To string `yaml:"to,optional"`
 	}{
 		alias: (*alias)(l),
 		To:    os.ExpandEnv(l.To),
@@ -108,7 +108,6 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		case 2:
 			// TODO: Update this with more flexiblities
 			msg := fmt.Sprintf("[ERROR] %s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
-			log.Printf(msg)
 			return links, errors.New(msg)
 		default:
 			return links, errors.New("unknown error occured")

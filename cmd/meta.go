@@ -17,7 +17,6 @@ type meta struct {
 	Env      *env.Config
 	Packages []config.Package
 
-	paths    []string
 	parseErr error
 }
 

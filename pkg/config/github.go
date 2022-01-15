@@ -272,8 +272,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	}
 	req.Header.Set("Authorization", "token "+token)
 
-	var httpClient *http.Client
-	httpClient = http.DefaultClient
+	httpClient := http.DefaultClient
 	httpClient.Transport = logging.NewTransport("GitHub", http.DefaultTransport)
 
 	resp, err := httpClient.Do(req.WithContext(ctx))

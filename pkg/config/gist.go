@@ -178,6 +178,7 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	}
 
 	if c.HasPluginBlock() {
+		// TODO
 	}
 
 	delete(c.GetHome(), &errs)
