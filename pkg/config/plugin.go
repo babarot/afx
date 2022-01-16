@@ -1,11 +1,11 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"log"
+	"os"
 	"path/filepath"
 
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/mattn/go-zglob"
 )
 
@@ -41,17 +41,27 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
+	var sources []string
 	for _, src := range p.Sources {
+		path := src
 		if !filepath.IsAbs(src) {
-			sources := glob(filepath.Join(pkg.GetHome(), src))
-			if len(sources) == 0 {
-				log.Printf("[ERROR] %s: failed to get with glob/zglob\n", pkg.GetName())
+			// basically almost all of sources are not abs path
+			path = filepath.Join(pkg.GetHome(), src)
+		}
+		for _, src := range glob(path) {
+			if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
 				continue
 			}
-			for _, src := range sources {
-				fmt.Printf("source %s\n", src)
-			}
+			sources = append(sources, src)
 		}
+	}
+
+	if len(sources) == 0 {
+		return errors.New("no source files")
+	}
+
+	for _, src := range sources {
+		fmt.Printf("source %s\n", src)
 	}
 
 	for k, v := range p.Env {
