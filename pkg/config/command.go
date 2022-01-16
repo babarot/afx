@@ -65,7 +65,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	l.From = tmp.From
-	l.To = os.ExpandEnv(tmp.To)
+	l.To = expandTilda(os.ExpandEnv(tmp.To))
 
 	return nil
 }
