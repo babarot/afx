@@ -59,7 +59,7 @@ func (c *initCmd) run(args []string) error {
 		// endif
 		if err := pkg.Init(); err != nil {
 			log.Printf("[ERROR] %s: failed to init pacakge: %v\n", pkg.GetName(), err)
-			continue
+			return err
 		}
 	}
 

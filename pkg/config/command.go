@@ -237,7 +237,6 @@ func (c Command) Install(pkg Package) error {
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)
 			errs.Append(err)
-			continue
 		}
 	}
 

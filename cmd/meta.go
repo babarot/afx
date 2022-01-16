@@ -9,7 +9,6 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
-	"github.com/goccy/go-yaml"
 	"github.com/manifoldco/promptui"
 )
 
@@ -22,30 +21,45 @@ type meta struct {
 
 func (m *meta) init(args []string) error {
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
-	dir := filepath.Join(os.Getenv("HOME"), ".config", "afx")
-	cache := filepath.Join(root, ".cache.json")
+	base := filepath.Join(os.Getenv("HOME"), ".config", "afx")
+	cache := filepath.Join(root, "cache.json")
 
 	m.Env = env.New(cache)
 	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
 
-	var cfg config.Config
-	b, err := os.ReadFile("afxw.yaml")
+	files, err := config.WalkDir(base)
 	if err != nil {
 		return err
 	}
 
-	if err := yaml.Unmarshal(b, &cfg); err != nil {
-		return err
+	for _, file := range files {
+		cfg, err := config.Read(file)
+		if err != nil {
+			// // TODO: Consider we should just return error here
+			// m.parseErr = err
+			return err
+		}
+		pkgs, err := cfg.Parse()
+		if err != nil {
+			return err
+		}
+		m.Packages = append(m.Packages, pkgs...)
 	}
+	pkgs := m.Packages
+	// pp.Println(pkgs)
+	// m.Packages = cfg
+	// panic("error")
 
-	pkgs, err := config.ParseYAML(cfg)
-	if err != nil {
-		m.parseErr = err
-	}
-	m.Packages = pkgs
+	// var pkgs []config.Package
+	// pkgs, err := config.Load(filepath.Join(base, "afx.yaml"))
+	// if err != nil {
+	// 	// TODO: Consider we should just return error here
+	// 	m.parseErr = err
+	// }
+	// m.Packages = pkgs
 
 	m.Env.Add(env.Variables{
-		"AFX_CONFIG_ROOT":  env.Variable{Value: dir},
+		"AFX_CONFIG_ROOT":  env.Variable{Value: base},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
