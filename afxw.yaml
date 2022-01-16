@@ -9,12 +9,12 @@ http:
 
 local:
 - name: zsh
-  directory: /Users/babarot/.zsh
+  directory: ~/.zsh
   plugin:
     sources:
     - '[0-9]*.zsh'
 - name: google-cloud-sdk
-  directory: /Users/babarot/Downloads/google-cloud-sdk
+  directory: ~/Downloads/google-cloud-sdk
   plugin:
     sources:
     - '*.zsh.inc'

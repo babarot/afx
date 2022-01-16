@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
 )
@@ -77,7 +78,7 @@ func (c Local) GetName() string {
 
 // GetHome returns a path
 func (c Local) GetHome() string {
-	return c.Directory
+	return expandTilda(os.ExpandEnv(c.Directory))
 }
 
 // GetType returns a pacakge type
