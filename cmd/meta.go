@@ -41,6 +41,10 @@ func (m *meta) init(args []string) error {
 		m.Packages = append(m.Packages, pkgs...)
 	}
 
+	if err := config.Validate(m.Packages); err != nil {
+		return err
+	}
+
 	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
 		"AFX_ROOT":         env.Variable{Default: root},
