@@ -39,7 +39,7 @@ func Read(path string) (Config, error) {
 	return cfg, err
 }
 
-func parse(cfg Config) ([]Package, error) {
+func parse(cfg Config) []Package {
 	var pkgs []Package
 	for _, pkg := range cfg.GitHub {
 		// TODO: Remove?
@@ -62,11 +62,11 @@ func parse(cfg Config) ([]Package, error) {
 		pkgs = append(pkgs, pkg)
 	}
 
-	return pkgs, nil
+	return pkgs
 }
 
 func (c Config) Parse() ([]Package, error) {
-	return parse(c)
+	return parse(c), nil
 }
 
 func visitYAML(files *[]string) filepath.WalkFunc {

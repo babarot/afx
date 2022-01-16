@@ -24,9 +24,6 @@ func (m *meta) init(args []string) error {
 	base := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, "cache.json")
 
-	m.Env = env.New(cache)
-	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
-
 	files, err := config.WalkDir(base)
 	if err != nil {
 		return err
@@ -35,8 +32,6 @@ func (m *meta) init(args []string) error {
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
-			// // TODO: Consider we should just return error here
-			// m.parseErr = err
 			return err
 		}
 		pkgs, err := cfg.Parse()
@@ -45,34 +40,24 @@ func (m *meta) init(args []string) error {
 		}
 		m.Packages = append(m.Packages, pkgs...)
 	}
-	pkgs := m.Packages
-	// pp.Println(pkgs)
-	// m.Packages = cfg
-	// panic("error")
 
-	// var pkgs []config.Package
-	// pkgs, err := config.Load(filepath.Join(base, "afx.yaml"))
-	// if err != nil {
-	// 	// TODO: Consider we should just return error here
-	// 	m.parseErr = err
-	// }
-	// m.Packages = pkgs
-
+	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
+		"AFX_ROOT":         env.Variable{Default: root},
 		"AFX_CONFIG_ROOT":  env.Variable{Value: base},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
-				When:    config.HasSudoInCommandBuildSteps(pkgs),
+				When:    config.HasSudoInCommandBuildSteps(m.Packages),
 				Message: "Please enter sudo command password",
 				Help:    "Some packages build steps requires sudo command",
 			},
 		},
 		"GITHUB_TOKEN": env.Variable{
 			Input: env.Input{
-				When:    config.HasGitHubReleaseBlock(pkgs),
+				When:    config.HasGitHubReleaseBlock(m.Packages),
 				Message: "Please type your GITHUB_TOKEN",
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
