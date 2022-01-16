@@ -11,11 +11,6 @@ type Config struct {
 	HTTP   []*HTTP   `yaml:"http,block"`
 }
 
-// Load is
-type Load struct {
-	Scripts []string `yaml:"scripts,optional"`
-}
-
 // Merge all sources into current configuration struct.
 // Should just call merge on all blocks / attributes of config struct.
 func (c *Config) Merge(srcs []*Config) error {

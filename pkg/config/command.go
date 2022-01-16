@@ -18,11 +18,11 @@ import (
 
 // Command is
 type Command struct {
-	Build     *Build            `yaml:"build,block"`
-	Link      []*Link           `yaml:"link,block"`
-	Env       map[string]string `yaml:"env,optional"`
-	Alias     map[string]string `yaml:"alias,optional"`
-	LoadBlock *Load             `yaml:"load,block"`
+	Build   *Build            `yaml:"build,block"`
+	Link    []*Link           `yaml:"link,block"`
+	Env     map[string]string `yaml:"env,optional"`
+	Alias   map[string]string `yaml:"alias,optional"`
+	Snippet string            `yaml:"snippet,optional"`
 }
 
 // Build is
@@ -261,10 +261,8 @@ func (c Command) Init(pkg Package) error {
 		fmt.Printf("alias %s=%q\n", k, v)
 	}
 
-	if c.LoadBlock != nil {
-		for _, script := range c.LoadBlock.Scripts {
-			fmt.Printf("%s\n", script)
-		}
+	if s := c.Snippet; s != "" {
+		fmt.Printf("%s", s)
 	}
 
 	return nil

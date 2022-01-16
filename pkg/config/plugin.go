@@ -11,9 +11,9 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources   []string          `yaml:"sources"`
-	Env       map[string]string `yaml:"env,optional"`
-	LoadBlock *Load             `yaml:"load,block"`
+	Sources []string          `yaml:"sources"`
+	Env     map[string]string `yaml:"env,optional"`
+	Snippet string            `yaml:"snippet,optional"`
 }
 
 // Installed returns true ...
@@ -68,10 +68,8 @@ func (p Plugin) Init(pkg Package) error {
 		fmt.Printf("export %s=%q\n", k, v)
 	}
 
-	if p.LoadBlock != nil {
-		for _, script := range p.LoadBlock.Scripts {
-			fmt.Printf("%s\n", script)
-		}
+	if s := p.Snippet; s != "" {
+		fmt.Printf("%s\n", s)
 	}
 
 	return nil
