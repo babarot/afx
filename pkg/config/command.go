@@ -244,11 +244,6 @@ func (c Command) Install(pkg Package) error {
 	return errs.ErrorOrNil()
 }
 
-// Load is
-type Load struct {
-	Scripts []string `yaml:"scripts,optional"`
-}
-
 // Init returns necessary things which should be loaded when executing commands
 func (c Command) Init(pkg Package) error {
 	if !pkg.Installed() {
