@@ -18,14 +18,14 @@ import (
 
 // Gist represents
 type Gist struct {
-	Name string `hcl:"name,label"`
+	Name string `yaml:"name,label"`
 
-	Owner       string `hcl:"owner"`
-	ID          string `hcl:"id"`
-	Description string `hcl:"description,optional"`
+	Owner       string `yaml:"owner"`
+	ID          string `yaml:"id"`
+	Description string `yaml:"description,optional"`
 
-	Plugin  *Plugin  `hcl:"plugin,block"`
-	Command *Command `hcl:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin,block"`
+	Command *Command `yaml:"command,block"`
 }
 
 func NewGist(owner, id string) (Gist, error) {
@@ -178,6 +178,7 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	}
 
 	if c.HasPluginBlock() {
+		// TODO
 	}
 
 	delete(c.GetHome(), &errs)

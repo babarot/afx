@@ -8,62 +8,60 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/config/loader"
 	"github.com/b4b4r07/afx/pkg/env"
-	"github.com/b4b4r07/afx/pkg/schema"
 	"github.com/manifoldco/promptui"
 )
 
 type meta struct {
-	// UI cli.Ui
-	data schema.Data
-
 	Env      *env.Config
 	Packages []config.Package
-	// Loader   *loader.Loader
 
-	paths    []string
 	parseErr error
 }
 
 func (m *meta) init(args []string) error {
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
-	cfg := filepath.Join(os.Getenv("HOME"), ".config", "afx")
-	cache := filepath.Join(root, ".cache.json")
+	base := filepath.Join(os.Getenv("HOME"), ".config", "afx")
+	cache := filepath.Join(root, "cache.json")
 
-	m.Env = env.New(cache)
-	m.Env.Add("AFX_ROOT", env.Variable{Default: root})
-
-	data, err := loader.Load(cfg)
+	files, err := config.WalkDir(base)
 	if err != nil {
 		return err
 	}
-	m.data = data
-	for file := range data.Files {
-		m.paths = append(m.paths, file)
+
+	for _, file := range files {
+		cfg, err := config.Read(file)
+		if err != nil {
+			return err
+		}
+		pkgs, err := cfg.Parse()
+		if err != nil {
+			return err
+		}
+		m.Packages = append(m.Packages, pkgs...)
 	}
 
-	pkgs, err := config.Parse(data)
-	if err != nil {
-		m.parseErr = err
+	if err := config.Validate(m.Packages); err != nil {
+		return err
 	}
-	m.Packages = pkgs
 
+	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
-		"AFX_CONFIG_ROOT":  env.Variable{Value: cfg},
+		"AFX_ROOT":         env.Variable{Default: root},
+		"AFX_CONFIG_ROOT":  env.Variable{Value: base},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
-				When:    config.HasSudoInCommandBuildSteps(pkgs),
+				When:    config.HasSudoInCommandBuildSteps(m.Packages),
 				Message: "Please enter sudo command password",
 				Help:    "Some packages build steps requires sudo command",
 			},
 		},
 		"GITHUB_TOKEN": env.Variable{
 			Input: env.Input{
-				When:    config.HasGitHubReleaseBlock(pkgs),
+				When:    config.HasGitHubReleaseBlock(m.Packages),
 				Message: "Please type your GITHUB_TOKEN",
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
@@ -155,38 +153,4 @@ func (m *meta) Prompt() (config.Package, error) {
 	}
 
 	return items[i].Package, nil
-}
-
-func getConfigPath() (string, error) {
-	root := os.Getenv("AFX_CONFIG_ROOT")
-	var paths []string
-
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		switch filepath.Ext(path) {
-		case ".hcl":
-			paths = append(paths, filepath.Base(path))
-		}
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
-		Active:   promptui.IconSelect + " {{ . | cyan }}",
-		Inactive: "  {{ . | faint }}",
-	}
-
-	prompt := promptui.Select{
-		Label:        "Select config file you want to open",
-		Items:        paths,
-		Templates:    templates,
-		HideSelected: true,
-	}
-	_, file, err := prompt.Run()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(root, file), nil
 }

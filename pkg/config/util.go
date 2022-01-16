@@ -2,6 +2,9 @@ package config
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/b4b4r07/afx/pkg/errors"
 )
@@ -38,4 +41,27 @@ func check(list []bool) bool {
 		}
 	}
 	return true
+}
+
+func expandTilda(path string) string {
+	if !strings.HasPrefix(path, "~") {
+		return path
+	}
+
+	home := ""
+	switch runtime.GOOS {
+	case "windows":
+		home = filepath.Join(os.Getenv("HomeDrive"), os.Getenv("HomePath"))
+		if home == "" {
+			home = os.Getenv("UserProfile")
+		}
+	default:
+		home = os.Getenv("HOME")
+	}
+
+	if home == "" {
+		return path
+	}
+
+	return home + path[1:]
 }

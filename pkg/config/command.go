@@ -11,29 +11,63 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
 )
 
 // Command is
 type Command struct {
-	Build     *Build            `hcl:"build,block"`
-	Link      []*Link           `hcl:"link,block"`
-	Env       map[string]string `hcl:"env,optional"`
-	Alias     map[string]string `hcl:"alias,optional"`
-	LoadBlock *Load             `hcl:"load,block"`
+	Build   *Build            `yaml:"build,block"`
+	Link    []*Link           `yaml:"link,block"`
+	Env     map[string]string `yaml:"env,optional"`
+	Alias   map[string]string `yaml:"alias,optional"`
+	Snippet string            `yaml:"snippet,optional"`
 }
 
 // Build is
 type Build struct {
-	Env   map[string]string `hcl:"env,optional"`
-	Steps []string          `hcl:"steps"`
+	Env   map[string]string `yaml:"env,optional"`
+	Steps []string          `yaml:"steps"`
 }
 
 // Link is
 type Link struct {
-	From string `hcl:"from"`
-	To   string `hcl:"to,optional"`
+	From string `yaml:"from"`
+	To   string `yaml:"to,optional"`
+}
+
+func (l *Link) MarshalYAML() ([]byte, error) {
+	type alias Link
+
+	return yaml.Marshal(struct {
+		*alias
+		To string `yaml:"to,optional"`
+	}{
+		alias: (*alias)(l),
+		To:    os.ExpandEnv(l.To),
+	})
+}
+
+func (l *Link) UnmarshalYAML(b []byte) error {
+	type alias Link
+
+	tmp := struct {
+		*alias
+		From string `yaml:"from"`
+		To   string `yaml:"to,optional"`
+	}{
+		alias: (*alias)(l),
+	}
+
+	if err := yaml.Unmarshal(b, &tmp); err != nil {
+		return err
+	}
+
+	l.From = tmp.From
+	l.To = expandTilda(os.ExpandEnv(tmp.To))
+
+	return nil
 }
 
 // GetLink is
@@ -74,7 +108,6 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		case 2:
 			// TODO: Update this with more flexiblities
 			msg := fmt.Sprintf("[ERROR] %s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
-			log.Printf(msg)
 			return links, errors.New(msg)
 		default:
 			return links, errors.New("unknown error occured")
@@ -204,16 +237,10 @@ func (c Command) Install(pkg Package) error {
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)
 			errs.Append(err)
-			continue
 		}
 	}
 
 	return errs.ErrorOrNil()
-}
-
-// Load is
-type Load struct {
-	Scripts []string `hcl:"scripts,optional"`
 }
 
 // Init returns necessary things which should be loaded when executing commands
@@ -233,10 +260,8 @@ func (c Command) Init(pkg Package) error {
 		fmt.Printf("alias %s=%q\n", k, v)
 	}
 
-	if c.LoadBlock != nil {
-		for _, script := range c.LoadBlock.Scripts {
-			fmt.Printf("%s\n", script)
-		}
+	if s := c.Snippet; s != "" {
+		fmt.Printf("%s", s)
 	}
 
 	return nil

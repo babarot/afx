@@ -29,23 +29,23 @@ import (
 
 // GitHub represents
 type GitHub struct {
-	Name string `hcl:"name,label"`
+	Name string `yaml:"name,label"`
 
-	Owner       string `hcl:"owner"`
-	Repo        string `hcl:"repo"`
-	Description string `hcl:"description,optional"`
-	Branch      string `hcl:"branch,optional"`
+	Owner       string `yaml:"owner"`
+	Repo        string `yaml:"repo"`
+	Description string `yaml:"description,optional"`
+	Branch      string `yaml:"branch,optional"`
 
-	Release *Release `hcl:"release,block"`
+	Release *Release `yaml:"release,block"`
 
-	Plugin  *Plugin  `hcl:"plugin,block"`
-	Command *Command `hcl:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin,block"`
+	Command *Command `yaml:"command,block"`
 }
 
 // Release is
 type Release struct {
-	Name string `hcl:"name"`
-	Tag  string `hcl:"tag"`
+	Name string `yaml:"name"`
+	Tag  string `yaml:"tag"`
 }
 
 func NewGitHub(owner, repo string) (GitHub, error) {
@@ -272,8 +272,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	}
 	req.Header.Set("Authorization", "token "+token)
 
-	var httpClient *http.Client
-	httpClient = http.DefaultClient
+	httpClient := http.DefaultClient
 	httpClient.Transport = logging.NewTransport("GitHub", http.DefaultTransport)
 
 	resp, err := httpClient.Do(req.WithContext(ctx))
@@ -428,7 +427,7 @@ func (r *GitHubRelease) Unarchive() error {
 	a := r.Assets[0]
 
 	switch filepath.Ext(a.Path) {
-		case ".tar", ".gz", ".tar.gz", ".tgz", ".zip": // FIXME: filepath.Ext is not support 2 dot extensions
+	case ".tar", ".gz", ".tar.gz", ".tgz", ".zip": // FIXME: filepath.Ext is not support 2 dot extensions
 		log.Printf("[DEBUG] unarchive %s", r.Name)
 		if err := archiver.Unarchive(a.Path, a.Home); err != nil {
 			log.Printf("[ERROR] failed to unarchive %s: %s\n", r.Name, err)
