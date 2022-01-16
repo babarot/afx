@@ -151,37 +151,3 @@ func (m *meta) Prompt() (config.Package, error) {
 
 	return items[i].Package, nil
 }
-
-func getConfigPath() (string, error) {
-	root := os.Getenv("AFX_CONFIG_ROOT")
-	var paths []string
-
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		switch filepath.Ext(path) {
-		case ".hcl":
-			paths = append(paths, filepath.Base(path))
-		}
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
-		Active:   promptui.IconSelect + " {{ . | cyan }}",
-		Inactive: "  {{ . | faint }}",
-	}
-
-	prompt := promptui.Select{
-		Label:        "Select config file you want to open",
-		Items:        paths,
-		Templates:    templates,
-		HideSelected: true,
-	}
-	_, file, err := prompt.Run()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(root, file), nil
-}
