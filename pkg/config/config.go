@@ -20,16 +20,21 @@ type Config struct {
 	AppConfig *AppConfig `yaml:"config"`
 }
 
+// AppConfig represents configurations of this application itself
 type AppConfig struct {
 	Filter Filter `yaml:"filter"`
 }
 
+// Filter represents filter command. A filter command means command-line
+// fuzzy finder, e.g. fzf
 type Filter struct {
 	Command string            `yaml:"command"`
 	Args    []string          `yaml:"args"`
 	Env     map[string]string `yaml:"env"`
 }
 
+// DefaultAppConfig is default settings of AppConfig
+// Basically this will be overridden by user config if given
 var DefaultAppConfig AppConfig = AppConfig{
 	Filter: Filter{
 		Command: "fzf",
@@ -37,6 +42,7 @@ var DefaultAppConfig AppConfig = AppConfig{
 	},
 }
 
+// Read reads yaml file based on given path
 func Read(path string) (Config, error) {
 	var cfg Config
 
@@ -84,6 +90,7 @@ func parse(cfg Config) []Package {
 	return pkgs
 }
 
+// Parse parses a config given via yaml files and converts it into package interface
 func (c Config) Parse() ([]Package, error) {
 	return parse(c), nil
 }
@@ -101,6 +108,7 @@ func visitYAML(files *[]string) filepath.WalkFunc {
 	}
 }
 
+// WalkDir walks given directory path and returns full-path of all yaml files
 func WalkDir(path string) ([]string, error) {
 	var files []string
 	fi, err := os.Stat(path)

@@ -7,19 +7,19 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-// Installer is
+// Installer is an interface related to installation of a package
 type Installer interface {
 	Install(context.Context, chan<- Status) error
 	Uninstall(context.Context) error
 	Installed() bool
 }
 
-// Loader is
+// Loader is an interface related to initialize a package
 type Loader interface {
 	Init() error
 }
 
-// Handler is
+// Handler is an interface of package handler
 type Handler interface {
 	GetHome() string
 	GetName() string
@@ -34,14 +34,14 @@ type Handler interface {
 	GetCommandBlock() Command
 }
 
-// Package is
+// Package is an interface related to package itself
 type Package interface {
 	Loader
 	Handler
 	Installer
 }
 
-// HasGitHubReleaseBlock is
+// HasGitHubReleaseBlock returns true if release block is included in one package at least
 func HasGitHubReleaseBlock(pkgs []Package) bool {
 	for _, pkg := range pkgs {
 		if pkg.Installed() {
@@ -58,7 +58,8 @@ func HasGitHubReleaseBlock(pkgs []Package) bool {
 	return false
 }
 
-// HasSudoInCommandBuildSteps is
+// HasSudoInCommandBuildSteps returns true if sudo command is
+// included in one build step of given package at least
 func HasSudoInCommandBuildSteps(pkgs []Package) bool {
 	for _, pkg := range pkgs {
 		if pkg.Installed() {
@@ -90,6 +91,7 @@ func HasSudoInCommandBuildSteps(pkgs []Package) bool {
 	return false
 }
 
+// Validate checks if keys of given packages are not duplicated
 func Validate(pkgs []Package) error {
 	done := make(map[string]bool, len(pkgs))
 	for _, pkg := range pkgs {
