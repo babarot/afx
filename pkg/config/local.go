@@ -86,26 +86,9 @@ func (c Local) GetType() string {
 	return "local"
 }
 
-// GetSlug returns a pacakge type
-func (c Local) GetSlug() string {
-	return c.Name
-}
-
 // GetURL returns a URL related to the package
 func (c Local) GetURL() string {
 	return ""
-}
-
-// SetCommand sets given command to struct
-func (c Local) SetCommand(command Command) Package {
-	c.Command = &command
-	return c
-}
-
-// SetPlugin sets given command to struct
-func (c Local) SetPlugin(plugin Plugin) Package {
-	c.Plugin = &plugin
-	return c
 }
 
 // Objects returns file obejcts in the package

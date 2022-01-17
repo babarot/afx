@@ -57,11 +57,6 @@ func (s Shell) Run(ctx context.Context) error {
 	return cmd.Run()
 }
 
-func (s Shell) setDir(dir string) Shell {
-	s.dir = dir
-	return s
-}
-
 // RunCommand runs command with given arguments
 func RunCommand(command string, args ...string) error {
 	return New(command, args...).Run(context.Background())

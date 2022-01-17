@@ -222,26 +222,9 @@ func (c HTTP) GetType() string {
 	return "http"
 }
 
-// GetSlug returns a pacakge slug
-func (c HTTP) GetSlug() string {
-	return c.Name
-}
-
 // GetURL returns a URL related to the package
 func (c HTTP) GetURL() string {
 	return c.URL
-}
-
-// SetCommand sets given command to struct
-func (c HTTP) SetCommand(command Command) Package {
-	c.Command = &command
-	return c
-}
-
-// SetPlugin sets given command to struct
-func (c HTTP) SetPlugin(plugin Plugin) Package {
-	c.Plugin = &plugin
-	return c
 }
 
 // Objects returns file obejcts in the package

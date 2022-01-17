@@ -36,7 +36,7 @@ func check(list []bool) bool {
 		return false
 	}
 	for _, item := range list {
-		if item == false {
+		if !item {
 			return false
 		}
 	}

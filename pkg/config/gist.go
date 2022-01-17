@@ -201,26 +201,9 @@ func (c Gist) GetType() string {
 	return "gist"
 }
 
-// GetSlug returns a pacakge slug
-func (c Gist) GetSlug() string {
-	return fmt.Sprintf("%s/%s", c.Owner, c.ID)
-}
-
 // GetURL returns a URL related to the package
 func (c Gist) GetURL() string {
 	return path.Join("https://gist.github.com", c.Owner, c.ID)
-}
-
-// SetCommand sets given command to struct
-func (c Gist) SetCommand(command Command) Package {
-	c.Command = &command
-	return c
-}
-
-// SetPlugin sets given command to struct
-func (c Gist) SetPlugin(plugin Plugin) Package {
-	c.Plugin = &plugin
-	return c
 }
 
 // Objects returns file obejcts in the package

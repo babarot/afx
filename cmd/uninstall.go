@@ -59,7 +59,7 @@ func (c *uninstallCmd) run(args []string) error {
 		return err
 	}
 
-	s := spin.New("Removing "+pkg.GetSlug()+" %s", spin.WithDoneMessage("Uninstalled\n"))
+	s := spin.New("Removing " + pkg.GetHome() + " %s")
 	s.Start()
 	defer s.Stop()
 

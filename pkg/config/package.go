@@ -19,18 +19,14 @@ type Loader interface {
 	Init() error
 }
 
-// Manager is
-type Manager interface {
+// Handler is
+type Handler interface {
 	GetHome() string
 	GetName() string
 	GetType() string
-	GetSlug() string
 	GetURL() string
 
 	Objects() ([]string, error)
-
-	SetCommand(Command) Package
-	SetPlugin(Plugin) Package
 
 	HasPluginBlock() bool
 	HasCommandBlock() bool
@@ -41,7 +37,7 @@ type Manager interface {
 // Package is
 type Package interface {
 	Loader
-	Manager
+	Handler
 	Installer
 }
 

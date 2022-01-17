@@ -87,7 +87,6 @@ func (m *meta) Prompt() (config.Package, error) {
 		Name    string
 		Type    string
 		Home    string
-		Slug    string
 	}
 
 	var items []item
@@ -102,15 +101,14 @@ func (m *meta) Prompt() (config.Package, error) {
 			Name:    pkg.GetName(),
 			Type:    pkg.GetType(),
 			Home:    pkg.GetHome(),
-			Slug:    pkg.GetSlug(),
 		})
 	}
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   promptui.IconSelect + " {{ .Slug | cyan }}",
-		Inactive: "  {{ .Slug | faint }}",
-		Selected: promptui.IconGood + " {{ .Slug }}",
+		Active:   promptui.IconSelect + " {{ .Home | cyan }}",
+		Inactive: "  {{ .Home | faint }}",
+		Selected: promptui.IconGood + " {{ .Home }}",
 		Details: `
 {{ "Type:" | faint }}	{{ .Type }}
 {{ "Command:" | faint }}	{{ .Command }}
@@ -128,7 +126,7 @@ func (m *meta) Prompt() (config.Package, error) {
 
 	searcher := func(input string, index int) bool {
 		item := items[index]
-		name := strings.Replace(strings.ToLower(item.Slug), " ", "", -1)
+		name := strings.Replace(strings.ToLower(item.Home), " ", "", -1)
 		input = strings.Replace(strings.ToLower(input), " ", "", -1)
 		return strings.Contains(name, input)
 	}

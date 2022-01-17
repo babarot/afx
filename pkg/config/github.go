@@ -537,26 +537,9 @@ func (c GitHub) GetType() string {
 	return "github"
 }
 
-// GetSlug returns a pacakge slug
-func (c GitHub) GetSlug() string {
-	return fmt.Sprintf("%s/%s", c.Owner, c.Repo)
-}
-
 // GetURL returns a URL related to the package
 func (c GitHub) GetURL() string {
 	return path.Join("https://github.com", c.Owner, c.Repo)
-}
-
-// SetCommand sets given command to struct
-func (c GitHub) SetCommand(command Command) Package {
-	c.Command = &command
-	return c
-}
-
-// SetPlugin sets given command to struct
-func (c GitHub) SetPlugin(plugin Plugin) Package {
-	c.Plugin = &plugin
-	return c
 }
 
 // Objects returns file obejcts in the package
