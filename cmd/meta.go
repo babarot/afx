@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -9,12 +12,13 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
-	"github.com/manifoldco/promptui"
+	"github.com/b4b4r07/afx/pkg/helpers/shell"
 )
 
 type meta struct {
-	Env      *env.Config
-	Packages []config.Package
+	Env       *env.Config
+	Packages  []config.Package
+	AppConfig *config.AppConfig
 
 	parseErr error
 }
@@ -29,6 +33,7 @@ func (m *meta) init(args []string) error {
 		return err
 	}
 
+	app := &config.DefaultAppConfig
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
@@ -39,7 +44,13 @@ func (m *meta) init(args []string) error {
 			return err
 		}
 		m.Packages = append(m.Packages, pkgs...)
+
+		if cfg.AppConfig != nil {
+			app = cfg.AppConfig
+		}
 	}
+
+	m.AppConfig = app
 
 	if err := config.Validate(m.Packages); err != nil {
 		return err
@@ -77,78 +88,40 @@ func (m *meta) init(args []string) error {
 	return nil
 }
 
-func (m *meta) Prompt() (config.Package, error) {
-	// https://github.com/manifoldco/promptui
-	// https://github.com/iwittkau/mage-select
-	type item struct {
-		Package config.Package
-		Plugin  bool
-		Command bool
-		Name    string
-		Type    string
-		Home    string
+func (m *meta) Select() (config.Package, error) {
+	var stdin, stdout bytes.Buffer
+
+	cmd := shell.Shell{
+		Stdin:   &stdin,
+		Stdout:  &stdout,
+		Stderr:  os.Stderr,
+		Command: m.AppConfig.Filter.Command,
+		Args:    m.AppConfig.Filter.Args,
+		Env:     m.AppConfig.Filter.Env,
 	}
 
-	var items []item
 	for _, pkg := range m.Packages {
-		if !pkg.Installed() {
-			continue
-		}
-		items = append(items, item{
-			Package: pkg,
-			Plugin:  pkg.HasPluginBlock(),
-			Command: pkg.HasCommandBlock(),
-			Name:    pkg.GetName(),
-			Type:    pkg.GetType(),
-			Home:    pkg.GetHome(),
-		})
+		fmt.Fprintln(&stdin, pkg.GetName())
 	}
 
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
-		Active:   promptui.IconSelect + " {{ .Home | cyan }}",
-		Inactive: "  {{ .Home | faint }}",
-		Selected: promptui.IconGood + " {{ .Home }}",
-		Details: `
-{{ "Type:" | faint }}	{{ .Type }}
-{{ "Command:" | faint }}	{{ .Command }}
-{{ "Plugin:" | faint }}	{{ .Plugin }}
-`,
-		// FuncMap: template.FuncMap{ // TODO: do not overwrite
-		// 	"toupper": strings.ToUpper,
-		// },
-	}
-
-	size := 5
-	if len(items) < size {
-		size = len(items)
-	}
-
-	searcher := func(input string, index int) bool {
-		item := items[index]
-		name := strings.Replace(strings.ToLower(item.Home), " ", "", -1)
-		input = strings.Replace(strings.ToLower(input), " ", "", -1)
-		return strings.Contains(name, input)
-	}
-
-	prompt := promptui.Select{
-		Label:             "Select a pacakge:",
-		Items:             items,
-		Templates:         templates,
-		Size:              size,
-		Searcher:          searcher,
-		StartInSearchMode: true,
-		HideSelected:      true,
-	}
-
-	i, _, err := prompt.Run()
-	if err != nil {
-		if err == promptui.ErrInterrupt {
-			// TODO: do not regard this as error
-			err = fmt.Errorf("prompt cancelled")
-		}
+	if err := cmd.Run(context.Background()); err != nil {
 		return nil, err
 	}
 
-	return items[i].Package, nil
+	search := func(name string) config.Package {
+		for _, pkg := range m.Packages {
+			if pkg.GetName() == name {
+				return pkg
+			}
+		}
+		return nil
+	}
+
+	for _, line := range strings.Split(stdout.String(), "\n") {
+		if pkg := search(line); pkg != nil {
+			return pkg, nil
+		}
+	}
+
+	return nil, errors.New("pkg not found")
 }

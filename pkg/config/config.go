@@ -16,6 +16,25 @@ type Config struct {
 	Gist   []*Gist   `yaml:"gist,block"`
 	Local  []*Local  `yaml:"local,block"`
 	HTTP   []*HTTP   `yaml:"http,block"`
+
+	AppConfig *AppConfig `yaml:"config"`
+}
+
+type AppConfig struct {
+	Filter Filter `yaml:"filter"`
+}
+
+type Filter struct {
+	Command string            `yaml:"command"`
+	Args    []string          `yaml:"args"`
+	Env     map[string]string `yaml:"env"`
+}
+
+var DefaultAppConfig AppConfig = AppConfig{
+	Filter: Filter{
+		Command: "fzf",
+		Args:    []string{"--ansi", "--no-preview", "--height=50%", "--reverse"},
+	},
 }
 
 func Read(path string) (Config, error) {

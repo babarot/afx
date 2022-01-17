@@ -54,7 +54,7 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	pkg, err := c.Prompt()
+	pkg, err := c.Select()
 	if err != nil {
 		return err
 	}

@@ -20,7 +20,6 @@ require (
 	github.com/hashicorp/hcl/v2 v2.2.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
-	github.com/manifoldco/promptui v0.6.0
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mattn/go-zglob v0.0.1
 	github.com/mholt/archiver v3.1.1+incompatible
@@ -32,10 +31,10 @@ require (
 	github.com/tidwall/gjson v1.3.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/tools v0.1.0 // indirect
+	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
