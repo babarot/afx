@@ -14,11 +14,9 @@ import (
 	"runtime"
 
 	"golang.org/x/oauth2"
-	"gopkg.in/src-d/go-billy.v4/memfs"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
@@ -540,33 +538,4 @@ func (c GitHub) GetType() string {
 // GetURL returns a URL related to the package
 func (c GitHub) GetURL() string {
 	return path.Join("https://github.com", c.Owner, c.Repo)
-}
-
-// Objects returns file obejcts in the package
-func (c GitHub) Objects() ([]string, error) {
-	var paths []string
-	fs := memfs.New()
-	storer := memory.NewStorage()
-	r, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL: fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo),
-	})
-	if err != nil {
-		return paths, err
-	}
-	head, err := r.Head()
-	if err != nil {
-		return paths, err
-	}
-	commit, err := r.CommitObject(head.Hash())
-	if err != nil {
-		return paths, err
-	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return paths, err
-	}
-	for _, entry := range tree.Entries {
-		paths = append(paths, entry.Name)
-	}
-	return paths, nil
 }

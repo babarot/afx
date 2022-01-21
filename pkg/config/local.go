@@ -90,8 +90,3 @@ func (c Local) GetType() string {
 func (c Local) GetURL() string {
 	return ""
 }
-
-// Objects returns file obejcts in the package
-func (c Local) Objects() ([]string, error) {
-	return []string{}, nil
-}

@@ -26,8 +26,6 @@ type Handler interface {
 	GetType() string
 	GetURL() string
 
-	Objects() ([]string, error)
-
 	HasPluginBlock() bool
 	HasCommandBlock() bool
 	GetPluginBlock() Plugin

@@ -226,8 +226,3 @@ func (c HTTP) GetType() string {
 func (c HTTP) GetURL() string {
 	return c.URL
 }
-
-// Objects returns file obejcts in the package
-func (c HTTP) Objects() ([]string, error) {
-	return []string{}, nil
-}

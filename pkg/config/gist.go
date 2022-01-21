@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"gopkg.in/src-d/go-billy.v4/memfs"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 // Gist represents
@@ -204,33 +202,4 @@ func (c Gist) GetType() string {
 // GetURL returns a URL related to the package
 func (c Gist) GetURL() string {
 	return path.Join("https://gist.github.com", c.Owner, c.ID)
-}
-
-// Objects returns file obejcts in the package
-func (c Gist) Objects() ([]string, error) {
-	var paths []string
-	fs := memfs.New()
-	storer := memory.NewStorage()
-	r, err := git.Clone(storer, fs, &git.CloneOptions{
-		URL: fmt.Sprintf("https://gist.github.com/%s/%s", c.Owner, c.ID),
-	})
-	if err != nil {
-		return paths, err
-	}
-	head, err := r.Head()
-	if err != nil {
-		return paths, err
-	}
-	commit, err := r.CommitObject(head.Hash())
-	if err != nil {
-		return paths, err
-	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return paths, err
-	}
-	for _, entry := range tree.Entries {
-		paths = append(paths, entry.Name)
-	}
-	return paths, nil
 }
