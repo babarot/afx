@@ -56,9 +56,9 @@ func newUninstallCmd() *cobra.Command {
 
 func (c *uninstallCmd) run(args []string) error {
 	// pp.Println(c.State.NeedInstall)
-	pp.Println("should install", c.State.NeedInstall)
-	pp.Println("should reinstall", c.State.NeedReinstall)
-	pp.Println("should uninstall", c.State.NeedUninstall)
+	pp.Println("should install", c.State.Additions)
+	pp.Println("should reinstall", c.State.Readditions)
+	pp.Println("should uninstall", c.State.Deletions)
 	return nil
 
 	var pkgs []config.Package

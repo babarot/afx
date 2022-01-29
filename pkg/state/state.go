@@ -20,13 +20,13 @@ type State struct {
 	path     string
 
 	// No record in state file
-	NeedInstall []config.Package
+	Additions []config.Package
 	// Exists but resource paths has something problem
 	// so it's likely to have had problem when installing before
-	NeedReinstall []config.Package
+	Readditions []config.Package
 	// Exists in state file but no in config file
 	// so maybe users had deleted the package from config file
-	NeedUninstall []Resource
+	Deletions []Resource
 }
 
 type Resource struct {
@@ -86,14 +86,24 @@ func Open(path string, pkgs []config.Package) (State, error) {
 		return s, err
 	}
 
-	s.NeedInstall = s.listNeedInstall()
-	s.NeedReinstall = s.listNeedReinstall()
-	s.NeedUninstall = s.listNeedUninstall()
+	s.Additions = s.listAdditions()
+	s.Readditions = s.listReadditions()
+	s.Deletions = s.listDeletions()
 
 	return s, nil
 }
 
-func (s *State) listNeedReinstall() []config.Package {
+func (s *State) listAdditions() []config.Package {
+	var pkgs []config.Package
+	for _, pkg := range s.packages {
+		if _, ok := s.body.Resources[pkg.GetName()]; !ok {
+			pkgs = append(pkgs, pkg)
+		}
+	}
+	return pkgs
+}
+
+func (s *State) listReadditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
 		resource, ok := s.body.Resources[pkg.GetName()]
@@ -110,17 +120,7 @@ func (s *State) listNeedReinstall() []config.Package {
 	return pkgs
 }
 
-func (s *State) listNeedInstall() []config.Package {
-	var pkgs []config.Package
-	for _, pkg := range s.packages {
-		if _, ok := s.body.Resources[pkg.GetName()]; !ok {
-			pkgs = append(pkgs, pkg)
-		}
-	}
-	return pkgs
-}
-
-func (s *State) listNeedUninstall() []Resource {
+func (s *State) listDeletions() []Resource {
 	var resources []Resource
 	for _, resource := range s.body.Resources {
 		if _, ok := s.packages[resource.Name]; !ok {
