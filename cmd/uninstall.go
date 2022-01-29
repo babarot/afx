@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+	"log"
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/templates"
-	"github.com/k0kubun/pp"
 	"github.com/spf13/cobra"
 )
 
@@ -55,28 +55,21 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	// pp.Println(c.State.NeedInstall)
-	pp.Println("should install", c.State.Additions)
-	pp.Println("should reinstall", c.State.Readditions)
-	pp.Println("should uninstall", c.State.Deletions)
-	return nil
-
-	var pkgs []config.Package
-	// for _, resource := range c.State.Resources {
-	// 	if !resource.Valid() {
-	// 		pkgs = append(pkgs, c.get(resource.Name))
-	// 	}
-	// }
+	deletions := c.State.Deletions
+	if len(deletions) == 0 {
+		// TODO: improve message
+		log.Printf("[INFO] No packages to uninstall")
+		return nil
+	}
 
 	var errs errors.Errors
-
-	for _, pkg := range pkgs {
-		errs.Append(os.RemoveAll(pkg.GetHome()))
-
-		switch {
-		case pkg.HasPluginBlock():
-		case pkg.HasCommandBlock():
+	for _, resource := range c.State.Deletions {
+		fmt.Printf("deleted %s\n", resource.Home)
+		os.RemoveAll(resource.Home)
+		for _, path := range resource.Paths {
+			os.RemoveAll(path)
 		}
+		c.State.Remove(resource.Name)
 	}
 
 	return errs.ErrorOrNil()

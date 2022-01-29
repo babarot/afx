@@ -85,7 +85,14 @@ func (c *installCmd) run(args []string) error {
 	// if len(pkgs) == 0 {
 	// 	pkgs = c.Packages
 	// }
-	pkgs := c.Packages
+
+	// pkgs := c.Packages
+	pkgs := c.State.Additions
+	if len(pkgs) == 0 {
+		// TODO: improve message
+		log.Printf("[INFO] No packages to install")
+		return nil
+	}
 
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
@@ -105,6 +112,7 @@ func (c *installCmd) run(args []string) error {
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
 			}
+			c.State.Add(pkg)
 			return err
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"sync"
 
 	"github.com/b4b4r07/afx/pkg/config"
 )
@@ -19,6 +20,7 @@ type State struct {
 
 	packages map[string]config.Package
 	path     string
+	mu       *sync.RWMutex
 
 	// No record in state file
 	Additions []config.Package
@@ -71,10 +73,10 @@ func add(pkg config.Package, s *State) {
 	}
 }
 
-func remove(pkg config.Package, s *State) {
+func remove(name string, s *State) {
 	resources := map[string]Resource{}
 	for _, resource := range s.Resources {
-		if resource.Name == pkg.GetName() {
+		if resource.Name == name {
 			continue
 		}
 		resources[resource.Name] = resource
@@ -159,11 +161,17 @@ func (s *State) save() error {
 }
 
 func (s *State) Add(pkg config.Package) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	add(pkg, s)
 	s.save()
 }
 
-func (s *State) Remove(pkg config.Package) {
-	remove(pkg, s)
+func (s *State) Remove(name string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	remove(name, s)
 	s.save()
 }
