@@ -55,16 +55,18 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	pp.Println("should install", c.State.CheckInstall())
-	pp.Println("should uninstall", c.State.CheckUninstall())
+	pp.Println(c.State.Result)
+	// pp.Println("should install", c.State.CheckInstall())
+	// pp.Println("should uninstall", c.State.CheckUninstall())
+	// pp.Println("should reinstall", c.State.CheckReinstall())
 	return nil
 
 	var pkgs []config.Package
-	for _, resource := range c.State.Resources {
-		if !resource.Valid() {
-			pkgs = append(pkgs, c.get(resource.Name))
-		}
-	}
+	// for _, resource := range c.State.Resources {
+	// 	if !resource.Valid() {
+	// 		pkgs = append(pkgs, c.get(resource.Name))
+	// 	}
+	// }
 
 	var errs errors.Errors
 

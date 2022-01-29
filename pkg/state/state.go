@@ -9,10 +9,12 @@ import (
 )
 
 type State struct {
-	Resources map[string]Resource       `json:"resources"`
-	Packages  map[string]config.Package `json:"-"`
+	Resources map[string]Resource `json:"resources"`
 
-	path string
+	Result Result `json:"-"`
+
+	packages map[string]config.Package
+	path     string
 }
 
 type Resource struct {
@@ -21,13 +23,13 @@ type Resource struct {
 	Paths []string `json:"paths"`
 }
 
+type Result struct {
+	NeedInstall   []config.Package
+	NeedReinstall []config.Package
+	NeedUninstall []Resource
+}
+
 func create(pkgs []config.Package, s *State) {
-	s.Packages = map[string]config.Package{}
-
-	for _, pkg := range pkgs {
-		s.Packages[pkg.GetName()] = pkg
-	}
-
 	s.Resources = map[string]Resource{}
 	for _, pkg := range pkgs {
 		var paths []string
@@ -58,6 +60,10 @@ func create(pkgs []config.Package, s *State) {
 
 func Open(path string, pkgs []config.Package) (State, error) {
 	s := State{path: path}
+	s.packages = map[string]config.Package{}
+	for _, pkg := range pkgs {
+		s.packages[pkg.GetName()] = pkg
+	}
 
 	_, err := os.Stat(path)
 	if err != nil {
@@ -74,17 +80,33 @@ func Open(path string, pkgs []config.Package) (State, error) {
 		return s, err
 	}
 
-	s.Packages = map[string]config.Package{}
-	for _, pkg := range pkgs {
-		s.Packages[pkg.GetName()] = pkg
-	}
+	s.Result.NeedInstall = s.listNeedInstall()
+	s.Result.NeedReinstall = s.listNeedReinstall()
+	s.Result.NeedUninstall = s.listNeedUninstall()
 
 	return s, nil
 }
 
-func (s *State) CheckInstall() []config.Package {
+func (s *State) listNeedReinstall() []config.Package {
 	var pkgs []config.Package
-	for _, pkg := range s.Packages {
+	for _, pkg := range s.packages {
+		resource, ok := s.Resources[pkg.GetName()]
+		if !ok {
+			// if it's not in state file,
+			// it means we need to install not reinstall
+			continue
+		}
+		if !resource.exists() {
+			pkgs = append(pkgs, pkg)
+			continue
+		}
+	}
+	return pkgs
+}
+
+func (s *State) listNeedInstall() []config.Package {
+	var pkgs []config.Package
+	for _, pkg := range s.packages {
 		if _, ok := s.Resources[pkg.GetName()]; !ok {
 			pkgs = append(pkgs, pkg)
 		}
@@ -92,10 +114,10 @@ func (s *State) CheckInstall() []config.Package {
 	return pkgs
 }
 
-func (s *State) CheckUninstall() []Resource {
+func (s *State) listNeedUninstall() []Resource {
 	var resources []Resource
 	for _, resource := range s.Resources {
-		if _, ok := s.Packages[resource.Name]; !ok {
+		if _, ok := s.packages[resource.Name]; !ok {
 			resources = append(resources, resource)
 		}
 	}
@@ -110,7 +132,7 @@ func (s *State) Save() error {
 	return json.NewEncoder(f).Encode(s)
 }
 
-func (e Resource) Valid() bool {
+func (e Resource) exists() bool {
 	for _, path := range e.Paths {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			return false
