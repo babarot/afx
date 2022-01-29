@@ -8,13 +8,25 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 )
 
-type State struct {
+type Body struct {
 	Resources map[string]Resource `json:"resources"`
+}
 
-	Result Result `json:"-"`
+type State struct {
+	// records itself of state file
+	body Body
 
 	packages map[string]config.Package
 	path     string
+
+	// No record in state file
+	NeedInstall []config.Package
+	// Exists but resource paths has something problem
+	// so it's likely to have had problem when installing before
+	NeedReinstall []config.Package
+	// Exists in state file but no in config file
+	// so maybe users had deleted the package from config file
+	NeedUninstall []Resource
 }
 
 type Resource struct {
@@ -23,14 +35,8 @@ type Resource struct {
 	Paths []string `json:"paths"`
 }
 
-type Result struct {
-	NeedInstall   []config.Package
-	NeedReinstall []config.Package
-	NeedUninstall []Resource
-}
-
-func create(pkgs []config.Package, s *State) {
-	s.Resources = map[string]Resource{}
+func construct(pkgs []config.Package, s *State) {
+	s.body.Resources = map[string]Resource{}
 	for _, pkg := range pkgs {
 		var paths []string
 		if pkg.HasPluginBlock() {
@@ -43,14 +49,14 @@ func create(pkgs []config.Package, s *State) {
 			command := pkg.GetCommandBlock()
 			links, err := command.GetLink(pkg)
 			if err != nil {
-				panic(err)
+				// no handling
 			}
 			for _, link := range links {
 				paths = append(paths, link.From)
 				paths = append(paths, link.To)
 			}
 		}
-		s.Resources[pkg.GetName()] = Resource{
+		s.body.Resources[pkg.GetName()] = Resource{
 			Name:  pkg.GetName(),
 			Home:  pkg.GetHome(),
 			Paths: paths,
@@ -67,7 +73,7 @@ func Open(path string, pkgs []config.Package) (State, error) {
 
 	_, err := os.Stat(path)
 	if err != nil {
-		create(pkgs, &s)
+		construct(pkgs, &s)
 		return s, nil
 	}
 
@@ -76,13 +82,13 @@ func Open(path string, pkgs []config.Package) (State, error) {
 		return s, err
 	}
 
-	if err := json.Unmarshal(content, &s); err != nil {
+	if err := json.Unmarshal(content, &s.body); err != nil {
 		return s, err
 	}
 
-	s.Result.NeedInstall = s.listNeedInstall()
-	s.Result.NeedReinstall = s.listNeedReinstall()
-	s.Result.NeedUninstall = s.listNeedUninstall()
+	s.NeedInstall = s.listNeedInstall()
+	s.NeedReinstall = s.listNeedReinstall()
+	s.NeedUninstall = s.listNeedUninstall()
 
 	return s, nil
 }
@@ -90,7 +96,7 @@ func Open(path string, pkgs []config.Package) (State, error) {
 func (s *State) listNeedReinstall() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		resource, ok := s.Resources[pkg.GetName()]
+		resource, ok := s.body.Resources[pkg.GetName()]
 		if !ok {
 			// if it's not in state file,
 			// it means we need to install not reinstall
@@ -107,7 +113,7 @@ func (s *State) listNeedReinstall() []config.Package {
 func (s *State) listNeedInstall() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		if _, ok := s.Resources[pkg.GetName()]; !ok {
+		if _, ok := s.body.Resources[pkg.GetName()]; !ok {
 			pkgs = append(pkgs, pkg)
 		}
 	}
@@ -116,7 +122,7 @@ func (s *State) listNeedInstall() []config.Package {
 
 func (s *State) listNeedUninstall() []Resource {
 	var resources []Resource
-	for _, resource := range s.Resources {
+	for _, resource := range s.body.Resources {
 		if _, ok := s.packages[resource.Name]; !ok {
 			resources = append(resources, resource)
 		}
@@ -129,7 +135,7 @@ func (s *State) Save() error {
 	if err != nil {
 		return err
 	}
-	return json.NewEncoder(f).Encode(s)
+	return json.NewEncoder(f).Encode(s.body)
 }
 
 func (e Resource) exists() bool {
