@@ -74,19 +74,6 @@ func (c *installCmd) run(args []string) error {
 		cancel()
 	}()
 
-	// var pkgs []config.Package
-	// for _, arg := range args {
-	// 	for _, pkg := range c.Packages {
-	// 		if arg == pkg.GetName() {
-	// 			pkgs = append(pkgs, pkg)
-	// 		}
-	// 	}
-	// }
-	// if len(pkgs) == 0 {
-	// 	pkgs = c.Packages
-	// }
-
-	// pkgs := c.Packages
 	pkgs := c.State.Additions
 	if len(pkgs) == 0 {
 		// TODO: improve message

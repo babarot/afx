@@ -20,7 +20,7 @@ type State struct {
 
 	packages map[string]config.Package
 	path     string
-	mu       *sync.RWMutex
+	mu       sync.RWMutex
 
 	// No record in state file
 	Additions []config.Package
@@ -84,7 +84,7 @@ func remove(name string, s *State) {
 	s.Resources = resources
 }
 
-func Open(path string, pkgs []config.Package) (State, error) {
+func Open(path string, pkgs []config.Package) (*State, error) {
 	s := State{path: path}
 	s.packages = map[string]config.Package{}
 	for _, pkg := range pkgs {
@@ -101,10 +101,10 @@ func Open(path string, pkgs []config.Package) (State, error) {
 	default:
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
-			return s, err
+			return &s, err
 		}
 		if err := json.Unmarshal(content, &s.Self); err != nil {
-			return s, err
+			return &s, err
 		}
 	}
 
@@ -112,7 +112,7 @@ func Open(path string, pkgs []config.Package) (State, error) {
 	s.Readditions = s.listReadditions()
 	s.Deletions = s.listDeletions()
 
-	return s, s.save()
+	return &s, s.save()
 }
 
 func (s *State) listAdditions() []config.Package {

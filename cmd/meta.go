@@ -85,7 +85,10 @@ func (m *meta) init(args []string) error {
 	if err != nil {
 		panic(err)
 	}
-	m.State = &s
+	m.State = s
+	// pp.Println("add", s.Additions)
+	// pp.Println("readd", s.Readditions)
+	// pp.Println("delete", s.Deletions)
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))
 	os.MkdirAll(os.Getenv("AFX_ROOT"), os.ModePerm)

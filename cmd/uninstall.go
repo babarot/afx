@@ -55,22 +55,30 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	deletions := c.State.Deletions
-	if len(deletions) == 0 {
+	resources := c.State.Deletions
+	if len(resources) == 0 {
 		// TODO: improve message
 		log.Printf("[INFO] No packages to uninstall")
 		return nil
 	}
 
 	var errs errors.Errors
-	for _, resource := range c.State.Deletions {
-		fmt.Printf("deleted %s\n", resource.Home)
-		os.RemoveAll(resource.Home)
-		for _, path := range resource.Paths {
-			os.RemoveAll(path)
+	for _, resource := range resources {
+		err := delete(append(resource.Paths, resource.Home)...)
+		if err == nil {
+			c.State.Remove(resource.Name)
+			fmt.Printf("deleted %s\n", resource.Home)
 		}
-		c.State.Remove(resource.Name)
+		errs.Append(err)
 	}
 
+	return errs.ErrorOrNil()
+}
+
+func delete(paths ...string) error {
+	var errs errors.Errors
+	for _, path := range paths {
+		errs.Append(os.RemoveAll(path))
+	}
 	return errs.ErrorOrNil()
 }
