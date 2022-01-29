@@ -85,7 +85,6 @@ func (m *meta) init(args []string) error {
 	if err != nil {
 		panic(err)
 	}
-	s.Save()
 	m.State = &s
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))

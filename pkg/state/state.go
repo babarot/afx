@@ -2,19 +2,20 @@ package state
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/config"
 )
 
-type Body struct {
+type Self struct {
 	Resources map[string]Resource `json:"resources"`
 }
 
 type State struct {
-	// records itself of state file
-	body Body
+	// State itself of state file
+	Self
 
 	packages map[string]config.Package
 	path     string
@@ -35,33 +36,50 @@ type Resource struct {
 	Paths []string `json:"paths"`
 }
 
-func construct(pkgs []config.Package, s *State) {
-	s.body.Resources = map[string]Resource{}
-	for _, pkg := range pkgs {
-		var paths []string
-		if pkg.HasPluginBlock() {
-			plugin := pkg.GetPluginBlock()
-			for _, src := range plugin.GetSources(pkg) {
-				paths = append(paths, src)
-			}
-		}
-		if pkg.HasCommandBlock() {
-			command := pkg.GetCommandBlock()
-			links, err := command.GetLink(pkg)
-			if err != nil {
-				// no handling
-			}
-			for _, link := range links {
-				paths = append(paths, link.From)
-				paths = append(paths, link.To)
-			}
-		}
-		s.body.Resources[pkg.GetName()] = Resource{
-			Name:  pkg.GetName(),
-			Home:  pkg.GetHome(),
-			Paths: paths,
+func (e Resource) exists() bool {
+	for _, path := range e.Paths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			return false
 		}
 	}
+	return true
+}
+
+func add(pkg config.Package, s *State) {
+	var paths []string
+	if pkg.HasPluginBlock() {
+		plugin := pkg.GetPluginBlock()
+		for _, src := range plugin.GetSources(pkg) {
+			paths = append(paths, src)
+		}
+	}
+	if pkg.HasCommandBlock() {
+		command := pkg.GetCommandBlock()
+		links, err := command.GetLink(pkg)
+		if err != nil {
+			// no handling
+		}
+		for _, link := range links {
+			paths = append(paths, link.From)
+			paths = append(paths, link.To)
+		}
+	}
+	s.Resources[pkg.GetName()] = Resource{
+		Name:  pkg.GetName(),
+		Home:  pkg.GetHome(),
+		Paths: paths,
+	}
+}
+
+func remove(pkg config.Package, s *State) {
+	resources := map[string]Resource{}
+	for _, resource := range s.Resources {
+		if resource.Name == pkg.GetName() {
+			continue
+		}
+		resources[resource.Name] = resource
+	}
+	s.Resources = resources
 }
 
 func Open(path string, pkgs []config.Package) (State, error) {
@@ -72,31 +90,33 @@ func Open(path string, pkgs []config.Package) (State, error) {
 	}
 
 	_, err := os.Stat(path)
-	if err != nil {
-		construct(pkgs, &s)
-		return s, nil
-	}
-
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		return s, err
-	}
-
-	if err := json.Unmarshal(content, &s.body); err != nil {
-		return s, err
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		s.Resources = map[string]Resource{}
+		for _, pkg := range pkgs {
+			add(pkg, &s)
+		}
+	default:
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			return s, err
+		}
+		if err := json.Unmarshal(content, &s.Self); err != nil {
+			return s, err
+		}
 	}
 
 	s.Additions = s.listAdditions()
 	s.Readditions = s.listReadditions()
 	s.Deletions = s.listDeletions()
 
-	return s, nil
+	return s, s.save()
 }
 
 func (s *State) listAdditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		if _, ok := s.body.Resources[pkg.GetName()]; !ok {
+		if _, ok := s.Resources[pkg.GetName()]; !ok {
 			pkgs = append(pkgs, pkg)
 		}
 	}
@@ -106,7 +126,7 @@ func (s *State) listAdditions() []config.Package {
 func (s *State) listReadditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		resource, ok := s.body.Resources[pkg.GetName()]
+		resource, ok := s.Resources[pkg.GetName()]
 		if !ok {
 			// if it's not in state file,
 			// it means we need to install not reinstall
@@ -122,7 +142,7 @@ func (s *State) listReadditions() []config.Package {
 
 func (s *State) listDeletions() []Resource {
 	var resources []Resource
-	for _, resource := range s.body.Resources {
+	for _, resource := range s.Resources {
 		if _, ok := s.packages[resource.Name]; !ok {
 			resources = append(resources, resource)
 		}
@@ -130,19 +150,20 @@ func (s *State) listDeletions() []Resource {
 	return resources
 }
 
-func (s *State) Save() error {
+func (s *State) save() error {
 	f, err := os.Create(s.path)
 	if err != nil {
 		return err
 	}
-	return json.NewEncoder(f).Encode(s.body)
+	return json.NewEncoder(f).Encode(s.Self)
 }
 
-func (e Resource) exists() bool {
-	for _, path := range e.Paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
+func (s *State) Add(pkg config.Package) {
+	add(pkg, s)
+	s.save()
+}
+
+func (s *State) Remove(pkg config.Package) {
+	remove(pkg, s)
+	s.save()
 }
