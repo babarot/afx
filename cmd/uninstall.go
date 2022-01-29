@@ -3,9 +3,10 @@ package cmd
 import (
 	"os"
 
+	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/helpers/spin"
 	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/k0kubun/pp"
 	"github.com/spf13/cobra"
 )
 
@@ -54,32 +55,27 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	pkg, err := c.Select()
-	if err != nil {
-		return err
-	}
+	pp.Println("should install", c.State.CheckInstall())
+	pp.Println("should uninstall", c.State.CheckUninstall())
+	return nil
 
-	s := spin.New("Removing " + pkg.GetHome() + " %s")
-	s.Start()
-	defer s.Stop()
+	var pkgs []config.Package
+	for _, resource := range c.State.Resources {
+		if !resource.Valid() {
+			pkgs = append(pkgs, c.get(resource.Name))
+		}
+	}
 
 	var errs errors.Errors
 
-	switch {
-	case pkg.HasPluginBlock():
-		// TODO: think what to do in this type (plugin)
-	case pkg.HasCommandBlock():
-		command := pkg.GetCommandBlock()
-		links, err := command.GetLink(pkg)
-		if err != nil {
-			return err
-		}
-		for _, link := range links {
-			errs.Append(os.Remove(link.From))
-			errs.Append(os.Remove(link.To))
+	for _, pkg := range pkgs {
+		errs.Append(os.RemoveAll(pkg.GetHome()))
+
+		switch {
+		case pkg.HasPluginBlock():
+		case pkg.HasCommandBlock():
 		}
 	}
 
-	errs.Append(os.RemoveAll(pkg.GetHome()))
 	return errs.ErrorOrNil()
 }

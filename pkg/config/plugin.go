@@ -32,15 +32,7 @@ func (p Plugin) Install(pkg Package) error {
 	return nil
 }
 
-// Init returns the file list which should be loaded as shell plugins
-func (p Plugin) Init(pkg Package) error {
-	if !pkg.Installed() {
-		msg := fmt.Sprintf("package %s.%s is not installed, so skip to init",
-			pkg.GetType(), pkg.GetName())
-		fmt.Printf("## %s\n", msg)
-		return errors.New(msg)
-	}
-
+func (p Plugin) GetSources(pkg Package) []string {
 	var sources []string
 	for _, src := range p.Sources {
 		path := src
@@ -55,6 +47,19 @@ func (p Plugin) Init(pkg Package) error {
 			sources = append(sources, src)
 		}
 	}
+	return sources
+}
+
+// Init returns the file list which should be loaded as shell plugins
+func (p Plugin) Init(pkg Package) error {
+	if !pkg.Installed() {
+		msg := fmt.Sprintf("package %s.%s is not installed, so skip to init",
+			pkg.GetType(), pkg.GetName())
+		fmt.Printf("## %s\n", msg)
+		return errors.New(msg)
+	}
+
+	sources := p.GetSources(pkg)
 
 	if len(sources) == 0 {
 		return errors.New("no source files")

@@ -14,13 +14,13 @@ import (
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/state"
-	"github.com/k0kubun/pp"
 )
 
 type meta struct {
 	Env       *env.Config
 	Packages  []config.Package
 	AppConfig *config.AppConfig
+	State     *state.State
 
 	parseErr error
 }
@@ -81,19 +81,12 @@ func (m *meta) init(args []string) error {
 		},
 	})
 
-	s, err := state.Read(filepath.Join(root, "state.json"))
+	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
 	if err != nil {
 		panic(err)
 	}
-	for _, pkg := range m.Packages {
-		s.Add(state.Entry{
-			Name:  pkg.GetName(),
-			Home:  pkg.GetHome(),
-			Paths: []string{"/path/to/hoge"},
-		})
-	}
-	pp.Println(s)
 	s.Save()
+	m.State = &s
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))
 	os.MkdirAll(os.Getenv("AFX_ROOT"), os.ModePerm)
