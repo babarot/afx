@@ -85,7 +85,7 @@ func remove(name string, s *State) {
 }
 
 func Open(path string, pkgs []config.Package) (*State, error) {
-	s := State{path: path}
+	s := State{path: path, mu: sync.RWMutex{}}
 	s.packages = map[string]config.Package{}
 	for _, pkg := range pkgs {
 		s.packages[pkg.GetName()] = pkg
