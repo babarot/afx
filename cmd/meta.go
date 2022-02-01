@@ -86,9 +86,6 @@ func (m *meta) init(args []string) error {
 		panic(err)
 	}
 	m.State = s
-	// pp.Println("add", s.Additions)
-	// pp.Println("readd", s.Readditions)
-	// pp.Println("delete", s.Deletions)
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))
 	os.MkdirAll(os.Getenv("AFX_ROOT"), os.ModePerm)
@@ -135,13 +132,4 @@ func (m *meta) Select() (config.Package, error) {
 	}
 
 	return nil, errors.New("pkg not found")
-}
-
-func (m *meta) get(name string) config.Package {
-	for _, pkg := range m.Packages {
-		if pkg.GetName() == name {
-			return pkg
-		}
-	}
-	return nil
 }

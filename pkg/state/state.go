@@ -51,9 +51,7 @@ func add(pkg config.Package, s *State) {
 	var paths []string
 	if pkg.HasPluginBlock() {
 		plugin := pkg.GetPluginBlock()
-		for _, src := range plugin.GetSources(pkg) {
-			paths = append(paths, src)
-		}
+		paths = append(paths, plugin.GetSources(pkg)...)
 	}
 	if pkg.HasCommandBlock() {
 		command := pkg.GetCommandBlock()
@@ -84,35 +82,12 @@ func remove(name string, s *State) {
 	s.Resources = resources
 }
 
-func Open(path string, pkgs []config.Package) (*State, error) {
-	s := State{path: path, mu: sync.RWMutex{}}
-	s.packages = map[string]config.Package{}
-	for _, pkg := range pkgs {
-		s.packages[pkg.GetName()] = pkg
+func (s *State) save() error {
+	f, err := os.Create(s.path)
+	if err != nil {
+		return err
 	}
-
-	_, err := os.Stat(path)
-	switch {
-	case errors.Is(err, os.ErrNotExist):
-		s.Resources = map[string]Resource{}
-		for _, pkg := range pkgs {
-			add(pkg, &s)
-		}
-	default:
-		content, err := ioutil.ReadFile(path)
-		if err != nil {
-			return &s, err
-		}
-		if err := json.Unmarshal(content, &s.Self); err != nil {
-			return &s, err
-		}
-	}
-
-	s.Additions = s.listAdditions()
-	s.Readditions = s.listReadditions()
-	s.Deletions = s.listDeletions()
-
-	return &s, s.save()
+	return json.NewEncoder(f).Encode(s.Self)
 }
 
 func (s *State) listAdditions() []config.Package {
@@ -152,12 +127,35 @@ func (s *State) listDeletions() []Resource {
 	return resources
 }
 
-func (s *State) save() error {
-	f, err := os.Create(s.path)
-	if err != nil {
-		return err
+func Open(path string, pkgs []config.Package) (*State, error) {
+	s := State{path: path, mu: sync.RWMutex{}}
+	s.packages = map[string]config.Package{}
+	for _, pkg := range pkgs {
+		s.packages[pkg.GetName()] = pkg
 	}
-	return json.NewEncoder(f).Encode(s.Self)
+
+	_, err := os.Stat(path)
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		s.Resources = map[string]Resource{}
+		for _, pkg := range pkgs {
+			add(pkg, &s)
+		}
+	default:
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			return &s, err
+		}
+		if err := json.Unmarshal(content, &s.Self); err != nil {
+			return &s, err
+		}
+	}
+
+	s.Additions = s.listAdditions()
+	s.Readditions = s.listReadditions()
+	s.Deletions = s.listDeletions()
+
+	return &s, s.save()
 }
 
 func (s *State) Add(pkg config.Package) {

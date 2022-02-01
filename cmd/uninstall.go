@@ -65,11 +65,12 @@ func (c *uninstallCmd) run(args []string) error {
 	var errs errors.Errors
 	for _, resource := range resources {
 		err := delete(append(resource.Paths, resource.Home)...)
-		if err == nil {
-			c.State.Remove(resource.Name)
-			fmt.Printf("deleted %s\n", resource.Home)
+		if err != nil {
+			errs.Append(err)
+			continue
 		}
-		errs.Append(err)
+		c.State.Remove(resource.Name)
+		fmt.Printf("deleted %s\n", resource.Home)
 	}
 
 	return errs.ErrorOrNil()

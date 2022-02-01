@@ -73,7 +73,8 @@ func (c *installCmd) run(args []string) error {
 		cancel()
 	}()
 
-	pkgs := c.State.Additions
+	// TODO: Check if this process does not matter other concerns
+	pkgs := append(c.State.Additions, c.State.Readditions...)
 	if len(pkgs) == 0 {
 		// TODO: improve message
 		log.Printf("[INFO] No packages to install")
