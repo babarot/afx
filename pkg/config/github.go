@@ -27,17 +27,17 @@ import (
 
 // GitHub represents
 type GitHub struct {
-	Name string `yaml:"name,label"`
+	Name string `yaml:"name"`
 
 	Owner       string `yaml:"owner"`
 	Repo        string `yaml:"repo"`
-	Description string `yaml:"description,optional"`
-	Branch      string `yaml:"branch,optional"`
+	Description string `yaml:"description"`
+	Branch      string `yaml:"branch"`
 
-	Release *Release `yaml:"release,block"`
+	Release *Release `yaml:"release"`
 
-	Plugin  *Plugin  `yaml:"plugin,block"`
-	Command *Command `yaml:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin"`
+	Command *Command `yaml:"command"`
 }
 
 // Release is

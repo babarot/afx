@@ -16,14 +16,14 @@ import (
 
 // Gist represents
 type Gist struct {
-	Name string `yaml:"name,label"`
+	Name string `yaml:"name"`
 
 	Owner       string `yaml:"owner"`
 	ID          string `yaml:"id"`
-	Description string `yaml:"description,optional"`
+	Description string `yaml:"description"`
 
-	Plugin  *Plugin  `yaml:"plugin,block"`
-	Command *Command `yaml:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin"`
+	Command *Command `yaml:"command"`
 }
 
 func NewGist(owner, id string) (Gist, error) {

@@ -12,8 +12,8 @@ import (
 // Plugin is
 type Plugin struct {
 	Sources []string          `yaml:"sources"`
-	Env     map[string]string `yaml:"env,optional"`
-	Snippet string            `yaml:"snippet,optional"`
+	Env     map[string]string `yaml:"env"`
+	Snippet string            `yaml:"snippet"`
 }
 
 // Installed returns true ...

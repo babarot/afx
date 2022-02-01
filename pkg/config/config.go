@@ -12,10 +12,10 @@ import (
 // Config structure for file describing deployment. This includes the module source, inputs
 // dependencies, backend etc. One config element is connected to a single deployment
 type Config struct {
-	GitHub []*GitHub `yaml:"github,block"`
-	Gist   []*Gist   `yaml:"gist,block"`
-	Local  []*Local  `yaml:"local,block"`
-	HTTP   []*HTTP   `yaml:"http,block"`
+	GitHub []*GitHub `yaml:"github"`
+	Gist   []*Gist   `yaml:"gist"`
+	Local  []*Local  `yaml:"local"`
+	HTTP   []*HTTP   `yaml:"http"`
 
 	AppConfig *AppConfig `yaml:"config"`
 }
