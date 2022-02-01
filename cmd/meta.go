@@ -83,7 +83,7 @@ func (m *meta) init(args []string) error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
 	if err != nil {
-		panic(err)
+		return errors.New("something wrong in state file")
 	}
 	m.State = s
 

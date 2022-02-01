@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -23,8 +24,11 @@ var (
 
 	// installExample is examples for fmt command
 	installExample = templates.Examples(`
-		# Normal
-		afx install
+		afx install [args...]
+
+		By default, install tries to install all packages which are newly
+		added to config file.
+		If any args are given, tries to install only them.
 	`)
 )
 
@@ -41,7 +45,7 @@ func newInstallCmd() *cobra.Command {
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := c.meta.init(args); err != nil {
 				return err
@@ -79,6 +83,21 @@ func (c *installCmd) run(args []string) error {
 		// TODO: improve message
 		log.Printf("[INFO] No packages to install")
 		return nil
+	}
+
+	// not install all new packages. Instead just only install
+	// given packages when not installed yet.
+	var given []config.Package
+	for _, arg := range args {
+		pkg, err := c.getFromAdditions(arg)
+		if err != nil {
+			// no hit in additions
+			continue
+		}
+		given = append(given, pkg)
+	}
+	if len(given) > 0 {
+		pkgs = given
 	}
 
 	progress := config.NewProgress(pkgs)
@@ -133,4 +152,16 @@ func (c *installCmd) run(args []string) error {
 	}(exit)
 
 	return exit
+}
+
+func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
+	pkgs := append(c.State.Additions, c.State.Readditions...)
+
+	for _, pkg := range pkgs {
+		if pkg.GetName() == name {
+			return pkg, nil
+		}
+	}
+
+	return nil, errors.New("not found")
 }

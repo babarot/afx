@@ -128,8 +128,11 @@ func (s *State) listDeletions() []Resource {
 }
 
 func Open(path string, pkgs []config.Package) (*State, error) {
-	s := State{path: path, mu: sync.RWMutex{}}
-	s.packages = map[string]config.Package{}
+	s := State{
+		packages: map[string]config.Package{},
+		path:     path,
+		mu:       sync.RWMutex{},
+	}
 	for _, pkg := range pkgs {
 		s.packages[pkg.GetName()] = pkg
 	}
