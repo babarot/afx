@@ -9,13 +9,13 @@ import (
 
 // Local represents
 type Local struct {
-	Name string `yaml:"name,label"`
+	Name string `yaml:"name"`
 
 	Directory   string `yaml:"directory"`
-	Description string `yaml:"description,optional"`
+	Description string `yaml:"description"`
 
-	Plugin  *Plugin  `yaml:"plugin,block"`
-	Command *Command `yaml:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin"`
+	Command *Command `yaml:"command"`
 }
 
 // Init is

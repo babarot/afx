@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/helpers/spin"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
 )
@@ -19,8 +21,11 @@ var (
 
 	// uninstallExample is examples for uninstall command
 	uninstallExample = templates.Examples(`
-		# Normal
-		afx uninstall
+		afx uninstall [args...]
+
+		By default, uninstall tries to uninstall all packages deleted from config file.
+		If any args are given, tries to uninstall only them.
+		But it's needed also to be deleted from config file.
 	`)
 )
 
@@ -38,7 +43,7 @@ func newUninstallCmd() *cobra.Command {
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := c.meta.init(args); err != nil {
 				return err
@@ -54,32 +59,58 @@ func newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(args []string) error {
-	pkg, err := c.Select()
-	if err != nil {
-		return err
+	resources := c.State.Deletions
+	if len(resources) == 0 {
+		// TODO: improve message
+		log.Printf("[INFO] No packages to uninstall")
+		return nil
 	}
 
-	s := spin.New("Removing " + pkg.GetHome() + " %s")
-	s.Start()
-	defer s.Stop()
+	// not uninstall all old packages. Instead just only uninstall
+	// given packages when not uninstalled yet.
+	var given []state.Resource
+	for _, arg := range args {
+		resource, err := c.getFromDeletions(arg)
+		if err != nil {
+			// no hit in deletions
+			continue
+		}
+		given = append(given, resource)
+	}
+	if len(given) > 0 {
+		resources = given
+	}
 
 	var errs errors.Errors
-
-	switch {
-	case pkg.HasPluginBlock():
-		// TODO: think what to do in this type (plugin)
-	case pkg.HasCommandBlock():
-		command := pkg.GetCommandBlock()
-		links, err := command.GetLink(pkg)
+	for _, resource := range resources {
+		err := delete(append(resource.Paths, resource.Home)...)
 		if err != nil {
-			return err
+			errs.Append(err)
+			continue
 		}
-		for _, link := range links {
-			errs.Append(os.Remove(link.From))
-			errs.Append(os.Remove(link.To))
+		c.State.Remove(resource.Name)
+		fmt.Printf("deleted %s\n", resource.Home)
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func delete(paths ...string) error {
+	var errs errors.Errors
+	for _, path := range paths {
+		errs.Append(os.RemoveAll(path))
+	}
+	return errs.ErrorOrNil()
+}
+
+func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
+	resources := c.State.Deletions
+
+	for _, resource := range resources {
+		if resource.Name == name {
+			return resource, nil
 		}
 	}
 
-	errs.Append(os.RemoveAll(pkg.GetHome()))
-	return errs.ErrorOrNil()
+	return state.Resource{}, errors.New("not found")
 }

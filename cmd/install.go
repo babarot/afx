@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -24,8 +24,11 @@ var (
 
 	// installExample is examples for fmt command
 	installExample = templates.Examples(`
-		# Normal
-		afx install
+		afx install [args...]
+
+		By default, install tries to install all packages which are newly
+		added to config file.
+		If any args are given, tries to install only them.
 	`)
 )
 
@@ -42,7 +45,7 @@ func newInstallCmd() *cobra.Command {
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := c.meta.init(args); err != nil {
 				return err
@@ -74,18 +77,28 @@ func (c *installCmd) run(args []string) error {
 		cancel()
 	}()
 
-	// var pkgs []config.Package
-	// for _, arg := range args {
-	// 	for _, pkg := range c.Packages {
-	// 		if arg == pkg.GetName() {
-	// 			pkgs = append(pkgs, pkg)
-	// 		}
-	// 	}
-	// }
-	// if len(pkgs) == 0 {
-	// 	pkgs = c.Packages
-	// }
-	pkgs := c.Packages
+	// TODO: Check if this process does not matter other concerns
+	pkgs := append(c.State.Additions, c.State.Readditions...)
+	if len(pkgs) == 0 {
+		// TODO: improve message
+		log.Printf("[INFO] No packages to install")
+		return nil
+	}
+
+	// not install all new packages. Instead just only install
+	// given packages when not installed yet.
+	var given []config.Package
+	for _, arg := range args {
+		pkg, err := c.getFromAdditions(arg)
+		if err != nil {
+			// no hit in additions
+			continue
+		}
+		given = append(given, pkg)
+	}
+	if len(given) > 0 {
+		pkgs = given
+	}
 
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
@@ -101,7 +114,10 @@ func (c *installCmd) run(args []string) error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
 			err := pkg.Install(ctx, completion)
-			if err != nil && !logging.IsSet() {
+			switch err {
+			case nil:
+				c.State.Add(pkg)
+			default:
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
 			}
@@ -136,4 +152,16 @@ func (c *installCmd) run(args []string) error {
 	}(exit)
 
 	return exit
+}
+
+func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
+	pkgs := append(c.State.Additions, c.State.Readditions...)
+
+	for _, pkg := range pkgs {
+		if pkg.GetName() == name {
+			return pkg, nil
+		}
+	}
+
+	return nil, errors.New("not found")
 }

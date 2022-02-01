@@ -18,23 +18,23 @@ import (
 
 // Command is
 type Command struct {
-	Build   *Build            `yaml:"build,block"`
-	Link    []*Link           `yaml:"link,block"`
-	Env     map[string]string `yaml:"env,optional"`
-	Alias   map[string]string `yaml:"alias,optional"`
-	Snippet string            `yaml:"snippet,optional"`
+	Build   *Build            `yaml:"build"`
+	Link    []*Link           `yaml:"link"`
+	Env     map[string]string `yaml:"env"`
+	Alias   map[string]string `yaml:"alias"`
+	Snippet string            `yaml:"snippet"`
 }
 
 // Build is
 type Build struct {
-	Env   map[string]string `yaml:"env,optional"`
+	Env   map[string]string `yaml:"env"`
 	Steps []string          `yaml:"steps"`
 }
 
 // Link is
 type Link struct {
 	From string `yaml:"from"`
-	To   string `yaml:"to,optional"`
+	To   string `yaml:"to"`
 }
 
 func (l *Link) MarshalYAML() ([]byte, error) {
@@ -42,7 +42,7 @@ func (l *Link) MarshalYAML() ([]byte, error) {
 
 	return yaml.Marshal(struct {
 		*alias
-		To string `yaml:"to,optional"`
+		To string `yaml:"to"`
 	}{
 		alias: (*alias)(l),
 		To:    os.ExpandEnv(l.To),
@@ -55,7 +55,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	tmp := struct {
 		*alias
 		From string `yaml:"from"`
-		To   string `yaml:"to,optional"`
+		To   string `yaml:"to"`
 	}{
 		alias: (*alias)(l),
 	}

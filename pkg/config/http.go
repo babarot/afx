@@ -17,14 +17,14 @@ import (
 
 // HTTP represents
 type HTTP struct {
-	Name string `yaml:"name,label"`
+	Name string `yaml:"name"`
 
 	URL         string `yaml:"url"`
 	Output      string `yaml:"output"`
-	Description string `yaml:"description,optional"`
+	Description string `yaml:"description"`
 
-	Plugin  *Plugin  `yaml:"plugin,block"`
-	Command *Command `yaml:"command,block"`
+	Plugin  *Plugin  `yaml:"plugin"`
+	Command *Command `yaml:"command"`
 }
 
 // Init is

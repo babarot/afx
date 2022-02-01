@@ -13,12 +13,14 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
+	"github.com/b4b4r07/afx/pkg/state"
 )
 
 type meta struct {
 	Env       *env.Config
 	Packages  []config.Package
 	AppConfig *config.AppConfig
+	State     *state.State
 
 	parseErr error
 }
@@ -78,6 +80,12 @@ func (m *meta) init(args []string) error {
 			},
 		},
 	})
+
+	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
+	if err != nil {
+		return errors.New("something wrong in state file")
+	}
+	m.State = s
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))
 	os.MkdirAll(os.Getenv("AFX_ROOT"), os.ModePerm)
