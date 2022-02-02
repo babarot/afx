@@ -246,8 +246,7 @@ func (c Command) Install(pkg Package) error {
 // Init returns necessary things which should be loaded when executing commands
 func (c Command) Init(pkg Package) error {
 	if !pkg.Installed() {
-		msg := fmt.Sprintf("package %s.%s is not installed, so skip to init",
-			pkg.GetType(), pkg.GetName())
+		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
 		fmt.Printf("## %s\n", msg)
 		return errors.New(msg)
 	}

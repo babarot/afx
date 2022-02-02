@@ -216,13 +216,3 @@ func (c HTTP) GetHome() string {
 	u, _ := url.Parse(c.URL)
 	return filepath.Join(os.Getenv("AFX_ROOT"), u.Host, filepath.Dir(u.Path))
 }
-
-// GetType returns a pacakge type
-func (c HTTP) GetType() string {
-	return "http"
-}
-
-// GetURL returns a URL related to the package
-func (c HTTP) GetURL() string {
-	return c.URL
-}

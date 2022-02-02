@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -285,7 +284,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	if !assets.Exists() {
 		return errors.Detail{
 			Head:    "cannot fetch the list from GitHub Releases",
-			Summary: fmt.Sprintf("%s.%s", c.GetType(), c.GetName()),
+			Summary: c.GetName(),
 			Details: []string{
 				gjson.Get(string(body), "message").String(),
 				string(body),
@@ -528,14 +527,4 @@ func (c GitHub) GetName() string {
 // GetHome returns a path
 func (c GitHub) GetHome() string {
 	return filepath.Join(os.Getenv("AFX_ROOT"), "github.com", c.Owner, c.Repo)
-}
-
-// GetType returns a pacakge type
-func (c GitHub) GetType() string {
-	return "github"
-}
-
-// GetURL returns a URL related to the package
-func (c GitHub) GetURL() string {
-	return path.Join("https://github.com", c.Owner, c.Repo)
 }

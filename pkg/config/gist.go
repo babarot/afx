@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/b4b4r07/afx/pkg/errors"
@@ -192,14 +191,4 @@ func (c Gist) GetName() string {
 // GetHome returns a path
 func (c Gist) GetHome() string {
 	return filepath.Join(os.Getenv("AFX_ROOT"), "gist.github.com", c.Owner, c.ID)
-}
-
-// GetType returns a pacakge type
-func (c Gist) GetType() string {
-	return "gist"
-}
-
-// GetURL returns a URL related to the package
-func (c Gist) GetURL() string {
-	return path.Join("https://gist.github.com", c.Owner, c.ID)
 }

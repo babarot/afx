@@ -23,8 +23,6 @@ type Loader interface {
 type Handler interface {
 	GetHome() string
 	GetName() string
-	GetType() string
-	GetURL() string
 
 	HasPluginBlock() bool
 	HasCommandBlock() bool
@@ -45,12 +43,12 @@ func HasGitHubReleaseBlock(pkgs []Package) bool {
 		if pkg.Installed() {
 			continue
 		}
-		switch pkg.GetType() {
-		case "github":
-			github := pkg.(*GitHub)
-			if github.Release != nil {
-				return true
-			}
+		github, ok := pkg.(*GitHub)
+		if !ok {
+			continue
+		}
+		if github.Release != nil {
+			return true
 		}
 	}
 	return false

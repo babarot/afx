@@ -80,13 +80,3 @@ func (c Local) GetName() string {
 func (c Local) GetHome() string {
 	return expandTilda(os.ExpandEnv(c.Directory))
 }
-
-// GetType returns a pacakge type
-func (c Local) GetType() string {
-	return "local"
-}
-
-// GetURL returns a URL related to the package
-func (c Local) GetURL() string {
-	return ""
-}
