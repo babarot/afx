@@ -252,6 +252,13 @@ func (c Command) Init(pkg Package) error {
 	}
 
 	for k, v := range c.Env {
+		switch k {
+		case "PATH":
+			// avoid overwriting PATH
+			v = fmt.Sprintf("$PATH:%s", expandTilda(v))
+		default:
+			// through
+		}
 		fmt.Printf("export %s=%q\n", k, v)
 	}
 

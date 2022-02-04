@@ -27,10 +27,10 @@ type meta struct {
 
 func (m *meta) init(args []string) error {
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
-	base := filepath.Join(os.Getenv("HOME"), ".config", "afx")
+	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, "cache.json")
 
-	files, err := config.WalkDir(base)
+	files, err := config.WalkDir(cfgRoot)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (m *meta) init(args []string) error {
 	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
 		"AFX_ROOT":         env.Variable{Default: root},
-		"AFX_CONFIG_ROOT":  env.Variable{Value: base},
+		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
