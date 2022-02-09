@@ -3,7 +3,7 @@
 ## Where to put YAML
 
 <figure>
-  <img src="../images/struct.svg" width="500"/>
+  <img src="../images/struct.png" width="500"/>
   <figcaption>Example of config directory structure.</figcaption>
 </figure>
 
@@ -56,7 +56,7 @@ Keeping files in sub directories is also ok. afx tries to walk all directories a
 ## State feature
 
 <figure>
-  <img src="../images/state-json.svg"/>
+  <img src="../images/state.png"/>
   <figcaption>Example of a state file.</figcaption>
 </figure>
 
@@ -133,7 +133,7 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 ## Installation
 
 <figure>
-  <img src="../images/install-drop.png"/>
+  <img src="../images/dir-map.png"/>
   <figcaption>Workflow to install packages.</figcaption>
 </figure>
 
