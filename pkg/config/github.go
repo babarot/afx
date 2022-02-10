@@ -343,6 +343,10 @@ type Asset struct {
 
 func (r *GitHubRelease) filter(fn func(Asset) bool) *GitHubRelease {
 	var assets []Asset
+	if len(r.Assets) < 2 {
+		// no more need to filter
+		return r
+	}
 	for _, asset := range r.Assets {
 		if fn(asset) {
 			assets = append(assets, asset)
@@ -372,7 +376,6 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 
 	r.filter(func(asset Asset) bool {
 		expr := ""
-		// TODO: need to improve: neovim case (nemvim doesn't have GOARCH)
 		switch runtime.GOARCH {
 		case "amd64":
 			expr += ".*(amd64|64).*"
@@ -383,11 +386,9 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	})
 
 	if len(r.Assets) == 0 {
-		log.Printf("[DEBUG] no assets: %#v\n", r)
-		return fmt.Errorf("%s not found assets", r.Name)
+		return fmt.Errorf("%s no assets found", r.Name)
 	}
 
-	// TODO: avoid to panic
 	asset := r.Assets[0]
 
 	req, err := http.NewRequest(http.MethodGet, asset.URL, nil)
