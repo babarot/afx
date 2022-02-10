@@ -17,24 +17,24 @@ theme:
   include_search_page: false
   search_index_only: true
   palette:
-    - media: "(prefers-color-scheme: light)"  # Light mode
-      scheme: default
-      primary: grey
-      accent: indigo
-      toggle:
-        icon: material/toggle-switch-off-outline
-        name: Switch to light mode
-    - media: "(prefers-color-scheme: dark)"  # Dark mode
-      scheme: slate
-      primary: teal
-      accent: indigo
-      toggle:
-        icon: material/toggle-switch
-        name: Switch to dark mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    toggle:
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+    primary: deep orange
+    accent: red # indigo
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+    primary: teal
+    accent: green # indigo
   features:
-    - search.suggest
-    - search.highlight
-    - search.share
+  - search.suggest
+  - search.highlight
+  - search.share
 
 plugins:
 - search
@@ -94,3 +94,4 @@ nav:
     - HTTP:   configuration/package/http.md
   - Command: configuration/command.md
   - Plugin:  configuration/plugin.md
+- Links: links.md
