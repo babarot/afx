@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"log"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/b4b4r07/afx/pkg/config"
+	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -65,17 +64,10 @@ func newInstallCmd() *cobra.Command {
 }
 
 func (c *installCmd) run(args []string) error {
-	ctx, cancel := context.WithCancel(context.Background())
 	eg := errgroup.Group{}
 
-	limit := make(chan struct{}, 16)
-
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, os.Interrupt)
-	defer func() {
-		signal.Stop(sigCh)
-		cancel()
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	// TODO: Check if this process does not matter other concerns
 	pkgs := append(c.State.Additions, c.State.Readditions...)
@@ -108,11 +100,10 @@ func (c *installCmd) run(args []string) error {
 	}()
 
 	log.Printf("[DEBUG] start to run each pkg.Install()")
+	results := make(chan installResult)
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
@@ -121,37 +112,36 @@ func (c *installCmd) run(args []string) error {
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
 			}
-			return err
+			select {
+			case results <- installResult{Package: pkg, Error: err}:
+				return nil
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		})
 	}
 
-	errCh := make(chan error, 1)
-
 	go func() {
-		errCh <- eg.Wait()
+		eg.Wait()
+		close(results)
 	}()
 
-	var exit error
-	select {
-	case err := <-errCh:
-		if err != nil {
-			log.Printf("[ERROR] failed to install: %s\n", err)
-		}
-		exit = err
-	case <-sigCh:
-		cancel()
-		log.Println("[INFO] canceled by signal")
-	case <-ctx.Done():
-		log.Println("[INFO] done")
+	var exit errors.Errors
+	for result := range results {
+		exit.Append(result.Error)
+	}
+	if err := eg.Wait(); err != nil {
+		log.Printf("[ERROR] failed to install: %s\n", err)
+		exit.Append(err)
 	}
 
 	defer func(err error) {
 		if err != nil {
 			c.Env.Refresh()
 		}
-	}(exit)
+	}(exit.ErrorOrNil())
 
-	return exit
+	return exit.ErrorOrNil()
 }
 
 func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
@@ -164,4 +154,9 @@ func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
 	}
 
 	return nil, errors.New("not found")
+}
+
+type installResult struct {
+	Package config.Package
+	Error   error
 }
