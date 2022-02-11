@@ -30,12 +30,16 @@ type State struct {
 	// Exists in state file but no in config file
 	// so maybe users had deleted the package from config file
 	Deletions []Resource
+	// Something changes happened between config file and state file
+	// Currently only version (github.release.tag) is detected as changes
+	Changes []config.Package
 }
 
 type Resource struct {
-	Name  string   `json:"name"`
-	Home  string   `json:"home"`
-	Paths []string `json:"paths"`
+	Name    string   `json:"name"`
+	Home    string   `json:"home"`
+	Version string   `json:"version"`
+	Paths   []string `json:"paths"`
 }
 
 func (e Resource) exists() bool {
@@ -47,7 +51,7 @@ func (e Resource) exists() bool {
 	return true
 }
 
-func add(pkg config.Package, s *State) {
+func toResource(pkg config.Package) Resource {
 	var paths []string
 	if pkg.HasPluginBlock() {
 		plugin := pkg.GetPluginBlock()
@@ -64,11 +68,23 @@ func add(pkg config.Package, s *State) {
 			paths = append(paths, link.To)
 		}
 	}
-	s.Resources[pkg.GetName()] = Resource{
-		Name:  pkg.GetName(),
-		Home:  pkg.GetHome(),
-		Paths: paths,
+	version := ""
+	switch v := pkg.(type) {
+	case *config.GitHub:
+		if v.HasReleaseBlock() {
+			version = v.Release.Tag
+		}
 	}
+	return Resource{
+		Name:    pkg.GetName(),
+		Home:    pkg.GetHome(),
+		Version: version,
+		Paths:   paths,
+	}
+}
+
+func add(pkg config.Package, s *State) {
+	s.Resources[pkg.GetName()] = toResource(pkg)
 }
 
 func remove(name string, s *State) {
@@ -82,12 +98,42 @@ func remove(name string, s *State) {
 	s.Resources = resources
 }
 
+func update(pkg config.Package, s *State) {
+	name := pkg.GetName()
+	_, ok := s.Resources[name]
+	if !ok {
+		// not found
+		return
+	}
+	s.Resources[name] = toResource(pkg)
+}
+
 func (s *State) save() error {
 	f, err := os.Create(s.path)
 	if err != nil {
 		return err
 	}
 	return json.NewEncoder(f).Encode(s.Self)
+}
+
+func (s *State) listChanges() []config.Package {
+	var pkgs []config.Package
+	for _, resource := range s.Resources {
+		if resource.Version == "" {
+			// not target resource
+			continue
+		}
+		pkg, ok := s.packages[resource.Name]
+		if !ok {
+			// something wrong happend
+			continue
+		}
+		version := pkg.(*config.GitHub).Release.Tag
+		if resource.Version != version {
+			pkgs = append(pkgs, pkg)
+		}
+	}
+	return pkgs
 }
 
 func (s *State) listAdditions() []config.Package {
@@ -157,6 +203,7 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	s.Additions = s.listAdditions()
 	s.Readditions = s.listReadditions()
 	s.Deletions = s.listDeletions()
+	s.Changes = s.listChanges()
 
 	return &s, s.save()
 }
@@ -174,5 +221,13 @@ func (s *State) Remove(name string) {
 	defer s.mu.Unlock()
 
 	remove(name, s)
+	s.save()
+}
+
+func (s *State) Update(pkg config.Package) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	update(pkg, s)
 	s.save()
 }

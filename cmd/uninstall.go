@@ -23,8 +23,8 @@ var (
 	uninstallExample = templates.Examples(`
 		afx uninstall [args...]
 
-		By default, uninstall tries to uninstall all packages deleted from config file.
-		If any args are given, tries to uninstall only them.
+		By default, it tries to uninstall all packages deleted from config file.
+		If any args are given, it tries to uninstall only them.
 		But it's needed also to be deleted from config file.
 	`)
 )

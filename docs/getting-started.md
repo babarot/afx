@@ -86,3 +86,28 @@ Add this command to your shell config (e.g. .zshrc) enable plugins and commands 
 # enable packages
 source <(afx init)
 ```
+
+## Update packages
+
+If you want to update package to new version etc, all you have to do is just to modify YAML file and then run `afx update`:
+
+```diff
+github:
+  - name: jq
+    description: Command-line JSON processor
+    owner: stedolan
+    repo: jq
+    release:
+      name: jq
+-     tag: jq-1.5
++     tag: jq-1.6
+    command:
+      link:
+      - from: '*jq*'
+        to: jq
+```
+
+```sh
+$ afx update
+✔ jq
+```

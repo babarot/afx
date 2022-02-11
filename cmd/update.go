@@ -13,34 +13,34 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type installCmd struct {
+type updateCmd struct {
 	meta
 }
 
 var (
-	// installLong is long description of fmt command
-	installLong = templates.LongDesc(``)
+	// updateLong is long description of fmt command
+	updateLong = templates.LongDesc(``)
 
-	// installExample is examples for fmt command
-	installExample = templates.Examples(`
-		afx install [args...]
+	// updateExample is examples for fmt command
+	updateExample = templates.Examples(`
+		afx update [args...]
 
-		By default, it tries to install all packages which are newly
-		added to config file.
-		If any args are given, it tries to install only them.
+		By default, it tries to update packages only if something are
+		changed in config file.
+		If any args are given, it tries to update only them.
 	`)
 )
 
-// newInstallCmd creates a new fmt command
-func newInstallCmd() *cobra.Command {
-	c := &installCmd{}
+// newUpdateCmd creates a new fmt command
+func newUpdateCmd() *cobra.Command {
+	c := &updateCmd{}
 
-	installCmd := &cobra.Command{
-		Use:                   "install",
-		Short:                 "Resume installation from paused part (idempotency)",
-		Long:                  installLong,
-		Example:               installExample,
-		Aliases:               []string{"i"},
+	updateCmd := &cobra.Command{
+		Use:                   "update",
+		Short:                 "Update installed package if version etc is changed",
+		Long:                  updateLong,
+		Example:               updateExample,
+		Aliases:               []string{"u"},
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
@@ -60,35 +60,34 @@ func newInstallCmd() *cobra.Command {
 		},
 	}
 
-	return installCmd
+	return updateCmd
 }
 
-type installResult struct {
+type updateResult struct {
 	Package config.Package
 	Error   error
 }
 
-func (c *installCmd) run(args []string) error {
+func (c *updateCmd) run(args []string) error {
 	eg := errgroup.Group{}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// TODO: Check if this process does not matter other concerns
-	pkgs := append(c.State.Additions, c.State.Readditions...)
+	pkgs := c.State.Changes
 	if len(pkgs) == 0 {
 		// TODO: improve message
-		log.Printf("[INFO] No packages to install")
+		log.Printf("[INFO] No packages to update")
 		return nil
 	}
 
-	// not install all new packages. Instead just only install
-	// given packages when not installed yet.
+	// not update all packages. Instead just only update
+	// given packages when not updated yet.
 	var given []config.Package
 	for _, arg := range args {
-		pkg, err := c.getFromAdditions(arg)
+		pkg, err := c.getFromChanges(arg)
 		if err != nil {
-			// no hit in additions
+			// no hit in changes
 			continue
 		}
 		given = append(given, pkg)
@@ -104,21 +103,18 @@ func (c *installCmd) run(args []string) error {
 		progress.Print(completion)
 	}()
 
-	log.Printf("[DEBUG] (install): start to run each pkg.Install()")
-	results := make(chan installResult)
+	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
+	results := make(chan updateResult)
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
-				c.State.Add(pkg)
-			default:
-				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
-				pkg.Uninstall(ctx)
+				c.State.Update(pkg)
 			}
 			select {
-			case results <- installResult{Package: pkg, Error: err}:
+			case results <- updateResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
 				return ctx.Err()
@@ -136,7 +132,7 @@ func (c *installCmd) run(args []string) error {
 		exit.Append(result.Error)
 	}
 	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to install: %s\n", err)
+		log.Printf("[ERROR] failed to update: %s\n", err)
 		exit.Append(err)
 	}
 
@@ -149,8 +145,8 @@ func (c *installCmd) run(args []string) error {
 	return exit.ErrorOrNil()
 }
 
-func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
-	pkgs := append(c.State.Additions, c.State.Readditions...)
+func (c *updateCmd) getFromChanges(name string) (config.Package, error) {
+	pkgs := c.State.Changes
 
 	for _, pkg := range pkgs {
 		if pkg.GetName() == name {
