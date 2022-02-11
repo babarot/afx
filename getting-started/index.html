@@ -340,6 +340,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#update-packages" class="md-nav__link">
+    Update packages
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -610,6 +617,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#update-packages" class="md-nav__link">
+    Update packages
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -681,6 +695,25 @@
 <p>Add this command to your shell config (e.g. .zshrc) enable plugins and commands you installed when starting shell.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># enable packages</span>
 <span class="nb">source</span> &lt;<span class="o">(</span>afx init<span class="o">)</span>
+</code></pre></div>
+<h2 id="update-packages">Update packages<a class="headerlink" href="#update-packages" title="Permanent link">#</a></h2>
+<p>If you want to update package to new version etc, all you have to do is just to modify YAML file and then run <code>afx update</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="w">github:</span>
+<span class="w"> </span> - name: jq<span class="w"></span>
+<span class="w"> </span>   description: Command-line JSON processor<span class="w"></span>
+<span class="w"> </span>   owner: stedolan<span class="w"></span>
+<span class="w"> </span>   repo: jq<span class="w"></span>
+<span class="w"> </span>   release:<span class="w"></span>
+<span class="w"> </span>     name: jq<span class="w"></span>
+<span class="gd">-     tag: jq-1.5</span><span class="w"></span>
+<span class="gi">+     tag: jq-1.6</span><span class="w"></span>
+<span class="w"> </span>   command:<span class="w"></span>
+<span class="w"> </span>     link:<span class="w"></span>
+<span class="w"> </span>     - from: &#39;*jq*&#39;<span class="w"></span>
+<span class="w"> </span>       to: jq<span class="w"></span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>$ afx update
+✔ jq
 </code></pre></div>
 
               
