@@ -90,6 +90,11 @@ func IsDebugOrHigher() bool {
 	return level == "DEBUG" || level == "TRACE"
 }
 
+func IsTrace() bool {
+	level := string(LogLevel())
+	return level == "TRACE"
+}
+
 // IsSet returns true if AFX_LOG is set
 func IsSet() bool {
 	return string(LogLevel()) != ""
