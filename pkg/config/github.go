@@ -45,12 +45,12 @@ type Release struct {
 	Tag  string `yaml:"tag"`
 }
 
-func NewGitHub(owner, repo string) (GitHub, error) {
-	r, err := getRepo(owner, repo)
+func NewGitHub(ctx context.Context, owner, repo string) (GitHub, error) {
+	r, err := getRepo(ctx, owner, repo)
 	if err != nil {
 		return GitHub{}, err
 	}
-	release, command := getRelease(owner, repo)
+	release, command := getRelease(ctx, owner, repo)
 	return GitHub{
 		Name:        repo,
 		Owner:       owner,
@@ -63,9 +63,8 @@ func NewGitHub(owner, repo string) (GitHub, error) {
 	}, nil
 }
 
-func githubClient() *github.Client {
+func githubClient(ctx context.Context) *github.Client {
 	token := os.Getenv("GITHUB_TOKEN")
-	ctx := context.Background()
 
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -75,18 +74,18 @@ func githubClient() *github.Client {
 	return github.NewClient(tc)
 }
 
-func getRepo(owner, repo string) (*github.Repository, error) {
-	c := githubClient()
-	r, _, err := c.Repositories.Get(context.Background(), owner, repo)
+func getRepo(ctx context.Context, owner, repo string) (*github.Repository, error) {
+	c := githubClient(ctx)
+	r, _, err := c.Repositories.Get(ctx, owner, repo)
 	return r, err
 }
 
-func getRelease(owner, repo string) (*Release, *Command) {
+func getRelease(ctx context.Context, owner, repo string) (*Release, *Command) {
 	var release *Release
 	var command *Command
-	c := githubClient()
+	c := githubClient(ctx)
 	latest, _, err := c.Repositories.GetLatestRelease(
-		context.Background(), owner, repo,
+		ctx, owner, repo,
 	)
 	if err == nil {
 		release = &Release{
