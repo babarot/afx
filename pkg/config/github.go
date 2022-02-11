@@ -24,7 +24,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// GitHub represents
+// GitHub represents GitHub repository
 type GitHub struct {
 	Name string `yaml:"name"`
 
@@ -39,7 +39,7 @@ type GitHub struct {
 	Command *Command `yaml:"command"`
 }
 
-// Release is
+// Release represents a GitHub release structure
 type Release struct {
 	Name string `yaml:"name"`
 	Tag  string `yaml:"tag"`
@@ -102,7 +102,7 @@ func getRelease(ctx context.Context, owner, repo string) (*Release, *Command) {
 	return release, command
 }
 
-// Init is
+// Init runs initialization step related to GitHub packages
 func (c GitHub) Init() error {
 	var errs errors.Errors
 	if c.HasPluginBlock() {
@@ -114,7 +114,7 @@ func (c GitHub) Init() error {
 	return errs.ErrorOrNil()
 }
 
-// Clone is
+// Clone runs git clone
 func (c GitHub) Clone(ctx context.Context) error {
 	writer := ioutil.Discard
 	if logging.IsDebugOrHigher() {
@@ -175,14 +175,10 @@ func (c GitHub) Clone(ctx context.Context) error {
 	return nil
 }
 
-// Install is
+// Install installs from GitHub repository with git clone command
 func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
-	if c.Installed() {
-		return nil
-	}
 
 	select {
 	case <-ctx.Done():
@@ -221,7 +217,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 	return errs.ErrorOrNil()
 }
 
-// Installed is
+// Installed returns true the GitHub package is already installed
 func (c GitHub) Installed() bool {
 	var list []bool
 
@@ -244,13 +240,13 @@ func (c GitHub) Installed() bool {
 	return check(list)
 }
 
-// ReleaseURL is
+// ReleaseURL returns URL of GitHub release
 func (c GitHub) ReleaseURL() string {
 	return fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/tags/%s",
 		c.Owner, c.Repo, c.Release.Tag)
 }
 
-// InstallFromRelease is
+// InstallFromRelease runs install from GitHub release, from not repository
 func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -314,17 +310,18 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	}
 
 	if err := release.Download(ctx); err != nil {
-		return errors.Wrapf(err, "failed to download: %v", release)
+		return errors.Wrapf(err, "failed to download: %q", release.Name)
 	}
 
 	if err := release.Unarchive(); err != nil {
-		return errors.Wrapf(err, "failed to unarchive: %v", release)
+		return errors.Wrapf(err, "failed to unarchive: %q", release.Name)
 	}
 
 	return nil
 }
 
-// GitHubRelease is
+// GitHubRelease represents a GitHub release and its client
+// A difference from Release is whether a client or not
 type GitHubRelease struct {
 	Client *http.Client
 
@@ -332,7 +329,8 @@ type GitHubRelease struct {
 	Assets []Asset
 }
 
-// Asset is
+// Asset represents GitHub release's asset.
+// Basically this means one archive file attached in a release
 type Asset struct {
 	Name string
 	Home string
@@ -421,40 +419,65 @@ func (r *GitHubRelease) Unarchive() error {
 	}
 	a := r.Assets[0]
 
-	switch filepath.Ext(a.Path) {
-	case ".tar", ".gz", ".tar.gz", ".tgz", ".zip": // FIXME: filepath.Ext is not support 2 dot extensions
-		log.Printf("[DEBUG] unarchive %s", r.Name)
-		if err := archiver.Unarchive(a.Path, a.Home); err != nil {
-			log.Printf("[ERROR] failed to unarchive %s: %s\n", r.Name, err)
-			return err
-		}
-		log.Printf("[DEBUG] remove %s\n", a.Path)
-		os.Remove(a.Path)
-		// Need to improve
-		// good := filepath.Join(a.Home, r.Name)
-		// return filepath.Walk(a.Home, func(path string, info os.FileInfo, err error) error {
-		// 	if err != nil || info.IsDir() {
-		// 		return err
-		// 	}
-		// 	if (info.Mode() & 0111) != 0 {
-		// 		if path != good {
-		// 			log.Printf("[DEBUG] move %s to %s", path, good)
-		// 			return os.Rename(path, good)
-		// 		}
-		// 	}
-		// 	return nil
-		// })
-		return nil
-	default:
+	uaIface, err := archiver.ByExtension(a.Path)
+	if err != nil {
+		// err: this will be an error of format unrecognized by filename
+		// but in this case, maybe not archived file: e.g. tigrawap/slit
+		//
+		log.Printf("[ERROR] archiver.ByExtension(): %v", err)
 		log.Printf("[DEBUG] %q is not an archive file so directly install", a.Name)
 		target := filepath.Join(a.Home, r.Name)
 		if _, err := os.Stat(target); err != nil {
-			log.Printf("[DEBUG] rename %s", r.Name)
+			log.Printf("[DEBUG] renamed from %s to %s", a.Path, target)
 			os.Rename(a.Path, target)
 			os.Chmod(target, 0755)
 		}
 		return nil
 	}
+
+	tar := &archiver.Tar{
+		OverwriteExisting:      true,
+		MkdirAll:               false,
+		ImplicitTopLevelFolder: false,
+		ContinueOnError:        false,
+	}
+	switch v := uaIface.(type) {
+	case *archiver.Rar:
+		v.OverwriteExisting = true
+	case *archiver.Zip:
+		v.OverwriteExisting = true
+	case *archiver.TarBz2:
+		v.Tar = tar
+	case *archiver.TarGz:
+		v.Tar = tar
+	case *archiver.TarLz4:
+		v.Tar = tar
+	case *archiver.TarSz:
+		v.Tar = tar
+	case *archiver.TarXz:
+		v.Tar = tar
+	case *archiver.Gz,
+		*archiver.Bz2,
+		*archiver.Lz4,
+		*archiver.Snappy,
+		*archiver.Xz:
+		// nothing to customise
+	}
+
+	u, ok := uaIface.(archiver.Unarchiver)
+	if !ok {
+		return errors.New("not supported archive file")
+	}
+
+	if err := u.Unarchive(a.Path, a.Home); err != nil {
+		log.Printf("[ERROR] failed to unarchive %s: %s\n", r.Name, err)
+		return errors.Wrap(err, "archiver.Unarchive(): failed")
+	}
+
+	log.Printf("[DEBUG] removed archive file: %s\n", a.Path)
+	os.Remove(a.Path)
+
+	return nil
 }
 
 // HasPluginBlock is

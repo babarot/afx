@@ -233,6 +233,11 @@ func (c Command) Install(pkg Package) error {
 			os.Chmod(link.From, 0755)
 		}
 
+		if _, err := os.Lstat(link.To); err == nil {
+			log.Printf("[DEBUG] removed %s because already exists before linking", link.To)
+			os.Remove(link.To)
+		}
+
 		log.Printf("[DEBUG] create symlink %s to %s", link.From, link.To)
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)

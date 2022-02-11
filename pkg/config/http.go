@@ -74,10 +74,6 @@ func (c HTTP) call(ctx context.Context) error {
 
 // Install is
 func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
-	if c.Installed() {
-		return nil
-	}
-
 	select {
 	case <-ctx.Done():
 		log.Println("[DEBUG] canceled")

@@ -68,10 +68,6 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if c.Installed() {
-		return nil
-	}
-
 	select {
 	case <-ctx.Done():
 		log.Println("[DEBUG] canceled")
