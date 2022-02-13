@@ -58,6 +58,9 @@ func (e Resource) exists() bool {
 func toResource(pkg config.Package) Resource {
 	var paths []string
 
+	// repository existence is also one of the path resource
+	paths = append(paths, pkg.GetHome())
+
 	if pkg.HasPluginBlock() {
 		plugin := pkg.GetPluginBlock()
 		paths = append(paths, plugin.GetSources(pkg)...)
@@ -67,6 +70,7 @@ func toResource(pkg config.Package) Resource {
 		command := pkg.GetCommandBlock()
 		links, err := command.GetLink(pkg)
 		if err != nil {
+			// TODO: thinking about what to do here
 			// no handling
 		}
 		for _, link := range links {

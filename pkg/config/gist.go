@@ -82,7 +82,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 	})
 	if err != nil {
 		status <- Status{Path: c.GetHome(), Done: true, Err: true}
-		return err
+		return errors.Wrapf(err, "%s: failed to clone gist repo", c.Name)
 	}
 
 	var errs errors.Errors
