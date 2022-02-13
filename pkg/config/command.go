@@ -95,7 +95,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		file := filepath.Join(pkg.GetHome(), link.From)
 		matches, err := zglob.Glob(file)
 		if err != nil {
-			return links, errors.Wrapf(err, "%s: failed to get links (%#v)", pkg.GetName(), link)
+			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
 		}
 		var src string
 		switch len(matches) {

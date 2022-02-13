@@ -192,14 +192,14 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 	case c.Release == nil:
 		err := c.Clone(ctx)
 		if err != nil {
-			err = errors.Wrap(err, "failed to clone repo")
+			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
 			status <- Status{Path: c.GetHome(), Done: true, Err: true}
 			return err
 		}
 	case c.Release != nil:
 		err := c.InstallFromRelease(ctx)
 		if err != nil {
-			err = errors.Wrap(err, "failed to get from release")
+			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
 			status <- Status{Path: c.GetHome(), Done: true, Err: true}
 			return err
 		}
@@ -310,11 +310,11 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	}
 
 	if err := release.Download(ctx); err != nil {
-		return errors.Wrapf(err, "failed to download: %q", release.Name)
+		return errors.Wrapf(err, "%s: failed to download", release.Name)
 	}
 
 	if err := release.Unarchive(); err != nil {
-		return errors.Wrapf(err, "failed to unarchive: %q", release.Name)
+		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
 	}
 
 	return nil
@@ -383,7 +383,8 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	})
 
 	if len(r.Assets) == 0 {
-		return fmt.Errorf("%s no assets found", r.Name)
+		// as a result of filtering
+		return fmt.Errorf("%s: assets is gone due to filter assets", r.Name)
 	}
 
 	asset := r.Assets[0]
