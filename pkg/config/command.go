@@ -27,8 +27,8 @@ type Command struct {
 
 // Build is
 type Build struct {
-	Env   map[string]string `yaml:"env"`
 	Steps []string          `yaml:"steps"`
+	Env   map[string]string `yaml:"env"`
 }
 
 // Link is

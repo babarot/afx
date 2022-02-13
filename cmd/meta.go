@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
+	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/state"
 )
@@ -83,7 +83,7 @@ func (m *meta) init(args []string) error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
 	if err != nil {
-		return errors.New("something wrong in state file")
+		return errors.Wrap(err, "faield to open state file")
 	}
 	m.State = s
 

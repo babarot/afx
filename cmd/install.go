@@ -99,6 +99,7 @@ func (c *installCmd) run(args []string) error {
 
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
+	limit := make(chan struct{}, 16)
 
 	go func() {
 		progress.Print(completion)
@@ -109,6 +110,8 @@ func (c *installCmd) run(args []string) error {
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
+			limit <- struct{}{}
+			defer func() { <-limit }()
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
@@ -135,6 +138,7 @@ func (c *installCmd) run(args []string) error {
 	for result := range results {
 		exit.Append(result.Error)
 	}
+
 	if err := eg.Wait(); err != nil {
 		log.Printf("[ERROR] failed to install: %s\n", err)
 		exit.Append(err)
