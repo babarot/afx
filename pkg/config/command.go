@@ -131,14 +131,17 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 
 // Installed returns true ...
 func (c Command) Installed(pkg Package) bool {
-	if len(c.Link) == 0 {
-		_, err := exec.LookPath(pkg.GetName())
-		return err == nil
+	links, err := c.GetLink(pkg)
+	if err != nil {
+		log.Printf("[ERROR] %s: command.Installed(): cannot get link section", pkg.GetName())
+		return false
 	}
 
-	links, err := c.GetLink(pkg)
-	if len(links) == 0 || err != nil {
-		return false
+	if len(links) == 0 {
+		// regard as installed if home dir exists
+		// even if link section is not specified
+		_, err := os.Stat(pkg.GetHome())
+		return err == nil
 	}
 
 	for _, link := range links {
