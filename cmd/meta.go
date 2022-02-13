@@ -78,17 +78,17 @@ func (m *meta) init(args []string) error {
 		},
 	})
 
-	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
-	if err != nil {
-		return errors.Wrap(err, "faield to open state file")
-	}
-	m.State = s
-
 	log.Printf("[DEBUG] mkdir %s\n", root)
 	os.MkdirAll(root, os.ModePerm)
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
+
+	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
+	if err != nil {
+		return errors.Wrap(err, "faield to open state file")
+	}
+	m.State = s
 
 	return nil
 }
