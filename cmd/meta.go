@@ -21,8 +21,6 @@ type meta struct {
 	Packages  []config.Package
 	AppConfig *config.AppConfig
 	State     *state.State
-
-	parseErr error
 }
 
 func (m *meta) init(args []string) error {
