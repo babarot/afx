@@ -21,9 +21,6 @@ type Progress struct {
 func NewProgress(pkgs []Package) Progress {
 	status := make(map[string]Status)
 	for _, pkg := range pkgs {
-		if pkg.Installed() {
-			continue
-		}
 		status[pkg.GetHome()] = Status{
 			Path: pkg.GetHome(),
 			Done: false,

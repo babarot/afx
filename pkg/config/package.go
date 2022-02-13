@@ -40,9 +40,6 @@ type Package interface {
 // HasGitHubReleaseBlock returns true if release block is included in one package at least
 func HasGitHubReleaseBlock(pkgs []Package) bool {
 	for _, pkg := range pkgs {
-		if pkg.Installed() {
-			continue
-		}
 		github, ok := pkg.(*GitHub)
 		if !ok {
 			continue
@@ -58,9 +55,6 @@ func HasGitHubReleaseBlock(pkgs []Package) bool {
 // included in one build step of given package at least
 func HasSudoInCommandBuildSteps(pkgs []Package) bool {
 	for _, pkg := range pkgs {
-		if pkg.Installed() {
-			continue
-		}
 		if !pkg.HasCommandBlock() {
 			continue
 		}
