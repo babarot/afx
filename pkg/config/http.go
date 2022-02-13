@@ -210,5 +210,5 @@ func (c HTTP) GetName() string {
 // GetHome returns a path
 func (c HTTP) GetHome() string {
 	u, _ := url.Parse(c.URL)
-	return filepath.Join(os.Getenv("AFX_ROOT"), u.Host, filepath.Dir(u.Path))
+	return filepath.Join(os.Getenv("HOME"), ".afx", u.Host, filepath.Dir(u.Path))
 }

@@ -186,5 +186,5 @@ func (c Gist) GetName() string {
 
 // GetHome returns a path
 func (c Gist) GetHome() string {
-	return filepath.Join(os.Getenv("AFX_ROOT"), "gist.github.com", c.Owner, c.ID)
+	return filepath.Join(os.Getenv("HOME"), ".afx", "gist.github.com", c.Owner, c.ID)
 }

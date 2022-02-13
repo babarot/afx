@@ -547,5 +547,5 @@ func (c GitHub) GetName() string {
 
 // GetHome returns a path
 func (c GitHub) GetHome() string {
-	return filepath.Join(os.Getenv("AFX_ROOT"), "github.com", c.Owner, c.Repo)
+	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
 }
