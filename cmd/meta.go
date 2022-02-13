@@ -58,7 +58,6 @@ func (m *meta) init(args []string) error {
 
 	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
-		"AFX_ROOT":         env.Variable{Default: root},
 		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
@@ -85,8 +84,8 @@ func (m *meta) init(args []string) error {
 	}
 	m.State = s
 
-	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_ROOT"))
-	os.MkdirAll(os.Getenv("AFX_ROOT"), os.ModePerm)
+	log.Printf("[DEBUG] mkdir %s\n", root)
+	os.MkdirAll(root, os.ModePerm)
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
