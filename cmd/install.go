@@ -49,14 +49,35 @@ func newInstallCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			if c.parseErr != nil {
-				return c.parseErr
+
+			pkgs := append(c.State.Additions, c.State.Readditions...)
+			if len(pkgs) == 0 {
+				// TODO: improve message
+				log.Printf("[INFO] No packages to install")
+				return nil
 			}
-			c.Env.Ask(
-				"AFX_SUDO_PASSWORD",
-				"GITHUB_TOKEN",
-			)
-			return c.run(args)
+
+			// not install all new packages. Instead just only install
+			// given packages when not installed yet.
+			var given []config.Package
+			for _, arg := range args {
+				pkg, err := c.getFromAdditions(arg)
+				if err != nil {
+					// no hit in additions
+					continue
+				}
+				given = append(given, pkg)
+			}
+			if len(given) > 0 {
+				pkgs = given
+			}
+
+			c.Env.AskWhen(map[string]bool{
+				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
+				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
+			})
+
+			return c.run(pkgs)
 		},
 	}
 
@@ -68,45 +89,21 @@ type installResult struct {
 	Error   error
 }
 
-func (c *installCmd) run(args []string) error {
-	eg := errgroup.Group{}
-
+func (c *installCmd) run(pkgs []config.Package) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
-	// TODO: Check if this process does not matter other concerns
-	pkgs := append(c.State.Additions, c.State.Readditions...)
-	if len(pkgs) == 0 {
-		// TODO: improve message
-		log.Printf("[INFO] No packages to install")
-		return nil
-	}
-
-	// not install all new packages. Instead just only install
-	// given packages when not installed yet.
-	var given []config.Package
-	for _, arg := range args {
-		pkg, err := c.getFromAdditions(arg)
-		if err != nil {
-			// no hit in additions
-			continue
-		}
-		given = append(given, pkg)
-	}
-	if len(given) > 0 {
-		pkgs = given
-	}
 
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
 	limit := make(chan struct{}, 16)
+	results := make(chan installResult)
 
 	go func() {
 		progress.Print(completion)
 	}()
 
 	log.Printf("[DEBUG] (install): start to run each pkg.Install()")
-	results := make(chan installResult)
+	eg := errgroup.Group{}
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
