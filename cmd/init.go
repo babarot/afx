@@ -42,9 +42,6 @@ func newInitCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			if c.parseErr != nil {
-				return c.parseErr
-			}
 			return c.run(args)
 		},
 	}

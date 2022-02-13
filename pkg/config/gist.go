@@ -82,7 +82,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 	})
 	if err != nil {
 		status <- Status{Path: c.GetHome(), Done: true, Err: true}
-		return err
+		return errors.Wrapf(err, "%s: failed to clone gist repo", c.Name)
 	}
 
 	var errs errors.Errors
@@ -162,7 +162,7 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, err := c.Command.GetLink(c)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to get command.link", c.Name)
 		}
 		for _, link := range links {
 			delete(link.From, &errs)
@@ -186,5 +186,5 @@ func (c Gist) GetName() string {
 
 // GetHome returns a path
 func (c Gist) GetHome() string {
-	return filepath.Join(os.Getenv("AFX_ROOT"), "gist.github.com", c.Owner, c.ID)
+	return filepath.Join(os.Getenv("HOME"), ".afx", "gist.github.com", c.Owner, c.ID)
 }

@@ -133,6 +133,34 @@ func (c *Config) Ask(keys ...string) {
 	}
 }
 
+func (c *Config) AskWhen(env map[string]bool) {
+	var update bool
+	for key, when := range env {
+		v, found := c.Env[key]
+		if !found {
+			continue
+		}
+		if len(v.Value) > 0 {
+			continue
+		}
+		if !when {
+			continue
+		}
+		var opts []survey.AskOpt
+		opts = append(opts, survey.WithValidator(survey.Required))
+		survey.AskOne(&survey.Password{
+			Message: v.Input.Message,
+			Help:    v.Input.Help,
+		}, &v.Value, opts...)
+		c.Env[key] = v
+		os.Setenv(key, v.Value)
+		update = true
+	}
+	if update {
+		c.save()
+	}
+}
+
 func (c *Config) read() error {
 	_, err := os.Stat(c.Path)
 	if err != nil {

@@ -48,40 +48,39 @@ func newUninstallCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			if c.parseErr != nil {
-				return c.parseErr
+
+			resources := c.State.Deletions
+			if len(resources) == 0 {
+				// TODO: improve message
+				log.Printf("[INFO] No packages to uninstall")
+				return nil
 			}
-			return c.run(args)
+
+			// not uninstall all old packages. Instead just only uninstall
+			// given packages when not uninstalled yet.
+			var given []state.Resource
+			for _, arg := range args {
+				resource, err := c.getFromDeletions(arg)
+				if err != nil {
+					// no hit in deletions
+					continue
+				}
+				given = append(given, resource)
+			}
+			if len(given) > 0 {
+				resources = given
+			}
+
+			return c.run(resources)
 		},
 	}
 
 	return uninstallCmd
 }
 
-func (c *uninstallCmd) run(args []string) error {
-	resources := c.State.Deletions
-	if len(resources) == 0 {
-		// TODO: improve message
-		log.Printf("[INFO] No packages to uninstall")
-		return nil
-	}
-
-	// not uninstall all old packages. Instead just only uninstall
-	// given packages when not uninstalled yet.
-	var given []state.Resource
-	for _, arg := range args {
-		resource, err := c.getFromDeletions(arg)
-		if err != nil {
-			// no hit in deletions
-			continue
-		}
-		given = append(given, resource)
-	}
-	if len(given) > 0 {
-		resources = given
-	}
-
+func (c *uninstallCmd) run(resources []state.Resource) error {
 	var errs errors.Errors
+
 	for _, resource := range resources {
 		err := delete(append(resource.Paths, resource.Home)...)
 		if err != nil {

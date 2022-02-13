@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
+	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/state"
 )
@@ -21,8 +21,6 @@ type meta struct {
 	Packages  []config.Package
 	AppConfig *config.AppConfig
 	State     *state.State
-
-	parseErr error
 }
 
 func (m *meta) init(args []string) error {
@@ -32,18 +30,18 @@ func (m *meta) init(args []string) error {
 
 	files, err := config.WalkDir(cfgRoot)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
 	app := &config.DefaultAppConfig
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to read config", file)
 		}
 		pkgs, err := cfg.Parse()
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		m.Packages = append(m.Packages, pkgs...)
 
@@ -55,7 +53,7 @@ func (m *meta) init(args []string) error {
 	m.AppConfig = app
 
 	if err := config.Validate(m.Packages); err != nil {
-		return err
+		return errors.Wrap(err, "%s: failed to validate packages")
 	}
 
 	m.Env = env.New(cache)
@@ -83,7 +81,7 @@ func (m *meta) init(args []string) error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
 	if err != nil {
-		return errors.New("something wrong in state file")
+		return errors.Wrap(err, "faield to open state file")
 	}
 	m.State = s
 

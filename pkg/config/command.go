@@ -27,8 +27,8 @@ type Command struct {
 
 // Build is
 type Build struct {
-	Env   map[string]string `yaml:"env"`
 	Steps []string          `yaml:"steps"`
+	Env   map[string]string `yaml:"env"`
 }
 
 // Link is
@@ -61,7 +61,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	if err := yaml.Unmarshal(b, &tmp); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
 
 	l.From = tmp.From
@@ -95,7 +95,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		file := filepath.Join(pkg.GetHome(), link.From)
 		matches, err := zglob.Glob(file)
 		if err != nil {
-			return links, errors.Wrapf(err, "%s: failed to get links (%#v)", pkg.GetName(), link)
+			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
 		}
 		var src string
 		switch len(matches) {
@@ -209,7 +209,7 @@ func (c Command) Install(pkg Package) error {
 	links, err := c.GetLink(pkg)
 	if len(links) == 0 {
 		log.Printf("[ERROR] no links: %s\n", pkg.GetName())
-		return err
+		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
 	}
 
 	var errs errors.Errors

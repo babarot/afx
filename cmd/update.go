@@ -49,14 +49,35 @@ func newUpdateCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			if c.parseErr != nil {
-				return c.parseErr
+
+			pkgs := c.State.Changes
+			if len(pkgs) == 0 {
+				// TODO: improve message
+				log.Printf("[INFO] No packages to update")
+				return nil
 			}
-			c.Env.Ask(
-				"AFX_SUDO_PASSWORD",
-				"GITHUB_TOKEN",
-			)
-			return c.run(args)
+
+			// not update all packages. Instead just only update
+			// given packages when not updated yet.
+			var given []config.Package
+			for _, arg := range args {
+				pkg, err := c.getFromChanges(arg)
+				if err != nil {
+					// no hit in changes
+					continue
+				}
+				given = append(given, pkg)
+			}
+			if len(given) > 0 {
+				pkgs = given
+			}
+
+			c.Env.AskWhen(map[string]bool{
+				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
+				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
+			})
+
+			return c.run(pkgs)
 		},
 	}
 
@@ -68,46 +89,26 @@ type updateResult struct {
 	Error   error
 }
 
-func (c *updateCmd) run(args []string) error {
-	eg := errgroup.Group{}
-
+func (c *updateCmd) run(pkgs []config.Package) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	pkgs := c.State.Changes
-	if len(pkgs) == 0 {
-		// TODO: improve message
-		log.Printf("[INFO] No packages to update")
-		return nil
-	}
-
-	// not update all packages. Instead just only update
-	// given packages when not updated yet.
-	var given []config.Package
-	for _, arg := range args {
-		pkg, err := c.getFromChanges(arg)
-		if err != nil {
-			// no hit in changes
-			continue
-		}
-		given = append(given, pkg)
-	}
-	if len(given) > 0 {
-		pkgs = given
-	}
-
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
+	limit := make(chan struct{}, 16)
+	results := make(chan updateResult)
 
 	go func() {
 		progress.Print(completion)
 	}()
 
 	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
-	results := make(chan updateResult)
+	eg := errgroup.Group{}
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
+			limit <- struct{}{}
+			defer func() { <-limit }()
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:

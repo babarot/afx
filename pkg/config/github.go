@@ -131,18 +131,18 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Progress: writer,
 		})
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to clone repository", c.GetName())
 		}
 	default:
 		r, err = git.PlainOpen(c.GetHome())
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to open repository", c.GetName())
 		}
 	}
 
 	w, err := r.Worktree()
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to get worktree", c.GetName())
 	}
 
 	if c.Branch != "" {
@@ -161,14 +161,14 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Progress: writer,
 		})
 		if err != nil && err != git.NoErrAlreadyUpToDate {
-			return errors.Wrap(err, "failed to fetch")
+			return errors.Wrapf(err, "%s: failed to fetch repository", c.Branch)
 		}
 		err = w.Checkout(&git.CheckoutOptions{
 			Branch: plumbing.ReferenceName("refs/heads/" + c.Branch),
 			Force:  true,
 		})
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to checkout", c.Branch)
 		}
 	}
 
@@ -192,14 +192,14 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 	case c.Release == nil:
 		err := c.Clone(ctx)
 		if err != nil {
-			err = errors.Wrap(err, "failed to clone repo")
+			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
 			status <- Status{Path: c.GetHome(), Done: true, Err: true}
 			return err
 		}
 	case c.Release != nil:
 		err := c.InstallFromRelease(ctx)
 		if err != nil {
-			err = errors.Wrap(err, "failed to get from release")
+			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
 			status <- Status{Path: c.GetHome(), Done: true, Err: true}
 			return err
 		}
@@ -310,11 +310,11 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	}
 
 	if err := release.Download(ctx); err != nil {
-		return errors.Wrapf(err, "failed to download: %q", release.Name)
+		return errors.Wrapf(err, "%s: failed to download", release.Name)
 	}
 
 	if err := release.Unarchive(); err != nil {
-		return errors.Wrapf(err, "failed to unarchive: %q", release.Name)
+		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
 	}
 
 	return nil
@@ -350,7 +350,16 @@ func (r *GitHubRelease) filter(fn func(Asset) bool) *GitHubRelease {
 		}
 	}
 	r.Assets = assets
+	log.Printf("[DEBUG] assets filter: filtered: %#v", asssetNames(assets))
 	return r
+}
+
+func asssetNames(assets []Asset) []string {
+	var names []string
+	for _, asset := range assets {
+		names = append(names, asset.Name)
+	}
+	return names
 }
 
 // Download is
@@ -358,7 +367,17 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	log.Printf("[DEBUG] assets: %#v\n", r.Assets)
+	log.Printf("[DEBUG] assets: %#v\n", asssetNames(r.Assets))
+
+	if len(r.Assets) == 0 {
+		return fmt.Errorf("%s: no assets found", r.Name)
+	}
+
+	r.filter(func(asset Asset) bool {
+		expr := ".*(sha256sum|checksum).*"
+		// filter out
+		return !regexp.MustCompile(expr).MatchString(asset.Name)
+	})
 
 	r.filter(func(asset Asset) bool {
 		expr := ""
@@ -383,7 +402,8 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	})
 
 	if len(r.Assets) == 0 {
-		return fmt.Errorf("%s no assets found", r.Name)
+		// as a result of filtering
+		return fmt.Errorf("%s: assets is gone due to filter assets", r.Name)
 	}
 
 	asset := r.Assets[0]
@@ -403,7 +423,7 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	os.MkdirAll(asset.Home, os.ModePerm)
 	file, err := os.Create(asset.Path)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to create file", asset.Path)
 	}
 	defer file.Close()
 	_, err = io.Copy(file, resp.Body)
@@ -466,12 +486,11 @@ func (r *GitHubRelease) Unarchive() error {
 
 	u, ok := uaIface.(archiver.Unarchiver)
 	if !ok {
-		return errors.New("not supported archive file")
+		return errors.New("cannot type assertion with archiver.Unarchiver")
 	}
 
 	if err := u.Unarchive(a.Path, a.Home); err != nil {
-		log.Printf("[ERROR] failed to unarchive %s: %s\n", r.Name, err)
-		return errors.Wrap(err, "archiver.Unarchive(): failed")
+		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
 	log.Printf("[DEBUG] removed archive file: %s\n", a.Path)
@@ -547,5 +566,5 @@ func (c GitHub) GetName() string {
 
 // GetHome returns a path
 func (c GitHub) GetHome() string {
-	return filepath.Join(os.Getenv("AFX_ROOT"), "github.com", c.Owner, c.Repo)
+	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
 }

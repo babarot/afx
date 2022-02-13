@@ -9,7 +9,8 @@ builds:
     binary: afx
     ldflags:
       - -s -w
-      - -X github.com/b4b4r07/afx/cmd.Version={{.Version}}
+      # - -X github.com/b4b4r07/afx/cmd.Version={{.Version}}
+      - -X github.com/b4b4r07/afx/cmd.Version={{.Tag}}
       - -X github.com/b4b4r07/afx/cmd.BuildTag={{.Tag}}
       - -X github.com/b4b4r07/afx/cmd.BuildSHA={{.ShortCommit}}
     env:

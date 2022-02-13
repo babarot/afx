@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 
@@ -43,6 +44,9 @@ type Resource struct {
 }
 
 func (e Resource) exists() bool {
+	if len(e.Paths) == 0 {
+		return false
+	}
 	for _, path := range e.Paths {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			return false
@@ -53,14 +57,20 @@ func (e Resource) exists() bool {
 
 func toResource(pkg config.Package) Resource {
 	var paths []string
+
+	// repository existence is also one of the path resource
+	paths = append(paths, pkg.GetHome())
+
 	if pkg.HasPluginBlock() {
 		plugin := pkg.GetPluginBlock()
 		paths = append(paths, plugin.GetSources(pkg)...)
 	}
+
 	if pkg.HasCommandBlock() {
 		command := pkg.GetCommandBlock()
 		links, err := command.GetLink(pkg)
 		if err != nil {
+			// TODO: thinking about what to do here
 			// no handling
 		}
 		for _, link := range links {
@@ -68,6 +78,7 @@ func toResource(pkg config.Package) Resource {
 			paths = append(paths, link.To)
 		}
 	}
+
 	version := ""
 	switch v := pkg.(type) {
 	case *config.GitHub:
@@ -75,6 +86,8 @@ func toResource(pkg config.Package) Resource {
 			version = v.Release.Tag
 		}
 	}
+
+	log.Printf("[DEBUG] %s: add paths to state: %#v", pkg.GetName(), paths)
 	return Resource{
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
@@ -186,10 +199,8 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	_, err := os.Stat(path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
+		// just create empty state when state has not been created yet
 		s.Resources = map[string]Resource{}
-		for _, pkg := range pkgs {
-			add(pkg, &s)
-		}
 	default:
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
