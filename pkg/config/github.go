@@ -350,7 +350,16 @@ func (r *GitHubRelease) filter(fn func(Asset) bool) *GitHubRelease {
 		}
 	}
 	r.Assets = assets
+	log.Printf("[DEBUG] assets filter: filtered: %#v", asssetNames(assets))
 	return r
+}
+
+func asssetNames(assets []Asset) []string {
+	var names []string
+	for _, asset := range assets {
+		names = append(names, asset.Name)
+	}
+	return names
 }
 
 // Download is
@@ -358,7 +367,17 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	log.Printf("[DEBUG] assets: %#v\n", r.Assets)
+	log.Printf("[DEBUG] assets: %#v\n", asssetNames(r.Assets))
+
+	if len(r.Assets) == 0 {
+		return fmt.Errorf("%s: no assets found", r.Name)
+	}
+
+	r.filter(func(asset Asset) bool {
+		expr := ".*(sha256sum|checksum).*"
+		// filter out
+		return !regexp.MustCompile(expr).MatchString(asset.Name)
+	})
 
 	r.filter(func(asset Asset) bool {
 		expr := ""
