@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 
@@ -56,10 +57,12 @@ func (e Resource) exists() bool {
 
 func toResource(pkg config.Package) Resource {
 	var paths []string
+
 	if pkg.HasPluginBlock() {
 		plugin := pkg.GetPluginBlock()
 		paths = append(paths, plugin.GetSources(pkg)...)
 	}
+
 	if pkg.HasCommandBlock() {
 		command := pkg.GetCommandBlock()
 		links, err := command.GetLink(pkg)
@@ -71,6 +74,7 @@ func toResource(pkg config.Package) Resource {
 			paths = append(paths, link.To)
 		}
 	}
+
 	version := ""
 	switch v := pkg.(type) {
 	case *config.GitHub:
@@ -78,6 +82,8 @@ func toResource(pkg config.Package) Resource {
 			version = v.Release.Tag
 		}
 	}
+
+	log.Printf("[DEBUG] %s: add paths to state: %#v", pkg.GetName(), paths)
 	return Resource{
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
