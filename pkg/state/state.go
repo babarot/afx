@@ -43,6 +43,9 @@ type Resource struct {
 }
 
 func (e Resource) exists() bool {
+	if len(e.Paths) == 0 {
+		return false
+	}
 	for _, path := range e.Paths {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			return false
@@ -186,10 +189,8 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	_, err := os.Stat(path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
+		// just create empty state when state has not been created yet
 		s.Resources = map[string]Resource{}
-		for _, pkg := range pkgs {
-			add(pkg, &s)
-		}
 	default:
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
