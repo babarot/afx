@@ -30,18 +30,18 @@ func (m *meta) init(args []string) error {
 
 	files, err := config.WalkDir(cfgRoot)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
 	app := &config.DefaultAppConfig
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to read config", file)
 		}
 		pkgs, err := cfg.Parse()
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		m.Packages = append(m.Packages, pkgs...)
 
@@ -53,7 +53,7 @@ func (m *meta) init(args []string) error {
 	m.AppConfig = app
 
 	if err := config.Validate(m.Packages); err != nil {
-		return err
+		return errors.Wrap(err, "%s: failed to validate packages")
 	}
 
 	m.Env = env.New(cache)

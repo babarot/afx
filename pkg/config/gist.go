@@ -162,7 +162,7 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, err := c.Command.GetLink(c)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to get command.link", c.Name)
 		}
 		for _, link := range links {
 			delete(link.From, &errs)

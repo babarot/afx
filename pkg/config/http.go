@@ -86,6 +86,7 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 	defer cancel()
 
 	if err := c.call(ctx); err != nil {
+		err = errors.Wrapf(err, "%s: failed to make HTTP request", c.Name)
 		status <- Status{Path: c.GetHome(), Done: true, Err: true}
 		return err
 	}

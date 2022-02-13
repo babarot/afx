@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/goccy/go-yaml"
 )
 
@@ -98,7 +99,7 @@ func (c Config) Parse() ([]Package, error) {
 func visitYAML(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to visit", path)
 		}
 		switch filepath.Ext(path) {
 		case ".yaml", ".yml":

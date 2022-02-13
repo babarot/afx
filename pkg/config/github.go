@@ -131,18 +131,18 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Progress: writer,
 		})
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to clone repository", c.GetName())
 		}
 	default:
 		r, err = git.PlainOpen(c.GetHome())
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to open repository", c.GetName())
 		}
 	}
 
 	w, err := r.Worktree()
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to get worktree", c.GetName())
 	}
 
 	if c.Branch != "" {
@@ -161,14 +161,14 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Progress: writer,
 		})
 		if err != nil && err != git.NoErrAlreadyUpToDate {
-			return errors.Wrap(err, "failed to fetch")
+			return errors.Wrapf(err, "%s: failed to fetch repository", c.Branch)
 		}
 		err = w.Checkout(&git.CheckoutOptions{
 			Branch: plumbing.ReferenceName("refs/heads/" + c.Branch),
 			Force:  true,
 		})
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to checkout", c.Branch)
 		}
 	}
 
@@ -423,7 +423,7 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	os.MkdirAll(asset.Home, os.ModePerm)
 	file, err := os.Create(asset.Path)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to create file", asset.Path)
 	}
 	defer file.Close()
 	_, err = io.Copy(file, resp.Body)
@@ -486,12 +486,11 @@ func (r *GitHubRelease) Unarchive() error {
 
 	u, ok := uaIface.(archiver.Unarchiver)
 	if !ok {
-		return errors.New("not supported archive file")
+		return errors.New("cannot type assertion with archiver.Unarchiver")
 	}
 
 	if err := u.Unarchive(a.Path, a.Home); err != nil {
-		log.Printf("[ERROR] failed to unarchive %s: %s\n", r.Name, err)
-		return errors.Wrap(err, "archiver.Unarchive(): failed")
+		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
 	log.Printf("[DEBUG] removed archive file: %s\n", a.Path)

@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
@@ -51,7 +52,7 @@ func newRootCmd() *cobra.Command {
 func Execute() error {
 	logWriter, err := logging.LogOutput()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "%s: failed to set logger")
 	}
 	log.SetOutput(logWriter)
 
