@@ -216,7 +216,21 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	s.Deletions = s.listDeletions()
 	s.Changes = s.listChanges()
 
+	log.Printf("[DEBUG] state additions: %#v", keys(s.Additions))
+	log.Printf("[DEBUG] state readditions: %#v", keys(s.Readditions))
+	log.Printf("[DEBUG] state deletions: %#v", s.Deletions)
+	log.Printf("[DEBUG] state changes: %#v", keys(s.Changes))
+
 	return &s, s.save()
+}
+
+// TODO: Improve this func
+func keys(pkgs []config.Package) []string {
+	var keys []string
+	for _, pkg := range pkgs {
+		keys = append(keys, pkg.GetName())
+	}
+	return keys
 }
 
 func (s *State) Add(pkg config.Package) {

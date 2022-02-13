@@ -349,12 +349,18 @@ func (r *GitHubRelease) filter(fn func(Asset) bool) *GitHubRelease {
 			assets = append(assets, asset)
 		}
 	}
+
+	// logging if assets are changed by filter
+	if len(r.Assets) != len(assets) {
+		log.Printf("[DEBUG] assets filter: filtered: %#v", getAssetKeys(assets))
+	}
+
 	r.Assets = assets
-	log.Printf("[DEBUG] assets filter: filtered: %#v", asssetNames(assets))
 	return r
 }
 
-func asssetNames(assets []Asset) []string {
+// getAssetKeys just returns list of asset.Name
+func getAssetKeys(assets []Asset) []string {
 	var names []string
 	for _, asset := range assets {
 		names = append(names, asset.Name)
@@ -367,7 +373,7 @@ func (r *GitHubRelease) Download(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	log.Printf("[DEBUG] assets: %#v\n", asssetNames(r.Assets))
+	log.Printf("[DEBUG] assets: %#v\n", getAssetKeys(r.Assets))
 
 	if len(r.Assets) == 0 {
 		return fmt.Errorf("%s: no assets found", r.Name)
@@ -445,7 +451,16 @@ func (r *GitHubRelease) Unarchive() error {
 		// but in this case, maybe not archived file: e.g. tigrawap/slit
 		//
 		log.Printf("[ERROR] archiver.ByExtension(): %v", err)
-		log.Printf("[DEBUG] %q is not an archive file so directly install", a.Name)
+
+		// TODO: remove this logic?
+		// thanks to this logic, we don't need to specify this statement to link.from
+		//
+		//   command:
+		//     link:
+		//     - from: '*jq*'
+		//
+		// because this logic renames a binary of 'jq-1.6' to 'jq'
+		//
 		target := filepath.Join(a.Home, r.Name)
 		if _, err := os.Stat(target); err != nil {
 			log.Printf("[DEBUG] renamed from %s to %s", a.Path, target)

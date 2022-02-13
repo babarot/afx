@@ -72,6 +72,15 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 
 // GetLink is
 func (c Command) GetLink(pkg Package) ([]Link, error) {
+	var links []Link
+
+	if _, err := os.Stat(pkg.GetHome()); err != nil {
+		return links, fmt.Errorf(
+			"%s: still not exists. this method should have been called after install was done",
+			pkg.GetHome(),
+		)
+	}
+
 	getTo := func(link *Link) string {
 		dest := link.To
 		if link.To == "" {
@@ -83,7 +92,6 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		return dest
 	}
 
-	var links []Link
 	for _, link := range c.Link {
 		if link.From == "." {
 			links = append(links, Link{
@@ -207,9 +215,13 @@ func (c Command) Install(pkg Package) error {
 	}
 
 	links, err := c.GetLink(pkg)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+	}
+
 	if len(links) == 0 {
 		log.Printf("[ERROR] no links: %s\n", pkg.GetName())
-		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+		return fmt.Errorf("%s: GetLlink() returns nothing", pkg.GetName())
 	}
 
 	var errs errors.Errors
