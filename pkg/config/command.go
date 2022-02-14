@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -23,6 +24,7 @@ type Command struct {
 	Env     map[string]string `yaml:"env"`
 	Alias   map[string]string `yaml:"alias"`
 	Snippet string            `yaml:"snippet"`
+	If      string            `yaml:"if"`
 }
 
 // Build is
@@ -269,6 +271,17 @@ func (c Command) Init(pkg Package) error {
 		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
 		fmt.Printf("## %s\n", msg)
 		return errors.New(msg)
+	}
+
+	if len(c.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: command.if returns not zero, so stopped to init package", pkg.GetName())
+			return err
+		}
 	}
 
 	for k, v := range c.Env {
