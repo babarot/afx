@@ -118,7 +118,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 			case results <- updateResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return ctx.Err()
+				return errors.Wrapf(ctx.Err(), "%s: cancelled updating", pkg.GetName())
 			}
 		})
 	}
