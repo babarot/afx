@@ -313,3 +313,36 @@ string | no
           echo "see github.com/tmux-plugins/tpm"
 
     ```
+
+### if
+
+Type | Required
+---|---
+string | no
+
+`if` allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.
+
+In `if` field, you can write shell scripts (currently `bash` is only supported). The exit code finally returned from that shell script is used to determine whether it links command or not.
+
+=== "Case 1"
+
+    ```yaml hl_lines="10 11" title="link commands if git is installed"
+    github:
+    - name: chmln/sd
+      description: Intuitive find & replace CLI (sed alternative)
+      owner: chmln
+      repo: sd
+      release:
+        name: sd
+        tag: 0.6.5
+      command:
+        if: |
+          type git &>/dev/null
+        snippet: |
+          replace() {
+            case "${#}" in
+              1) git grep "${1}" ;;
+              2) git grep -l "${1}" | xargs -I% sd "${1}" "${2}" % ;;
+            esac
+          }
+    ```

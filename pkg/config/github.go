@@ -31,12 +31,18 @@ type GitHub struct {
 	Owner       string `yaml:"owner"`
 	Repo        string `yaml:"repo"`
 	Description string `yaml:"description"`
-	Branch      string `yaml:"branch"`
+
+	Branch string        `yaml:"branch"`
+	Option *GitHubOption `yaml:"with"`
 
 	Release *Release `yaml:"release"`
 
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"`
+}
+
+type GitHubOption struct {
+	Depth int `yaml:"depth"`
 }
 
 // Release represents a GitHub release structure
@@ -93,7 +99,7 @@ func getRelease(ctx context.Context, owner, repo string) (*Release, *Command) {
 			Tag:  latest.GetTagName(),
 		}
 		command = &Command{
-			Link: []*Link{&Link{
+			Link: []*Link{{
 				From: repo,
 				To:   repo,
 			}},
@@ -117,8 +123,13 @@ func (c GitHub) Init() error {
 // Clone runs git clone
 func (c GitHub) Clone(ctx context.Context) error {
 	writer := ioutil.Discard
-	if logging.IsDebugOrHigher() {
+	if logging.IsTrace() {
 		writer = os.Stdout
+	}
+
+	var opt GitHubOption
+	if c.Option != nil {
+		opt = *c.Option
 	}
 
 	var r *git.Repository
@@ -128,6 +139,7 @@ func (c GitHub) Clone(ctx context.Context) error {
 		r, err = git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
 			URL:      fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo),
 			Tags:     git.NoTags,
+			Depth:    opt.Depth,
 			Progress: writer,
 		})
 		if err != nil {
@@ -155,7 +167,7 @@ func (c GitHub) Clone(ctx context.Context) error {
 					plumbing.NewBranchReferenceName(c.Branch),
 				)),
 			},
-			Depth:    1,
+			Depth:    opt.Depth,
 			Force:    true,
 			Tags:     git.NoTags,
 			Progress: writer,

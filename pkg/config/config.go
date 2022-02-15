@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -69,11 +70,23 @@ func parse(cfg Config) []Package {
 	var pkgs []Package
 	for _, pkg := range cfg.GitHub {
 		// TODO: Remove?
-		if pkg.HasReleaseBlock() && !pkg.HasCommandBlock() {
-			pkg.Command = &Command{
-				Link: []*Link{
-					{From: filepath.Join("**", pkg.Release.Name)},
-				},
+		if pkg.HasReleaseBlock() {
+			msg := fmt.Sprintf(
+				"[DEBUG] %s: added '**/%s' to link.from to complete missing links in github release",
+				pkg.GetName(), pkg.Release.Name,
+			)
+			defaultLinks := []*Link{
+				{From: filepath.Join("**", pkg.Release.Name)},
+			}
+			if pkg.HasCommandBlock() {
+				links, _ := pkg.Command.GetLink(pkg)
+				if len(links) == 0 {
+					log.Printf(msg)
+					pkg.Command.Link = defaultLinks
+				}
+			} else {
+				log.Printf(msg)
+				pkg.Command = &Command{Link: defaultLinks}
 			}
 		}
 		pkgs = append(pkgs, pkg)

@@ -1,9 +1,12 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/mattn/go-zglob"
@@ -15,6 +18,7 @@ type Plugin struct {
 	Env            map[string]string `yaml:"env"`
 	Snippet        string            `yaml:"snippet"`
 	SnippetPrepare string            `yaml:"snippet-prepare"`
+	If             string            `yaml:"if"`
 }
 
 // Installed returns true ...
@@ -57,6 +61,17 @@ func (p Plugin) Init(pkg Package) error {
 		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
 		fmt.Printf("## %s\n", msg)
 		return errors.New(msg)
+	}
+
+	if len(p.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: plugin.if returns not zero, so stopped to install package", pkg.GetName())
+			return fmt.Errorf("%s: failed to run plugin.if: %w", pkg.GetName(), err)
+		}
 	}
 
 	if s := p.SnippetPrepare; s != "" {

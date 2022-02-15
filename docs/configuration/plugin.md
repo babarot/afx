@@ -144,3 +144,26 @@ This option comes from https://github.com/b4b4r07/afx/issues/6.
         sources:
         - pure.zsh
     ```
+
+### if
+
+Type | Required
+---|---
+string | no
+
+`if` allows you to specify the condition to load packages. If it returns true, then the plugin will be loaded. But if it returns false, the plugin will not be loaded.
+
+In `if` field, you can write shell scripts (currently `bash` is only supported). The exit code finally returned from that shell script is used to determine whether it loads plugin or not.
+
+=== "Case 1"
+
+    ```yaml hl_lines="5 6" title="if login shell is zsh, plugin will be loaded"
+    local:
+    - name: zsh
+      directory: ~/.zsh
+      plugin:
+        if: |
+          [[ $SHELL == *zsh* ]]
+        sources:
+        - '[0-9]*.zsh'
+    ```

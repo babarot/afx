@@ -43,6 +43,7 @@ name | string | yes | Package name (must be unique in all packages)
 description | string | | A description of a package
 owner | string | yes | GitHub owner
 repo | string | yes | GitHub repo
+with.depth | int | no | Fetch commit depth (default: 0). N>0 means shallow clone
 release.name | string | yes (in `release`) | GitHub release name
 release.tag | string | | GitHub release tag
 command | section | | See [Command](../command.md) page
