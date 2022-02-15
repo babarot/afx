@@ -14,10 +14,11 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources []string          `yaml:"sources"`
-	Env     map[string]string `yaml:"env"`
-	Snippet string            `yaml:"snippet"`
-	If      string            `yaml:"if"`
+	Sources        []string          `yaml:"sources"`
+	Env            map[string]string `yaml:"env"`
+	Snippet        string            `yaml:"snippet"`
+	SnippetPrepare string            `yaml:"snippet-prepare"`
+	If             string            `yaml:"if"`
 }
 
 // Installed returns true ...
@@ -71,6 +72,10 @@ func (p Plugin) Init(pkg Package) error {
 			log.Printf("[ERROR] %s: plugin.if returns not zero, so stopped to install package", pkg.GetName())
 			return fmt.Errorf("%s: failed to run plugin.if: %w", pkg.GetName(), err)
 		}
+	}
+
+	if s := p.SnippetPrepare; s != "" {
+		fmt.Printf("%s\n", s)
 	}
 
 	sources := p.GetSources(pkg)
