@@ -121,7 +121,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 			case results <- installResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return ctx.Err()
+				return errors.Wrapf(ctx.Err(), "%s: cancelled installation", pkg.GetName())
 			}
 		})
 	}
