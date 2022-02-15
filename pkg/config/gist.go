@@ -81,7 +81,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 		Tags: git.NoTags,
 	})
 	if err != nil {
-		status <- Status{Path: c.GetHome(), Done: true, Err: true}
+		status <- Status{Name: c.GetName(), Done: true, Err: true}
 		return errors.Wrapf(err, "%s: failed to clone gist repo", c.Name)
 	}
 
@@ -93,7 +93,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Path: c.GetHome(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 

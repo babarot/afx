@@ -193,14 +193,14 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		err := c.Clone(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
-			status <- Status{Path: c.GetHome(), Done: true, Err: true}
+			status <- Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	case c.Release != nil:
 		err := c.InstallFromRelease(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
-			status <- Status{Path: c.GetHome(), Done: true, Err: true}
+			status <- Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	}
@@ -213,7 +213,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Path: c.GetHome(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 

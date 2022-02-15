@@ -21,8 +21,8 @@ type Progress struct {
 func NewProgress(pkgs []Package) Progress {
 	status := make(map[string]Status)
 	for _, pkg := range pkgs {
-		status[pkg.GetHome()] = Status{
-			Path: pkg.GetHome(),
+		status[pkg.GetName()] = Status{
+			Name: pkg.GetName(),
 			Done: false,
 			Err:  false,
 		}
@@ -36,28 +36,16 @@ func (p Progress) Print(completion chan Status) {
 	red := color.New(color.FgRed).SprintFunc()
 	white := color.New(color.FgWhite).SprintFunc()
 
-	// redbg := color.New(color.BgRed, color.FgBlack).SprintFunc()
-	// greenbg := color.New(color.BgGreen, color.FgBlack).SprintFunc()
-
 	fadedOutput := color.New(color.FgCyan)
 	for {
 		s := <-completion
-		project := getProjectFromPath(s.Path)
 		fmt.Printf("\x1b[2K")
 		if s.Err {
-			// if !(len(s.Output) < 1) {
-			// 	fmt.Println(redbg(" ✖ " + project + " "))
-			// 	fmt.Println(s.Output)
-			// }
-			fmt.Println(red("✖"), white(project))
+			fmt.Println(red("✖"), white(s.Name))
 		} else {
-			// if !(len(s.Output) < 1) {
-			// 	fmt.Println(greenbg(" ✔ " + project + " "))
-			// 	fmt.Println(s.Output)
-			// }
-			fmt.Println(green("✔"), white(project))
+			fmt.Println(green("✔"), white(s.Name))
 		}
-		p.Status[s.Path] = s
+		p.Status[s.Name] = s
 		count, repos := countRemaining(p.Status)
 
 		if count == len(p.Status) {
@@ -78,14 +66,9 @@ func (p Progress) Print(completion chan Status) {
 
 // Status is
 type Status struct {
-	Path string
+	Name string
 	Done bool
 	Err  bool
-}
-
-func getProjectFromPath(path string) string {
-	pathChunks := strings.Split(path, "/")
-	return pathChunks[len(pathChunks)-1]
 }
 
 func countRemaining(status map[string]Status) (int, []string) {
@@ -95,7 +78,7 @@ func countRemaining(status map[string]Status) (int, []string) {
 		if s.Done {
 			count++
 		} else {
-			repos = append(repos, getProjectFromPath(s.Path))
+			repos = append(repos, s.Name)
 		}
 	}
 	return count, repos

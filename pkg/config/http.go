@@ -87,7 +87,7 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 
 	if err := c.call(ctx); err != nil {
 		err = errors.Wrapf(err, "%s: failed to make HTTP request", c.Name)
-		status <- Status{Path: c.GetHome(), Done: true, Err: true}
+		status <- Status{Name: c.GetName(), Done: true, Err: true}
 		return err
 	}
 
@@ -99,7 +99,7 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Path: c.GetHome(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 
