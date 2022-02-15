@@ -211,17 +211,6 @@ func (c Command) build(pkg Package) error {
 
 // Install is
 func (c Command) Install(pkg Package) error {
-	if len(c.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
-		err := cmd.Run()
-		switch cmd.ProcessState.ExitCode() {
-		case 0:
-		default:
-			log.Printf("[ERROR] %s: command.if returns not zero, so stopped to install package", pkg.GetName())
-			return fmt.Errorf("%s: failed to run command.if: %w", pkg.GetName(), err)
-		}
-	}
-
 	if c.buildRequired() {
 		err := c.build(pkg)
 		if err != nil {
@@ -275,12 +264,38 @@ func (c Command) Install(pkg Package) error {
 	return errs.ErrorOrNil()
 }
 
+func (c Command) Unlink(pkg Package) error {
+	links, err := c.GetLink(pkg)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+	}
+
+	var errs errors.Errors
+	for _, link := range links {
+		log.Printf("[DEBUG] %s: unlinked %s", pkg.GetName(), link.To)
+		errs.Append(os.Remove(link.To))
+	}
+	return errs.ErrorOrNil()
+}
+
 // Init returns necessary things which should be loaded when executing commands
 func (c Command) Init(pkg Package) error {
 	if !pkg.Installed() {
 		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
 		fmt.Printf("## %s\n", msg)
 		return errors.New(msg)
+	}
+
+	if len(c.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: command.if returns not zero so unlink package", pkg.GetName())
+			c.Unlink(pkg)
+			return fmt.Errorf("%s: failed to run command.if: %w", pkg.GetName(), err)
+		}
 	}
 
 	for k, v := range c.Env {
