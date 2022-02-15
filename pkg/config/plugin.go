@@ -33,6 +33,16 @@ func (p Plugin) Installed(pkg Package) bool {
 
 // Install is
 func (p Plugin) Install(pkg Package) error {
+	if len(p.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: plugin.if returns not zero, so stopped to install package", pkg.GetName())
+			return fmt.Errorf("%s: failed to run plugin.if: %w", pkg.GetName(), err)
+		}
+	}
 	return nil
 }
 
@@ -62,19 +72,7 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
-	if len(p.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
-		err := cmd.Run()
-		switch cmd.ProcessState.ExitCode() {
-		case 0:
-		default:
-			log.Printf("[ERROR] %s: command.if returns not zero, so stopped to init package", pkg.GetName())
-			return err
-		}
-	}
-
 	sources := p.GetSources(pkg)
-
 	if len(sources) == 0 {
 		return errors.New("no source files")
 	}
