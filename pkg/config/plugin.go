@@ -1,9 +1,12 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/mattn/go-zglob"
@@ -14,6 +17,7 @@ type Plugin struct {
 	Sources []string          `yaml:"sources"`
 	Env     map[string]string `yaml:"env"`
 	Snippet string            `yaml:"snippet"`
+	If      string            `yaml:"if"`
 }
 
 // Installed returns true ...
@@ -58,8 +62,18 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
-	sources := p.GetSources(pkg)
+	if len(p.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: plugin.if returns not zero, so stopped to install package", pkg.GetName())
+			return fmt.Errorf("%s: failed to run plugin.if: %w", pkg.GetName(), err)
+		}
+	}
 
+	sources := p.GetSources(pkg)
 	if len(sources) == 0 {
 		return errors.New("no source files")
 	}

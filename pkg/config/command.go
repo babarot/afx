@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -23,6 +24,7 @@ type Command struct {
 	Env     map[string]string `yaml:"env"`
 	Alias   map[string]string `yaml:"alias"`
 	Snippet string            `yaml:"snippet"`
+	If      string            `yaml:"if"`
 }
 
 // Build is
@@ -210,10 +212,9 @@ func (c Command) build(pkg Package) error {
 // Install is
 func (c Command) Install(pkg Package) error {
 	if c.buildRequired() {
-		log.Printf("[DEBUG] build command block...\n")
 		err := c.build(pkg)
 		if err != nil {
-			return errors.Wrapf(err, "failed to build: %s", pkg.GetName())
+			return errors.Wrapf(err, "%s: failed to build", pkg.GetName())
 		}
 	}
 
@@ -223,8 +224,8 @@ func (c Command) Install(pkg Package) error {
 	}
 
 	if len(links) == 0 {
-		log.Printf("[ERROR] no links: %s\n", pkg.GetName())
-		return fmt.Errorf("%s: GetLlink() returns nothing", pkg.GetName())
+		log.Printf("[ERROR] %s: no links", pkg.GetName())
+		return fmt.Errorf("%s: GetLink() returns nothing", pkg.GetName())
 	}
 
 	var errs errors.Errors
@@ -232,13 +233,13 @@ func (c Command) Install(pkg Package) error {
 		// Create base dir if not exists when creating symlink
 		pdir := filepath.Dir(link.To)
 		if _, err := os.Stat(pdir); os.IsNotExist(err) {
-			log.Printf("[DEBUG] create directory to install path: %s", pdir)
+			log.Printf("[DEBUG] %s: created directory to install path", pdir)
 			os.MkdirAll(pdir, 0755)
 		}
 
 		fi, err := os.Stat(link.From)
 		if err != nil {
-			log.Printf("[ERROR] link.from %q: no such file or directory\n", link.From)
+			log.Printf("[ERROR] %s: no such file or directory\n", link.From)
 			continue
 		}
 		switch fi.Mode() {
@@ -249,11 +250,11 @@ func (c Command) Install(pkg Package) error {
 		}
 
 		if _, err := os.Lstat(link.To); err == nil {
-			log.Printf("[DEBUG] removed %s because already exists before linking", link.To)
+			log.Printf("[DEBUG] %s: removed because already exists before linking", link.To)
 			os.Remove(link.To)
 		}
 
-		log.Printf("[DEBUG] create symlink %s to %s", link.From, link.To)
+		log.Printf("[DEBUG] created symlink %s to %s", link.From, link.To)
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)
 			errs.Append(err)
@@ -263,12 +264,38 @@ func (c Command) Install(pkg Package) error {
 	return errs.ErrorOrNil()
 }
 
+func (c Command) Unlink(pkg Package) error {
+	links, err := c.GetLink(pkg)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+	}
+
+	var errs errors.Errors
+	for _, link := range links {
+		log.Printf("[DEBUG] %s: unlinked %s", pkg.GetName(), link.To)
+		errs.Append(os.Remove(link.To))
+	}
+	return errs.ErrorOrNil()
+}
+
 // Init returns necessary things which should be loaded when executing commands
 func (c Command) Init(pkg Package) error {
 	if !pkg.Installed() {
 		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
 		fmt.Printf("## %s\n", msg)
 		return errors.New(msg)
+	}
+
+	if len(c.If) > 0 {
+		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
+		err := cmd.Run()
+		switch cmd.ProcessState.ExitCode() {
+		case 0:
+		default:
+			log.Printf("[ERROR] %s: command.if returns not zero so unlink package", pkg.GetName())
+			c.Unlink(pkg)
+			return fmt.Errorf("%s: failed to run command.if: %w", pkg.GetName(), err)
+		}
 	}
 
 	for k, v := range c.Env {
