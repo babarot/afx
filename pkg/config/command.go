@@ -212,10 +212,9 @@ func (c Command) build(pkg Package) error {
 // Install is
 func (c Command) Install(pkg Package) error {
 	if c.buildRequired() {
-		log.Printf("[DEBUG] build command block...\n")
 		err := c.build(pkg)
 		if err != nil {
-			return errors.Wrapf(err, "failed to build: %s", pkg.GetName())
+			return errors.Wrapf(err, "%s: failed to build", pkg.GetName())
 		}
 	}
 
@@ -225,8 +224,8 @@ func (c Command) Install(pkg Package) error {
 	}
 
 	if len(links) == 0 {
-		log.Printf("[ERROR] no links: %s\n", pkg.GetName())
-		return fmt.Errorf("%s: GetLlink() returns nothing", pkg.GetName())
+		log.Printf("[ERROR] %s: no links", pkg.GetName())
+		return fmt.Errorf("%s: GetLink() returns nothing", pkg.GetName())
 	}
 
 	var errs errors.Errors
@@ -234,13 +233,13 @@ func (c Command) Install(pkg Package) error {
 		// Create base dir if not exists when creating symlink
 		pdir := filepath.Dir(link.To)
 		if _, err := os.Stat(pdir); os.IsNotExist(err) {
-			log.Printf("[DEBUG] create directory to install path: %s", pdir)
+			log.Printf("[DEBUG] %s: created directory to install path", pdir)
 			os.MkdirAll(pdir, 0755)
 		}
 
 		fi, err := os.Stat(link.From)
 		if err != nil {
-			log.Printf("[ERROR] link.from %q: no such file or directory\n", link.From)
+			log.Printf("[ERROR] %s: no such file or directory\n", link.From)
 			continue
 		}
 		switch fi.Mode() {
@@ -251,11 +250,11 @@ func (c Command) Install(pkg Package) error {
 		}
 
 		if _, err := os.Lstat(link.To); err == nil {
-			log.Printf("[DEBUG] removed %s because already exists before linking", link.To)
+			log.Printf("[DEBUG] %s: removed because already exists before linking", link.To)
 			os.Remove(link.To)
 		}
 
-		log.Printf("[DEBUG] create symlink %s to %s", link.From, link.To)
+		log.Printf("[DEBUG] created symlink %s to %s", link.From, link.To)
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)
 			errs.Append(err)
