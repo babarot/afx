@@ -14,7 +14,7 @@ type Plugin struct {
 	Sources        []string          `yaml:"sources"`
 	Env            map[string]string `yaml:"env"`
 	Snippet        string            `yaml:"snippet"`
-	SnippetPrepare string            `yaml:"prepare-snippet"`
+	SnippetPrepare string            `yaml:"snippet-prepare"`
 }
 
 // Installed returns true ...
