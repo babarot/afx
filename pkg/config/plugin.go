@@ -11,9 +11,10 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources []string          `yaml:"sources"`
-	Env     map[string]string `yaml:"env"`
-	Snippet string            `yaml:"snippet"`
+	Sources        []string          `yaml:"sources"`
+	Env            map[string]string `yaml:"env"`
+	Snippet        string            `yaml:"snippet"`
+	SnippetPrepare string            `yaml:"prepare-snippet"`
 }
 
 // Installed returns true ...
@@ -58,8 +59,11 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
-	sources := p.GetSources(pkg)
+	if s := p.SnippetPrepare; s != "" {
+		fmt.Printf("%s\n", s)
+	}
 
+	sources := p.GetSources(pkg)
 	if len(sources) == 0 {
 		return errors.New("no source files")
 	}

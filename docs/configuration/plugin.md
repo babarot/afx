@@ -111,3 +111,36 @@ string | no
           echo "enhancd is enabled, cd command is overrided by enhancd"
           echo "see github.com/b4b4r07/enhancd"
     ```
+
+### snippet-prepare (beta)
+
+Type | Required
+---|---
+string | no
+
+`snippet-prepare` allows you to specify the command which are runned when starting new shell. Unlike `snippet`, this `snippet-prepare` is run before `source` command.
+
+1. Run `snippet-prepare`
+2. Load `sources`
+3. Run `snippet`
+
+This option comes from https://github.com/b4b4r07/afx/issues/6.
+
+=== "Case 1"
+
+    ```yaml hl_lines="7 8 9 10 11 12" title="Run snippet before sources"
+    github:
+    - name: sindresorhus/pure
+      description: Pretty, minimal and fast ZSH prompt
+      owner: sindresorhus
+      repo: pure
+      plugin:
+        snippet-prepare: |
+          zstyle :prompt:pure:git:branch color magenta
+          zstyle :prompt:pure:git:branch:cached color yellow
+          zstyle :prompt:pure:git:dirty color 091
+          zstyle :prompt:pure:user color blue
+          zstyle :prompt:pure:host color blue
+        sources:
+        - pure.zsh
+    ```
