@@ -489,6 +489,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#if" class="md-nav__link">
+    if
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -617,6 +624,13 @@
           <li class="md-nav__item">
   <a href="#snippet" class="md-nav__link">
     snippet
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if" class="md-nav__link">
+    if
   </a>
   
 </li>
@@ -997,6 +1011,48 @@
 </span><span class="hll"><span class="w">      </span><span class="no">echo &quot;tpm is installed, so tmux will be automatically launched&quot;</span><span class="w"></span>
 </span><span class="hll"><span class="w">      </span><span class="no">echo &quot;see github.com/tmux-plugins/tpm&quot;</span><span class="w"></span>
 </span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="if">if<a class="headerlink" href="#if" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p><code>if</code> allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.</p>
+<p>In <code>if</code> field, you can write shell scripts (currently <code>bash</code> is only supported). The exit code finally returned from that shell script is used to determine whether it links command or not.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:1"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Case 1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><span class="filename">link commands if git is installed</span><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chmln/sd</span><span class="w"></span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Intuitive find &amp; replace CLI (sed alternative)</span><span class="w"></span>
+<span class="w">  </span><span class="nt">owner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chmln</span><span class="w"></span>
+<span class="w">  </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sd</span><span class="w"></span>
+<span class="w">  </span><span class="nt">release</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sd</span><span class="w"></span>
+<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6.5</span><span class="w"></span>
+<span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
+<span class="hll"><span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
+</span><span class="hll"><span class="w">      </span><span class="no">type git &amp;&gt;/dev/null</span><span class="w"></span>
+</span><span class="w">    </span><span class="nt">snippet</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w"></span>
+<span class="w">      </span><span class="no">replace() {</span><span class="w"></span>
+<span class="w">        </span><span class="no">case &quot;${#}&quot; in</span><span class="w"></span>
+<span class="w">          </span><span class="no">1) git grep &quot;${1}&quot; ;;</span><span class="w"></span>
+<span class="w">          </span><span class="no">2) git grep -l &quot;${1}&quot; | xargs -I% sd &quot;${1}&quot; &quot;${2}&quot; % ;;</span><span class="w"></span>
+<span class="w">        </span><span class="no">esac</span><span class="w"></span>
+<span class="w">      </span><span class="no">}</span><span class="w"></span>
+</code></pre></div>
 </div>
 </div>
 </div>
