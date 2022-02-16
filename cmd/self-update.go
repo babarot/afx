@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"runtime"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/creativeprojects/go-selfupdate"
@@ -53,10 +53,13 @@ func newSelfUpdateCmd() *cobra.Command {
 }
 
 func (c *selfUpdateCmd) run(args []string) error {
-	if Version == "unset" {
-		fmt.Printf("Failed to update to new version\n")
-		return fmt.Errorf("this version (%s/%s) is compiled from source code",
-			Version, runtime.Version())
+	switch Version {
+	case "unset":
+		c.UI.Error("Failed to update to new version\n")
+		c.UI.Output("-  You need to get precompiled version from GitHub releases")
+		c.UI.Output(fmt.Sprintf("-  This version (%s/%s) is compiled from source code\n",
+			Version, runtime.Version()))
+		return errors.New("failed to run self-update")
 	}
 
 	latest, found, err := selfupdate.DetectLatest("b4b4r07/afx")
@@ -70,17 +73,18 @@ func (c *selfUpdateCmd) run(args []string) error {
 	}
 
 	if latest.LessOrEqual(Version) {
-		fmt.Printf("Current version (%s) is the latest\n", Version)
+		c.UI.Info(fmt.Sprintf("Current version (%s) is the latest", Version))
 		return nil
 	}
 
-	fmt.Printf("Do you want to update to %s? (current: %s) (y/n) ", latest.Version(), Version)
-	input, err := bufio.NewReader(os.Stdin).ReadString('\n')
-	if err != nil || (input != "y\n" && input != "n\n") {
-		fmt.Println("Invalid input")
-		return err
+	yes := false
+	prompt := &survey.Confirm{
+		Message: fmt.Sprintf("Do you want to update to %s? (current version: %s)",
+			latest.Version(), Version),
 	}
-	if input == "n\n" {
+	survey.AskOne(prompt, &yes)
+
+	if !yes {
 		return nil
 	}
 
@@ -93,6 +97,6 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return fmt.Errorf("error occurred while updating binary: %w", err)
 	}
 
-	fmt.Printf("Successfully updated to version %s\n", latest.Version())
+	c.UI.Info(fmt.Sprintf("Successfully updated to version %s", latest.Version()))
 	return nil
 }
