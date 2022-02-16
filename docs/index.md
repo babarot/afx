@@ -16,6 +16,7 @@ Available Commands:
   init        Initialize installed packages
   install     Resume installation from paused part (idempotency)
   self-update Update afx itself to latest version
+  show        Show packages managed by afx
   uninstall   Uninstall installed packages
   update      Update installed package if version etc is changed
 
