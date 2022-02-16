@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/b4b4r07/afx/pkg/templates"
-	"github.com/k0kubun/pp"
 	"github.com/spf13/cobra"
 )
 
@@ -50,31 +50,19 @@ func newShowCmd() *cobra.Command {
 	return showCmd
 }
 
-type Line struct {
-	Name string
-	Type string
-	// status  Status
-}
-type Lines []Line
-
-// type Status string
-
-// const (
-// 	NeedInstall   = Status("NeedInstall")
-// 	NeedReinstall = Status("NeedReinstall")
-// 	NeedUpdate    = Status("NeedUpdate")
-// 	NeedUninstall = Status("NeedUninstall")
-// 	NoChanges     = Status("")
-// )
-
-type Package interface {
-	GetName() string
-}
-
 func (c *showCmd) run(args []string) error {
 	w := printers.GetNewTabWriter(os.Stdout)
 	headers := []string{"NAME", "TYPE"}
 	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+
+	type Line struct {
+		Name string
+		Type string
+	}
+
+	type Package interface {
+		GetName() string
+	}
 
 	var pkgs []Package
 	for _, pkg := range c.Packages {
@@ -83,10 +71,9 @@ func (c *showCmd) run(args []string) error {
 	for _, resource := range c.State.Deletions {
 		pkgs = append(pkgs, resource)
 	}
-	pp.Println(pkgs)
 
-	var lines Lines
-	for _, pkg := range c.Packages {
+	var lines []Line
+	for _, pkg := range pkgs {
 		var ty string
 		switch pkg := pkg.(type) {
 		case *config.GitHub:
@@ -101,45 +88,17 @@ func (c *showCmd) run(args []string) error {
 		case *config.HTTP:
 			ty = "HTTP"
 		default:
-			ty = "unknown"
+			ty = "Unknown"
 		}
 		lines = append(lines, Line{
 			Name: pkg.GetName(),
 			Type: ty,
 		})
 	}
-	// 	var s Status
-	// 	r := c.State.Validate(pkg.GetName())
-	// 	switch r.(type) {
-	// 	case state.Addition:
-	// 		s = NeedInstall
-	// 	case state.Readdition:
-	// 		s = NeedReinstall
-	// 	case state.Change:
-	// 		s = NeedUpdate
-	// 		// case state.Deletion:
-	// 		// 	s = NeedUninstall
-	// 	}
-	// 	fmt.Printf("%T\t%s\n", r, pkg.GetName())
-	// 	lines = append(lines, Line{
-	// 		name:    pkg.GetName(),
-	// 		pkgType: ty,
-	// 		status:  s,
-	// 	})
-	// 	// fields := []string{pkg.GetName(), pkgType, stateType}
-	// 	// fmt.Fprintf(w, strings.Join(fields, "\t")+"\n")
-	// }
-	// for _, resource := range c.State.Deletions {
-	// 	lines = append(lines, Line{
-	// 		name: resource.Name,
-	// 		// pkgType: ty,
-	// 		status: NeedUninstall,
-	// 	})
-	// }
 
-	// lines = lines.filter(func(line Line) bool {
-	// 	return line.status != NoChanges
-	// })
+	sort.Slice(lines, func(i, j int) bool {
+		return lines[i].Name < lines[j].Name
+	})
 	for _, line := range lines {
 		fields := []string{
 			line.Name, line.Type,
@@ -149,13 +108,3 @@ func (c *showCmd) run(args []string) error {
 
 	return w.Flush()
 }
-
-// func (l Lines) filter(fn func(Line) bool) Lines {
-// 	var lines []Line
-// 	for _, line := range l {
-// 		if fn(line) {
-// 			lines = append(lines, line)
-// 		}
-// 	}
-// 	return lines
-// }
