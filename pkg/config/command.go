@@ -286,8 +286,13 @@ func (c Command) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
+	shell := os.Getenv("AFX_SHELL")
+	if shell == "" {
+		shell = "bash"
+	}
+
 	if len(c.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
+		cmd := exec.CommandContext(context.Background(), shell, "-c", c.If)
 		err := cmd.Run()
 		switch cmd.ProcessState.ExitCode() {
 		case 0:
