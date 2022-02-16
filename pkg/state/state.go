@@ -34,17 +34,16 @@ type State struct {
 	// Something changes happened between config file and state file
 	// Currently only version (github.release.tag) is detected as changes
 	Changes []config.Package
+	//
+	NoChanges []config.Package
 }
 
 type Resource struct {
 	Name    string   `json:"name"`
 	Home    string   `json:"home"`
+	Type    string   `json:"type"`
 	Version string   `json:"version"`
 	Paths   []string `json:"paths"`
-}
-
-func (e Resource) GetName() string {
-	return e.Name
 }
 
 func (e Resource) exists() bool {
@@ -83,18 +82,31 @@ func toResource(pkg config.Package) Resource {
 		}
 	}
 
-	version := ""
-	switch v := pkg.(type) {
+	var ty string
+	var version string
+
+	switch pkg := pkg.(type) {
 	case *config.GitHub:
-		if v.HasReleaseBlock() {
-			version = v.Release.Tag
+		ty = "GitHub"
+		if pkg.HasReleaseBlock() {
+			ty = "GitHub Release"
+			version = pkg.Release.Tag
 		}
+	case *config.Gist:
+		ty = "Gist"
+	case *config.Local:
+		ty = "Local"
+	case *config.HTTP:
+		ty = "HTTP"
+	default:
+		ty = "Unknown"
 	}
 
 	log.Printf("[DEBUG] %s: add paths to state: %#v", pkg.GetName(), paths)
 	return Resource{
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
+		Type:    ty,
 		Version: version,
 		Paths:   paths,
 	}
@@ -149,6 +161,32 @@ func (s *State) listChanges() []config.Package {
 		if resource.Version != version {
 			pkgs = append(pkgs, pkg)
 		}
+	}
+	return pkgs
+}
+
+func contains(pkgs []config.Package, name string) bool {
+	for _, pkg := range pkgs {
+		if pkg.GetName() == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *State) listNoChanges() []config.Package {
+	var pkgs []config.Package
+	for _, pkg := range s.packages {
+		if contains(s.listAdditions(), pkg.GetName()) {
+			continue
+		}
+		if contains(s.listReadditions(), pkg.GetName()) {
+			continue
+		}
+		if contains(s.listChanges(), pkg.GetName()) {
+			continue
+		}
+		pkgs = append(pkgs, pkg)
 	}
 	return pkgs
 }
@@ -219,6 +257,7 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	s.Readditions = s.listReadditions()
 	s.Deletions = s.listDeletions()
 	s.Changes = s.listChanges()
+	s.NoChanges = s.listNoChanges()
 
 	log.Printf("[DEBUG] state additions: %#v", getNameInPackages(s.Additions))
 	log.Printf("[DEBUG] state readditions: %#v", getNameInPackages(s.Readditions))

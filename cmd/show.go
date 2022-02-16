@@ -50,61 +50,77 @@ func newShowCmd() *cobra.Command {
 	return showCmd
 }
 
+type Item struct {
+	Name   string
+	Type   string
+	Status string
+}
+
 func (c *showCmd) run(args []string) error {
 	w := printers.GetNewTabWriter(os.Stdout)
-	headers := []string{"NAME", "TYPE"}
-	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+	headers := []string{"NAME", "TYPE", "STATUS"}
 
-	type Line struct {
-		Name string
-		Type string
+	var items []Item
+	for _, pkg := range append(c.State.Additions, c.State.Readditions...) {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "WaitingInstall",
+		})
 	}
-
-	type Package interface {
-		GetName() string
-	}
-
-	var pkgs []Package
-	for _, pkg := range c.Packages {
-		pkgs = append(pkgs, pkg)
+	for _, pkg := range c.State.Changes {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "WaitingUpdate",
+		})
 	}
 	for _, resource := range c.State.Deletions {
-		pkgs = append(pkgs, resource)
+		items = append(items, Item{
+			Name:   resource.Name,
+			Type:   resource.Type,
+			Status: "WaitingUninstall",
+		})
 	}
-
-	var lines []Line
-	for _, pkg := range pkgs {
-		var ty string
-		switch pkg := pkg.(type) {
-		case *config.GitHub:
-			ty = "GitHub"
-			if pkg.HasReleaseBlock() {
-				ty = "GitHub Release"
-			}
-		case *config.Gist:
-			ty = "Gist"
-		case *config.Local:
-			ty = "Local"
-		case *config.HTTP:
-			ty = "HTTP"
-		default:
-			ty = "Unknown"
-		}
-		lines = append(lines, Line{
-			Name: pkg.GetName(),
-			Type: ty,
+	for _, pkg := range c.State.NoChanges {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "Installed",
 		})
 	}
 
-	sort.Slice(lines, func(i, j int) bool {
-		return lines[i].Name < lines[j].Name
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Name < items[j].Name
 	})
-	for _, line := range lines {
+
+	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+	for _, line := range items {
 		fields := []string{
-			line.Name, line.Type,
+			line.Name, line.Type, line.Status,
 		}
 		fmt.Fprintf(w, strings.Join(fields, "\t")+"\n")
 	}
 
 	return w.Flush()
+}
+
+func getType(pkg config.Package) string {
+	var ty string
+	switch pkg := pkg.(type) {
+	case *config.GitHub:
+		ty = "GitHub"
+		if pkg.HasReleaseBlock() {
+			ty = "GitHub Release"
+		}
+	case *config.Gist:
+		ty = "Gist"
+	case *config.Local:
+		ty = "Local"
+	case *config.HTTP:
+		ty = "HTTP"
+	default:
+		ty = "Unknown"
+	}
+	return ty
 }
