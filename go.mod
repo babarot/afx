@@ -10,6 +10,7 @@ require (
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/fatih/color v1.10.0
 	github.com/frankban/quicktest v1.4.1 // indirect
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/goccy/go-yaml v1.9.5
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
