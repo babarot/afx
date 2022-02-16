@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
@@ -51,8 +50,7 @@ func newUninstallCmd() *cobra.Command {
 
 			resources := c.State.Deletions
 			if len(resources) == 0 {
-				// TODO: improve message
-				log.Printf("[INFO] No packages to uninstall")
+				c.UI.Output("No packages to uninstall")
 				return nil
 			}
 

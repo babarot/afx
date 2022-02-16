@@ -107,6 +107,11 @@ func (m *meta) init(args []string) error {
 	}
 	m.State = s
 
+	log.Printf("[INFO] state additions: %#v", getNameInPackages(s.Additions))
+	log.Printf("[INFO] state readditions: %#v", getNameInPackages(s.Readditions))
+	log.Printf("[INFO] state deletions: %#v", getNameInResources(s.Deletions))
+	log.Printf("[INFO] state changes: %#v", getNameInPackages(s.Changes))
+
 	return nil
 }
 
@@ -146,4 +151,20 @@ func (m *meta) Select() (config.Package, error) {
 	}
 
 	return nil, errors.New("pkg not found")
+}
+
+func getNameInPackages(pkgs []config.Package) []string {
+	var keys []string
+	for _, pkg := range pkgs {
+		keys = append(keys, pkg.GetName())
+	}
+	return keys
+}
+
+func getNameInResources(resources []state.Resource) []string {
+	var keys []string
+	for _, resource := range resources {
+		keys = append(keys, resource.Name)
+	}
+	return keys
 }

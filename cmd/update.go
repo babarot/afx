@@ -52,8 +52,7 @@ func newUpdateCmd() *cobra.Command {
 
 			pkgs := c.State.Changes
 			if len(pkgs) == 0 {
-				// TODO: improve message
-				log.Printf("[INFO] No packages to update")
+				c.UI.Output("No packages to update")
 				return nil
 			}
 

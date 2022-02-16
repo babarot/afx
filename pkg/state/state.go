@@ -262,11 +262,6 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	s.Changes = s.listChanges()
 	s.NoChanges = s.listNoChanges()
 
-	log.Printf("[DEBUG] state additions: %#v", getNameInPackages(s.Additions))
-	log.Printf("[DEBUG] state readditions: %#v", getNameInPackages(s.Readditions))
-	log.Printf("[DEBUG] state deletions: %#v", getNameInResources(s.Deletions))
-	log.Printf("[DEBUG] state changes: %#v", getNameInPackages(s.Changes))
-
 	// TODO: maybe better to separate to dedicated command etc?
 	// this is needed to update state schema (e.g. adding new field)
 	// but maybe it's danger a bit
@@ -277,22 +272,6 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	}
 
 	return &s, s.save()
-}
-
-func getNameInPackages(pkgs []config.Package) []string {
-	var keys []string
-	for _, pkg := range pkgs {
-		keys = append(keys, pkg.GetName())
-	}
-	return keys
-}
-
-func getNameInResources(resources []Resource) []string {
-	var keys []string
-	for _, resource := range resources {
-		keys = append(keys, resource.Name)
-	}
-	return keys
 }
 
 func (s *State) Add(pkg config.Package) {

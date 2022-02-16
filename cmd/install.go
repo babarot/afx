@@ -52,8 +52,7 @@ func newInstallCmd() *cobra.Command {
 
 			pkgs := append(c.State.Additions, c.State.Readditions...)
 			if len(pkgs) == 0 {
-				// TODO: improve message
-				log.Printf("[INFO] No packages to install")
+				c.UI.Output("No packages to install")
 				return nil
 			}
 
