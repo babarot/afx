@@ -14,7 +14,7 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources        []string          `yaml:"sources"`
+	Sources        []string          `yaml:"sources" validate:"required"`
 	Env            map[string]string `yaml:"env"`
 	Snippet        string            `yaml:"snippet"`
 	SnippetPrepare string            `yaml:"snippet-prepare"`

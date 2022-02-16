@@ -9,9 +9,9 @@ import (
 
 // Local represents
 type Local struct {
-	Name string `yaml:"name"`
+	Name string `yaml:"name" validate:"required"`
 
-	Directory   string `yaml:"directory"`
+	Directory   string `yaml:"directory" validate:"required"`
 	Description string `yaml:"description"`
 
 	Plugin  *Plugin  `yaml:"plugin"`

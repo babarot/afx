@@ -15,10 +15,10 @@ import (
 
 // Gist represents
 type Gist struct {
-	Name string `yaml:"name"`
+	Name string `yaml:"name" validate:"required"`
 
-	Owner       string `yaml:"owner"`
-	ID          string `yaml:"id"`
+	Owner       string `yaml:"owner" validate:"required"`
+	ID          string `yaml:"id" validate:"required"`
 	Description string `yaml:"description"`
 
 	Plugin  *Plugin  `yaml:"plugin"`

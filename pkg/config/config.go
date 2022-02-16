@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 )
 
@@ -54,10 +55,12 @@ func Read(path string) (Config, error) {
 	}
 	defer f.Close()
 
+	validate := validator.New()
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
 		yaml.DisallowDuplicateKey(),
+		yaml.Validator(validate),
 	)
 	if err := d.Decode(&cfg); err != nil {
 		return cfg, err
