@@ -322,7 +322,7 @@ string | no
 
 `if` allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.
 
-In `if` field, you can write shell scripts (currently `bash` is only supported). The exit code finally returned from that shell script is used to determine whether it links command or not.
+In `if` field, you can write shell scripts[^1]. The exit code finally returned from that shell script is used to determine whether it links command or not.
 
 === "Case 1"
 
@@ -346,3 +346,5 @@ In `if` field, you can write shell scripts (currently `bash` is only supported).
             esac
           }
     ```
+
+[^1]: You can configure your favorite shell to evaluate `if` field by setting `AFX_SHELL`.

@@ -153,7 +153,7 @@ string | no
 
 `if` allows you to specify the condition to load packages. If it returns true, then the plugin will be loaded. But if it returns false, the plugin will not be loaded.
 
-In `if` field, you can write shell scripts (currently `bash` is only supported). The exit code finally returned from that shell script is used to determine whether it loads plugin or not.
+In `if` field, you can write shell scripts[^1]. The exit code finally returned from that shell script is used to determine whether it loads plugin or not.
 
 === "Case 1"
 
@@ -167,3 +167,5 @@ In `if` field, you can write shell scripts (currently `bash` is only supported).
         sources:
         - '[0-9]*.zsh'
     ```
+
+[^1]: You can configure your favorite shell to evaluate `if` field by setting `AFX_SHELL`.
