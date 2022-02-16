@@ -5,7 +5,8 @@ AFX is a command-line package manager. afx can allow us to manage almost all thi
 So afx's motivation is coming from that and to manage them with YAML files (as a code).
 
 ```console
-Package manager for everything
+$ afx help
+Package manager for CLI
 
 Usage:
   afx [command]
@@ -14,8 +15,9 @@ Available Commands:
   help        Help about any command
   init        Initialize installed packages
   install     Resume installation from paused part (idempotency)
+  self-update Update afx itself to latest version
   uninstall   Uninstall installed packages
-  update      Update installed repository if needed
+  update      Update installed package if version etc is changed
 
 Flags:
   -h, --help   help for afx

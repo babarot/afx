@@ -14,7 +14,7 @@ import (
 
 // Plugin is
 type Plugin struct {
-	Sources        []string          `yaml:"sources"`
+	Sources        []string          `yaml:"sources" validate:"required"`
 	Env            map[string]string `yaml:"env"`
 	Snippet        string            `yaml:"snippet"`
 	SnippetPrepare string            `yaml:"snippet-prepare"`
@@ -63,8 +63,13 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
+	shell := os.Getenv("AFX_SHELL")
+	if shell == "" {
+		shell = "bash"
+	}
+
 	if len(p.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
+		cmd := exec.CommandContext(context.Background(), shell, "-c", p.If)
 		err := cmd.Run()
 		switch cmd.ProcessState.ExitCode() {
 		case 0:
