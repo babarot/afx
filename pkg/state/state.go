@@ -273,7 +273,7 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	// so may be better to separate to dedicated command like `afx state refresh` etc
 	// to run state operation explicitly
 	if err := s.Refresh(); err != nil {
-		log.Printf("[ERROR] state has need some changes: %v", err)
+		log.Printf("[ERROR] there're some states or packages which needs operations: %v", err)
 	}
 
 	return &s, s.save()
@@ -323,23 +323,29 @@ func (s *State) Refresh() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	noChanges := len(s.Additions) == 0 &&
-		len(s.Readditions) == 0 &&
-		len(s.Changes) == 0 &&
-		len(s.Deletions) == 0
+	someChanges := len(s.Additions) > 0 ||
+		len(s.Readditions) > 0 ||
+		len(s.Changes) > 0 ||
+		len(s.Deletions) > 0
 
-	if noChanges {
-		log.Printf("[DEBUG] refresh state to update latest state schema")
-		for _, pkg := range s.packages {
-			v1 := s.Resources[pkg.GetName()]
-			v2 := toResource(pkg)
-			if diff := cmp.Diff(v1, v2); diff != "" {
-				log.Printf("[DEBUG] refresh state to %s", diff)
-				update(pkg, s)
-			}
-		}
-		return nil
+	if someChanges {
+		return errors.New("cannot refresh state")
 	}
 
-	return errors.New("cannot refresh state")
+	done := false
+	for _, pkg := range s.packages {
+		v1 := s.Resources[pkg.GetName()]
+		v2 := toResource(pkg)
+		if diff := cmp.Diff(v1, v2); diff != "" {
+			log.Printf("[DEBUG] refresh state to %s", diff)
+			update(pkg, s)
+			done = true
+		}
+	}
+
+	if done {
+		log.Printf("[DEBUG] refreshed state to update latest state schema")
+	}
+
+	return nil
 }

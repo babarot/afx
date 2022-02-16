@@ -50,15 +50,35 @@ func newShowCmd() *cobra.Command {
 	return showCmd
 }
 
-type Item struct {
-	Name   string
-	Type   string
-	Status string
-}
-
 func (c *showCmd) run(args []string) error {
 	w := printers.GetNewTabWriter(os.Stdout)
 	headers := []string{"NAME", "TYPE", "STATUS"}
+
+	getType := func(pkg config.Package) string {
+		var ty string
+		switch pkg := pkg.(type) {
+		case *config.GitHub:
+			ty = "GitHub"
+			if pkg.HasReleaseBlock() {
+				ty = "GitHub Release"
+			}
+		case *config.Gist:
+			ty = "Gist"
+		case *config.Local:
+			ty = "Local"
+		case *config.HTTP:
+			ty = "HTTP"
+		default:
+			ty = "Unknown"
+		}
+		return ty
+	}
+
+	type Item struct {
+		Name   string
+		Type   string
+		Status string
+	}
 
 	var items []Item
 	for _, pkg := range append(c.State.Additions, c.State.Readditions...) {
@@ -95,32 +115,12 @@ func (c *showCmd) run(args []string) error {
 	})
 
 	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
-	for _, line := range items {
+	for _, item := range items {
 		fields := []string{
-			line.Name, line.Type, line.Status,
+			item.Name, item.Type, item.Status,
 		}
 		fmt.Fprintf(w, strings.Join(fields, "\t")+"\n")
 	}
 
 	return w.Flush()
-}
-
-func getType(pkg config.Package) string {
-	var ty string
-	switch pkg := pkg.(type) {
-	case *config.GitHub:
-		ty = "GitHub"
-		if pkg.HasReleaseBlock() {
-			ty = "GitHub Release"
-		}
-	case *config.Gist:
-		ty = "Gist"
-	case *config.Local:
-		ty = "Local"
-	case *config.HTTP:
-		ty = "HTTP"
-	default:
-		ty = "Unknown"
-	}
-	return ty
 }
