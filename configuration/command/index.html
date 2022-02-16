@@ -1030,7 +1030,7 @@
 </tbody>
 </table>
 <p><code>if</code> allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.</p>
-<p>In <code>if</code> field, you can write shell scripts (currently <code>bash</code> is only supported). The exit code finally returned from that shell script is used to determine whether it links command or not.</p>
+<p>In <code>if</code> field, you can write shell scripts<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. The exit code finally returned from that shell script is used to determine whether it links command or not.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="8:1"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Case 1</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -1055,6 +1055,14 @@
 </code></pre></div>
 </div>
 </div>
+</div>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>You can configure your favorite shell to evaluate <code>if</code> field by setting <code>AFX_SHELL</code>.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
 </div>
 
               
