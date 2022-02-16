@@ -36,11 +36,19 @@ type State struct {
 	Changes []config.Package
 }
 
+// type Package interface {
+// 	GetName() string
+// }
+
 type Resource struct {
 	Name    string   `json:"name"`
 	Home    string   `json:"home"`
 	Version string   `json:"version"`
 	Paths   []string `json:"paths"`
+}
+
+func (e Resource) GetName() string {
+	return e.Name
 }
 
 func (e Resource) exists() bool {
@@ -263,3 +271,54 @@ func (s *State) Update(pkg config.Package) {
 	update(pkg, s)
 	s.save()
 }
+
+// type Addition interface {
+// 	GetName() string
+// }
+// type Readdition interface {
+// 	GetName() string
+// }
+// type Change interface {
+// 	GetName() string
+// }
+// type Deletion interface {
+// 	GetName() string
+// }
+//
+// func (s *State) Check(name string) interface{} {
+// 	for _, pkg := range s.Additions {
+// 		if pkg.GetName() == name {
+// 			return Addition(pkg)
+// 		}
+// 	}
+// 	for _, pkg := range s.Readditions {
+// 		if pkg.GetName() == name {
+// 			return Readdition(pkg)
+// 		}
+// 	}
+// 	for _, pkg := range s.Changes {
+// 		if pkg.GetName() == name {
+// 			return Change(pkg)
+// 		}
+// 	}
+// 	for _, resource := range s.Deletions {
+// 		if resource.Name == name {
+// 			return Deletion(resource)
+// 		}
+// 	}
+// 	return nil
+// }
+//
+// func (s *State) Validate(name string) Package {
+// 	for _, pkg := range s.Additions {
+// 		if pkg.GetName() == name {
+// 			return Addition(pkg)
+// 		}
+// 	}
+// 	for _, resource := range s.Deletions {
+// 		if resource.Name == name {
+// 			return Deletion(resource)
+// 		}
+// 	}
+// 	return nil
+// }
