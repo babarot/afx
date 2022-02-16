@@ -14,8 +14,6 @@ import (
 
 type selfUpdateCmd struct {
 	meta
-
-	path string
 }
 
 var (
@@ -53,6 +51,8 @@ func newSelfUpdateCmd() *cobra.Command {
 }
 
 func (c *selfUpdateCmd) run(args []string) error {
+	const repo string = "b4b4r07/afx"
+
 	switch Version {
 	case "unset":
 		c.UI.Error("Failed to update to new version\n")
@@ -62,9 +62,9 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return errors.New("failed to run self-update")
 	}
 
-	latest, found, err := selfupdate.DetectLatest("b4b4r07/afx")
+	latest, found, err := selfupdate.DetectLatest(repo)
 	if err != nil {
-		return fmt.Errorf("error occurred while detecting version: %v", err)
+		return errors.Wrap(err, "error occurred while detecting version")
 	}
 
 	if !found {
@@ -78,13 +78,14 @@ func (c *selfUpdateCmd) run(args []string) error {
 	}
 
 	yes := false
-	prompt := &survey.Confirm{
+	if err := survey.AskOne(&survey.Confirm{
 		Message: fmt.Sprintf("Do you want to update to %s? (current version: %s)",
 			latest.Version(), Version),
+	}, &yes); err != nil {
+		return errors.Wrap(err, "cannot get answer from console")
 	}
-	survey.AskOne(prompt, &yes)
-
 	if !yes {
+		// do nothing
 		return nil
 	}
 
@@ -94,7 +95,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 	}
 
 	if err := selfupdate.UpdateTo(latest.AssetURL, latest.AssetName, exe); err != nil {
-		return fmt.Errorf("error occurred while updating binary: %w", err)
+		return errors.Wrap(err, "error occurred while updating binary")
 	}
 
 	c.UI.Info(fmt.Sprintf("Successfully updated to version %s", latest.Version()))
