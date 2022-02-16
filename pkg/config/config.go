@@ -25,6 +25,7 @@ type Config struct {
 
 // AppConfig represents configurations of this application itself
 type AppConfig struct {
+	Shell  string `yaml:"shell"`
 	Filter Filter `yaml:"filter"`
 }
 
@@ -39,6 +40,7 @@ type Filter struct {
 // DefaultAppConfig is default settings of AppConfig
 // Basically this will be overridden by user config if given
 var DefaultAppConfig AppConfig = AppConfig{
+	Shell: "bash",
 	Filter: Filter{
 		Command: "fzf",
 		Args:    []string{"--ansi", "--no-preview", "--height=50%", "--reverse"},
@@ -94,6 +96,7 @@ func parse(cfg Config) []Package {
 		}
 		pkgs = append(pkgs, pkg)
 	}
+
 	for _, pkg := range cfg.Gist {
 		pkgs = append(pkgs, pkg)
 	}

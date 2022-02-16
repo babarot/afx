@@ -63,8 +63,13 @@ func (p Plugin) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
+	shell := os.Getenv("AFX_SHELL")
+	if shell == "" {
+		shell = "bash"
+	}
+
 	if len(p.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", p.If)
+		cmd := exec.CommandContext(context.Background(), shell, "-c", p.If)
 		err := cmd.Run()
 		switch cmd.ProcessState.ExitCode() {
 		case 0:

@@ -78,6 +78,7 @@ func (m *meta) init(args []string) error {
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
+		"AFX_SHELL":        env.Variable{Default: m.AppConfig.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
 				When:    config.HasSudoInCommandBuildSteps(m.Packages),
