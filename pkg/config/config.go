@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
@@ -58,6 +59,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
+	// validate.RegisterValidation("in-packages", validatePackageName)
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
@@ -72,7 +74,8 @@ func Read(path string) (Config, error) {
 }
 
 func parse(cfg Config) []Package {
-	var pkgs []Package
+	table := map[string]Package{}
+
 	for _, pkg := range cfg.GitHub {
 		// TODO: Remove?
 		if pkg.HasReleaseBlock() {
@@ -94,17 +97,33 @@ func parse(cfg Config) []Package {
 				pkg.Command = &Command{Link: defaultLinks}
 			}
 		}
-		pkgs = append(pkgs, pkg)
+		table[pkg.GetName()] = pkg
 	}
 
 	for _, pkg := range cfg.Gist {
-		pkgs = append(pkgs, pkg)
+		table[pkg.GetName()] = pkg
 	}
 	for _, pkg := range cfg.Local {
-		pkgs = append(pkgs, pkg)
+		table[pkg.GetName()] = pkg
 	}
 	for _, pkg := range cfg.HTTP {
-		pkgs = append(pkgs, pkg)
+		table[pkg.GetName()] = pkg
+	}
+
+	var graph dependency.Graph
+	for name, pkg := range table {
+		graph = append(graph, dependency.NewNode(name, pkg.GetDependsOn()...))
+	}
+
+	resolved, err := dependency.Resolve(graph)
+	if err != nil {
+		// TODO: how do we return value
+		log.Printf("[ERROR] failed to resolve dependency graph: %v\n", err)
+	}
+
+	var pkgs []Package
+	for _, node := range resolved {
+		pkgs = append(pkgs, table[node.Name])
 	}
 
 	return pkgs
@@ -145,4 +164,24 @@ func WalkDir(path string) ([]string, error) {
 		log.Printf("[WARN] %s: found but cannot be loaded. yaml is only allowed\n", path)
 	}
 	return files, nil
+}
+
+func validatePackageName(fl validator.FieldLevel) bool {
+	ls := []string{
+		"google-cloud-sdk",
+	}
+	// https://golang.hotexamples.com/jp/examples/reflect/Value/Slice/golang-value-slice-method-examples.html
+	for _, v := range ls {
+		field := fl.Field()
+		slice := field.Slice(0, field.Len())
+		if field.Len() == 0 {
+			return true
+		}
+		for i := 0; i < field.Len(); i++ {
+			if v == slice.Index(i).String() {
+				return true
+			}
+		}
+	}
+	return false
 }

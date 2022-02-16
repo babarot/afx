@@ -28,6 +28,8 @@ type Handler interface {
 	HasCommandBlock() bool
 	GetPluginBlock() Plugin
 	GetCommandBlock() Command
+
+	GetDependsOn() []string
 }
 
 // Package is an interface related to package itself

@@ -23,6 +23,8 @@ type Gist struct {
 
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"`
+
+	DependsOn []string `yaml:"depends-on"`
 }
 
 func NewGist(owner, id string) (Gist, error) {
@@ -187,4 +189,8 @@ func (c Gist) GetName() string {
 // GetHome returns a path
 func (c Gist) GetHome() string {
 	return filepath.Join(os.Getenv("HOME"), ".afx", "gist.github.com", c.Owner, c.ID)
+}
+
+func (c Gist) GetDependsOn() []string {
+	return c.DependsOn
 }

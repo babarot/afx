@@ -39,6 +39,8 @@ type GitHub struct {
 
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"` //  validate:"required_with=Release"
+
+	DependsOn []string `yaml:"depends-on"`
 }
 
 type GitHubOption struct {
@@ -598,4 +600,8 @@ func (c GitHub) GetName() string {
 // GetHome returns a path
 func (c GitHub) GetHome() string {
 	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
+}
+
+func (c GitHub) GetDependsOn() []string {
+	return c.DependsOn
 }

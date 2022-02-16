@@ -8,6 +8,7 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/creativeprojects/go-selfupdate v0.6.1
+	github.com/deckarep/golang-set v1.8.0
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/fatih/color v1.10.0
 	github.com/frankban/quicktest v1.4.1 // indirect

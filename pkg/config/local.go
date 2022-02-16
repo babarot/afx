@@ -16,6 +16,8 @@ type Local struct {
 
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"`
+
+	DependsOn []string `yaml:"depends-on"`
 }
 
 // Init is
@@ -79,4 +81,8 @@ func (c Local) GetName() string {
 // GetHome returns a path
 func (c Local) GetHome() string {
 	return expandTilda(os.ExpandEnv(c.Directory))
+}
+
+func (c Local) GetDependsOn() []string {
+	return c.DependsOn
 }
