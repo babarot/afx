@@ -32,7 +32,7 @@ func newShowCmd() *cobra.Command {
 
 	showCmd := &cobra.Command{
 		Use:                   "show",
-		Short:                 "Show packages",
+		Short:                 "Show packages managed by afx",
 		Long:                  showLong,
 		Example:               showExample,
 		DisableFlagsInUseLine: true,

@@ -43,6 +43,10 @@ type Resource struct {
 	Paths   []string `json:"paths"`
 }
 
+func (e Resource) GetName() string {
+	return e.Name
+}
+
 func (e Resource) exists() bool {
 	if len(e.Paths) == 0 {
 		return false
