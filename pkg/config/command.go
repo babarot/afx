@@ -20,7 +20,7 @@ import (
 // Command is
 type Command struct {
 	Build   *Build            `yaml:"build"`
-	Link    []*Link           `yaml:"link" validate:"required"`
+	Link    []*Link           `yaml:"link"` // validate:"required"
 	Env     map[string]string `yaml:"env"`
 	Alias   map[string]string `yaml:"alias"`
 	Snippet string            `yaml:"snippet"`

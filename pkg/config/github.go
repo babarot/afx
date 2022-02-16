@@ -38,7 +38,7 @@ type GitHub struct {
 	Release *Release `yaml:"release"`
 
 	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command"`
+	Command *Command `yaml:"command"` //  validate:"required_with=Release"
 }
 
 type GitHubOption struct {
