@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/b4b4r07/afx/pkg/config"
+	"github.com/google/go-cmp/cmp"
 )
 
 type Self struct {
@@ -102,7 +103,6 @@ func toResource(pkg config.Package) Resource {
 		ty = "Unknown"
 	}
 
-	log.Printf("[DEBUG] %s: add paths to state: %#v", pkg.GetName(), paths)
 	return Resource{
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
@@ -113,6 +113,7 @@ func toResource(pkg config.Package) Resource {
 }
 
 func add(pkg config.Package, s *State) {
+	log.Printf("[DEBUG] %s: added to state", pkg.GetName())
 	s.Resources[pkg.GetName()] = toResource(pkg)
 }
 
@@ -124,6 +125,7 @@ func remove(name string, s *State) {
 		}
 		resources[resource.Name] = resource
 	}
+	log.Printf("[DEBUG] %s: removed from state", name)
 	s.Resources = resources
 }
 
@@ -134,6 +136,7 @@ func update(pkg config.Package, s *State) {
 		// not found
 		return
 	}
+	log.Printf("[DEBUG] %s: updated in state", pkg.GetName())
 	s.Resources[name] = toResource(pkg)
 }
 
@@ -264,6 +267,15 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	log.Printf("[DEBUG] state deletions: %#v", getNameInResources(s.Deletions))
 	log.Printf("[DEBUG] state changes: %#v", getNameInPackages(s.Changes))
 
+	// TODO: maybe better to separate to dedicated command etc?
+	// this is needed to update state schema (e.g. adding new field)
+	// but maybe it's danger a bit
+	// so may be better to separate to dedicated command like `afx state refresh` etc
+	// to run state operation explicitly
+	if err := s.Refresh(); err != nil {
+		log.Printf("[ERROR] state has need some changes: %v", err)
+	}
+
 	return &s, s.save()
 }
 
@@ -305,4 +317,29 @@ func (s *State) Update(pkg config.Package) {
 
 	update(pkg, s)
 	s.save()
+}
+
+func (s *State) Refresh() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	noChanges := len(s.Additions) == 0 &&
+		len(s.Readditions) == 0 &&
+		len(s.Changes) == 0 &&
+		len(s.Deletions) == 0
+
+	if noChanges {
+		log.Printf("[DEBUG] refresh state to update latest state schema")
+		for _, pkg := range s.packages {
+			v1 := s.Resources[pkg.GetName()]
+			v2 := toResource(pkg)
+			if diff := cmp.Diff(v1, v2); diff != "" {
+				log.Printf("[DEBUG] refresh state to %s", diff)
+				update(pkg, s)
+			}
+		}
+		return nil
+	}
+
+	return errors.New("cannot refresh state")
 }

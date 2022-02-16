@@ -14,6 +14,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/goccy/go-yaml v1.9.5
 	github.com/golang/snappy v0.0.2 // indirect
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/h2non/filetype v1.0.10
 	github.com/hashicorp/hcl/v2 v2.2.0
