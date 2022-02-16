@@ -52,28 +52,9 @@ func newShowCmd() *cobra.Command {
 
 func (c *showCmd) run(args []string) error {
 	w := printers.GetNewTabWriter(os.Stdout)
-	headers := []string{"NAME", "TYPE"}
-	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+	headers := []string{"NAME", "TYPE", "STATUS"}
 
-	type Line struct {
-		Name string
-		Type string
-	}
-
-	type Package interface {
-		GetName() string
-	}
-
-	var pkgs []Package
-	for _, pkg := range c.Packages {
-		pkgs = append(pkgs, pkg)
-	}
-	for _, resource := range c.State.Deletions {
-		pkgs = append(pkgs, resource)
-	}
-
-	var lines []Line
-	for _, pkg := range pkgs {
+	getType := func(pkg config.Package) string {
 		var ty string
 		switch pkg := pkg.(type) {
 		case *config.GitHub:
@@ -90,18 +71,53 @@ func (c *showCmd) run(args []string) error {
 		default:
 			ty = "Unknown"
 		}
-		lines = append(lines, Line{
-			Name: pkg.GetName(),
-			Type: ty,
+		return ty
+	}
+
+	type Item struct {
+		Name   string
+		Type   string
+		Status string
+	}
+
+	var items []Item
+	for _, pkg := range append(c.State.Additions, c.State.Readditions...) {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "WaitingInstall",
+		})
+	}
+	for _, pkg := range c.State.Changes {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "WaitingUpdate",
+		})
+	}
+	for _, resource := range c.State.Deletions {
+		items = append(items, Item{
+			Name:   resource.Name,
+			Type:   resource.Type,
+			Status: "WaitingUninstall",
+		})
+	}
+	for _, pkg := range c.State.NoChanges {
+		items = append(items, Item{
+			Name:   pkg.GetName(),
+			Type:   getType(pkg),
+			Status: "Installed",
 		})
 	}
 
-	sort.Slice(lines, func(i, j int) bool {
-		return lines[i].Name < lines[j].Name
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Name < items[j].Name
 	})
-	for _, line := range lines {
+
+	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+	for _, item := range items {
 		fields := []string{
-			line.Name, line.Type,
+			item.Name, item.Type, item.Status,
 		}
 		fmt.Fprintf(w, strings.Join(fields, "\t")+"\n")
 	}

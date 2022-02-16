@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/b4b4r07/afx/pkg/config"
+	"github.com/google/go-cmp/cmp"
 )
 
 type Self struct {
@@ -34,17 +35,16 @@ type State struct {
 	// Something changes happened between config file and state file
 	// Currently only version (github.release.tag) is detected as changes
 	Changes []config.Package
+	//
+	NoChanges []config.Package
 }
 
 type Resource struct {
 	Name    string   `json:"name"`
 	Home    string   `json:"home"`
+	Type    string   `json:"type"`
 	Version string   `json:"version"`
 	Paths   []string `json:"paths"`
-}
-
-func (e Resource) GetName() string {
-	return e.Name
 }
 
 func (e Resource) exists() bool {
@@ -83,24 +83,37 @@ func toResource(pkg config.Package) Resource {
 		}
 	}
 
-	version := ""
-	switch v := pkg.(type) {
+	var ty string
+	var version string
+
+	switch pkg := pkg.(type) {
 	case *config.GitHub:
-		if v.HasReleaseBlock() {
-			version = v.Release.Tag
+		ty = "GitHub"
+		if pkg.HasReleaseBlock() {
+			ty = "GitHub Release"
+			version = pkg.Release.Tag
 		}
+	case *config.Gist:
+		ty = "Gist"
+	case *config.Local:
+		ty = "Local"
+	case *config.HTTP:
+		ty = "HTTP"
+	default:
+		ty = "Unknown"
 	}
 
-	log.Printf("[DEBUG] %s: add paths to state: %#v", pkg.GetName(), paths)
 	return Resource{
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
+		Type:    ty,
 		Version: version,
 		Paths:   paths,
 	}
 }
 
 func add(pkg config.Package, s *State) {
+	log.Printf("[DEBUG] %s: added to state", pkg.GetName())
 	s.Resources[pkg.GetName()] = toResource(pkg)
 }
 
@@ -112,6 +125,7 @@ func remove(name string, s *State) {
 		}
 		resources[resource.Name] = resource
 	}
+	log.Printf("[DEBUG] %s: removed from state", name)
 	s.Resources = resources
 }
 
@@ -122,6 +136,7 @@ func update(pkg config.Package, s *State) {
 		// not found
 		return
 	}
+	log.Printf("[DEBUG] %s: updated in state", pkg.GetName())
 	s.Resources[name] = toResource(pkg)
 }
 
@@ -149,6 +164,32 @@ func (s *State) listChanges() []config.Package {
 		if resource.Version != version {
 			pkgs = append(pkgs, pkg)
 		}
+	}
+	return pkgs
+}
+
+func contains(pkgs []config.Package, name string) bool {
+	for _, pkg := range pkgs {
+		if pkg.GetName() == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *State) listNoChanges() []config.Package {
+	var pkgs []config.Package
+	for _, pkg := range s.packages {
+		if contains(s.listAdditions(), pkg.GetName()) {
+			continue
+		}
+		if contains(s.listReadditions(), pkg.GetName()) {
+			continue
+		}
+		if contains(s.listChanges(), pkg.GetName()) {
+			continue
+		}
+		pkgs = append(pkgs, pkg)
 	}
 	return pkgs
 }
@@ -219,11 +260,21 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	s.Readditions = s.listReadditions()
 	s.Deletions = s.listDeletions()
 	s.Changes = s.listChanges()
+	s.NoChanges = s.listNoChanges()
 
 	log.Printf("[DEBUG] state additions: %#v", getNameInPackages(s.Additions))
 	log.Printf("[DEBUG] state readditions: %#v", getNameInPackages(s.Readditions))
 	log.Printf("[DEBUG] state deletions: %#v", getNameInResources(s.Deletions))
 	log.Printf("[DEBUG] state changes: %#v", getNameInPackages(s.Changes))
+
+	// TODO: maybe better to separate to dedicated command etc?
+	// this is needed to update state schema (e.g. adding new field)
+	// but maybe it's danger a bit
+	// so may be better to separate to dedicated command like `afx state refresh` etc
+	// to run state operation explicitly
+	if err := s.Refresh(); err != nil {
+		log.Printf("[ERROR] there're some states or packages which needs operations: %v", err)
+	}
 
 	return &s, s.save()
 }
@@ -266,4 +317,35 @@ func (s *State) Update(pkg config.Package) {
 
 	update(pkg, s)
 	s.save()
+}
+
+func (s *State) Refresh() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	someChanges := len(s.Additions) > 0 ||
+		len(s.Readditions) > 0 ||
+		len(s.Changes) > 0 ||
+		len(s.Deletions) > 0
+
+	if someChanges {
+		return errors.New("cannot refresh state")
+	}
+
+	done := false
+	for _, pkg := range s.packages {
+		v1 := s.Resources[pkg.GetName()]
+		v2 := toResource(pkg)
+		if diff := cmp.Diff(v1, v2); diff != "" {
+			log.Printf("[DEBUG] refresh state to %s", diff)
+			update(pkg, s)
+			done = true
+		}
+	}
+
+	if done {
+		log.Printf("[DEBUG] refreshed state to update latest state schema")
+	}
+
+	return nil
 }
