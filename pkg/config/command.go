@@ -20,7 +20,7 @@ import (
 // Command is
 type Command struct {
 	Build   *Build            `yaml:"build"`
-	Link    []*Link           `yaml:"link"`
+	Link    []*Link           `yaml:"link"` // validate:"required"
 	Env     map[string]string `yaml:"env"`
 	Alias   map[string]string `yaml:"alias"`
 	Snippet string            `yaml:"snippet"`
@@ -29,13 +29,13 @@ type Command struct {
 
 // Build is
 type Build struct {
-	Steps []string          `yaml:"steps"`
+	Steps []string          `yaml:"steps" validate:"required"`
 	Env   map[string]string `yaml:"env"`
 }
 
 // Link is
 type Link struct {
-	From string `yaml:"from"`
+	From string `yaml:"from" validate:"required"`
 	To   string `yaml:"to"`
 }
 
@@ -286,8 +286,13 @@ func (c Command) Init(pkg Package) error {
 		return errors.New(msg)
 	}
 
+	shell := os.Getenv("AFX_SHELL")
+	if shell == "" {
+		shell = "bash"
+	}
+
 	if len(c.If) > 0 {
-		cmd := exec.CommandContext(context.Background(), "bash", "-c", c.If)
+		cmd := exec.CommandContext(context.Background(), shell, "-c", c.If)
 		err := cmd.Run()
 		switch cmd.ProcessState.ExitCode() {
 		case 0:

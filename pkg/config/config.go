@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 )
 
@@ -24,6 +25,7 @@ type Config struct {
 
 // AppConfig represents configurations of this application itself
 type AppConfig struct {
+	Shell  string `yaml:"shell"`
 	Filter Filter `yaml:"filter"`
 }
 
@@ -38,6 +40,7 @@ type Filter struct {
 // DefaultAppConfig is default settings of AppConfig
 // Basically this will be overridden by user config if given
 var DefaultAppConfig AppConfig = AppConfig{
+	Shell: "bash",
 	Filter: Filter{
 		Command: "fzf",
 		Args:    []string{"--ansi", "--no-preview", "--height=50%", "--reverse"},
@@ -54,10 +57,12 @@ func Read(path string) (Config, error) {
 	}
 	defer f.Close()
 
+	validate := validator.New()
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
 		yaml.DisallowDuplicateKey(),
+		yaml.Validator(validate),
 	)
 	if err := d.Decode(&cfg); err != nil {
 		return cfg, err
@@ -91,6 +96,7 @@ func parse(cfg Config) []Package {
 		}
 		pkgs = append(pkgs, pkg)
 	}
+
 	for _, pkg := range cfg.Gist {
 		pkgs = append(pkgs, pkg)
 	}

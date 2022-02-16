@@ -17,9 +17,9 @@ import (
 
 // HTTP represents
 type HTTP struct {
-	Name string `yaml:"name"`
+	Name string `yaml:"name" validate:"required"`
 
-	URL         string `yaml:"url"`
+	URL         string `yaml:"url" validate:"required,url"`
 	Output      string `yaml:"output"`
 	Description string `yaml:"description"`
 

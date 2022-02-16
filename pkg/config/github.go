@@ -26,10 +26,10 @@ import (
 
 // GitHub represents GitHub repository
 type GitHub struct {
-	Name string `yaml:"name"`
+	Name string `yaml:"name" validate:"required"`
 
-	Owner       string `yaml:"owner"`
-	Repo        string `yaml:"repo"`
+	Owner       string `yaml:"owner" validate:"required"`
+	Repo        string `yaml:"repo" validate:"required"`
 	Description string `yaml:"description"`
 
 	Branch string        `yaml:"branch"`
@@ -38,7 +38,7 @@ type GitHub struct {
 	Release *Release `yaml:"release"`
 
 	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command"`
+	Command *Command `yaml:"command"` //  validate:"required_with=Release"
 }
 
 type GitHubOption struct {
@@ -47,7 +47,7 @@ type GitHubOption struct {
 
 // Release represents a GitHub release structure
 type Release struct {
-	Name string `yaml:"name"`
+	Name string `yaml:"name" validate:"required"`
 	Tag  string `yaml:"tag"`
 }
 
@@ -254,6 +254,10 @@ func (c GitHub) Installed() bool {
 
 // ReleaseURL returns URL of GitHub release
 func (c GitHub) ReleaseURL() string {
+	tag := c.Release.Tag
+	if tag == "" {
+		tag = "latest"
+	}
 	return fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/tags/%s",
 		c.Owner, c.Repo, c.Release.Tag)
 }
