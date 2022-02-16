@@ -14,6 +14,8 @@ import (
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/fatih/color"
+	"github.com/mitchellh/cli"
 )
 
 type meta struct {
@@ -21,9 +23,23 @@ type meta struct {
 	Packages  []config.Package
 	AppConfig *config.AppConfig
 	State     *state.State
+
+	UI cli.Ui
 }
 
 func (m *meta) init(args []string) error {
+	m.UI = &cli.ColoredUi{
+		Ui: &cli.BasicUi{
+			Reader:      os.Stdin,
+			Writer:      os.Stdout,
+			ErrorWriter: os.Stderr,
+		},
+		OutputColor: cli.UiColor{Bold: false},
+		InfoColor:   cli.UiColor{Code: int(color.FgWhite), Bold: true},
+		ErrorColor:  cli.UiColorRed,
+		WarnColor:   cli.UiColorYellow,
+	}
+
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
 	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, "cache.json")
