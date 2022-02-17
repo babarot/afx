@@ -49,6 +49,7 @@ func newUpdateCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
+			defer c.meta.printForUpdate()
 
 			pkgs := c.State.Changes
 			if len(pkgs) == 0 {

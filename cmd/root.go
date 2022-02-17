@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Repository string = "b4b4r07/afx"
+
 var (
 	rootLong = templates.LongDesc(`Package manager for everything`)
 )

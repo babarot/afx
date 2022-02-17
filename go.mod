@@ -18,12 +18,15 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/h2non/filetype v1.0.10
+	github.com/hashicorp/go-version v1.2.1
 	github.com/hashicorp/hcl/v2 v2.2.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mattn/go-zglob v0.0.1
+	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
@@ -38,6 +41,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
+	golang.org/x/term v0.0.0-20201117132131-f5c789dd3221
 	golang.org/x/text v0.3.5 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
