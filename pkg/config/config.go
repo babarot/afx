@@ -50,6 +50,8 @@ var DefaultAppConfig AppConfig = AppConfig{
 
 // Read reads yaml file based on given path
 func Read(path string) (Config, error) {
+	log.Printf("[INFO] Reading config %s...", path)
+
 	var cfg Config
 
 	f, err := os.Open(path)
@@ -59,7 +61,6 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
-	// validate.RegisterValidation("in-packages", validatePackageName)
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
@@ -115,6 +116,8 @@ func parse(cfg Config) []Package {
 
 // Parse parses a config given via yaml files and converts it into package interface
 func (c Config) Parse() ([]Package, error) {
+	log.Printf("[INFO] Parsing config...")
+
 	var pkgs []Package
 
 	parsed := parse(c)
@@ -141,6 +144,10 @@ func (c Config) Parse() ([]Package, error) {
 
 	if errs.ErrorOrNil() != nil {
 		return pkgs, errs.ErrorOrNil()
+	}
+
+	if dependency.Has(graph) {
+		log.Printf("[DEBUG] dependency graph is here: %s", graph)
 	}
 
 	resolved, err := dependency.Resolve(graph)
@@ -185,26 +192,6 @@ func WalkDir(path string) ([]string, error) {
 		log.Printf("[WARN] %s: found but cannot be loaded. yaml is only allowed\n", path)
 	}
 	return files, nil
-}
-
-func validatePackageName(fl validator.FieldLevel) bool {
-	ls := []string{
-		"google-cloud-sdk",
-	}
-	// https://golang.hotexamples.com/jp/examples/reflect/Value/Slice/golang-value-slice-method-examples.html
-	for _, v := range ls {
-		field := fl.Field()
-		slice := field.Slice(0, field.Len())
-		if field.Len() == 0 {
-			return true
-		}
-		for i := 0; i < field.Len(); i++ {
-			if v == slice.Index(i).String() {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func existence(pkgs []Package, name string) bool {

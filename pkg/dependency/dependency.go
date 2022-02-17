@@ -1,8 +1,23 @@
 package dependency
 
+// This package is heavily inspired from
+// https://github.com/dnaeon/go-dependency-graph-algorithm
+// E.g. let's say these dependencies are defined
+// C -> A
+// D -> A
+// A -> B
+// B -> X
+// then this package allows to resolve this dependency to this chain(order).
+// X
+// B
+// A
+// C
+// D
+// Read more about it and the motivation behind it at
 // http://dnaeon.github.io/dependency-graph-resolution-algorithm-in-go/
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
@@ -31,12 +46,27 @@ func NewNode(name string, deps ...string) *Node {
 type Graph []*Node
 
 // Displays the dependency graph
-func displayGraph(graph Graph) {
-	for _, node := range graph {
+func Display(graph Graph) {
+	fmt.Printf("%s", graph.String())
+}
+
+func (g Graph) String() string {
+	var buf bytes.Buffer
+	for _, node := range g {
 		for _, dep := range node.Deps {
-			fmt.Printf("%s -> %s\n", node.Name, dep)
+			fmt.Fprintf(&buf, "%s -> %s\n", node.Name, dep)
 		}
 	}
+	return buf.String()
+}
+
+func Has(graph Graph) bool {
+	for _, node := range graph {
+		if len(node.Deps) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // Resolves the dependency graph
