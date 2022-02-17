@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
@@ -194,5 +195,22 @@ func Sort(given []Package) ([]Package, error) {
 
 // Validate validates if packages are not violated some rules
 func Validate(pkgs []Package) error {
+	m := make(map[string]bool)
+	var list []string
+
+	for _, pkg := range pkgs {
+		name := pkg.GetName()
+		_, exist := m[name]
+		if exist {
+			list = append(list, name)
+			continue
+		}
+		m[name] = true
+	}
+
+	if len(list) > 0 {
+		return fmt.Errorf("duplicated packages: [%s]", strings.Join(list, ","))
+	}
+
 	return nil
 }

@@ -69,18 +69,16 @@ func (m *meta) init(args []string) error {
 
 	m.AppConfig = app
 
+	if err := config.Validate(pkgs); err != nil {
+		return errors.Wrap(err, "failed to validate packages")
+	}
+
 	pkgs, err = config.Sort(pkgs)
 	if err != nil {
-		return errors.Wrap(err, "%s: failed to resolve dependencies between packages")
+		return errors.Wrap(err, "failed to resolve dependencies between packages")
 	}
 
-	if len(pkgs) > 0 {
-		m.Packages = pkgs
-	}
-
-	if err := config.Validate(m.Packages); err != nil {
-		return errors.Wrap(err, "%s: failed to validate packages")
-	}
+	m.Packages = pkgs
 
 	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
