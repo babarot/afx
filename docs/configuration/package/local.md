@@ -27,3 +27,4 @@ description | string | | A description of a package
 directory | string | yes | Directory path where the target files are placed
 command | section | | See [Command](../command.md) page
 plugin | section | | See [Plugin](../plugin.md) page
+depends-on | array | Dependency list (you can write package name here)

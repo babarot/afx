@@ -25,6 +25,8 @@ type HTTP struct {
 
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"`
+
+	DependsOn []string `yaml:"depends-on"`
 }
 
 // Init is
@@ -212,4 +214,8 @@ func (c HTTP) GetName() string {
 func (c HTTP) GetHome() string {
 	u, _ := url.Parse(c.URL)
 	return filepath.Join(os.Getenv("HOME"), ".afx", u.Host, filepath.Dir(u.Path))
+}
+
+func (c HTTP) GetDependsOn() []string {
+	return c.DependsOn
 }

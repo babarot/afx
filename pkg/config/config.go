@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
@@ -49,6 +51,8 @@ var DefaultAppConfig AppConfig = AppConfig{
 
 // Read reads yaml file based on given path
 func Read(path string) (Config, error) {
+	log.Printf("[INFO] Reading config %s...", path)
+
 	var cfg Config
 
 	f, err := os.Open(path)
@@ -73,6 +77,7 @@ func Read(path string) (Config, error) {
 
 func parse(cfg Config) []Package {
 	var pkgs []Package
+
 	for _, pkg := range cfg.GitHub {
 		// TODO: Remove?
 		if pkg.HasReleaseBlock() {
@@ -112,6 +117,8 @@ func parse(cfg Config) []Package {
 
 // Parse parses a config given via yaml files and converts it into package interface
 func (c Config) Parse() ([]Package, error) {
+	log.Printf("[INFO] Parsing config...")
+	// TODO: divide from parse()
 	return parse(c), nil
 }
 
@@ -145,4 +152,65 @@ func WalkDir(path string) ([]string, error) {
 		log.Printf("[WARN] %s: found but cannot be loaded. yaml is only allowed\n", path)
 	}
 	return files, nil
+}
+
+func Sort(given []Package) ([]Package, error) {
+	var pkgs []Package
+	var graph dependency.Graph
+
+	table := map[string]Package{}
+
+	for _, pkg := range given {
+		table[pkg.GetName()] = pkg
+	}
+
+	var errs errors.Errors
+	for name, pkg := range table {
+		dependencies := pkg.GetDependsOn()
+		for _, dep := range pkg.GetDependsOn() {
+			if _, ok := table[dep]; !ok {
+				errs.Append(
+					fmt.Errorf("%q: not valid package name in depends-on: %s", dep, pkg.GetName()),
+				)
+			}
+		}
+		graph = append(graph, dependency.NewNode(name, dependencies...))
+	}
+
+	if dependency.Has(graph) {
+		log.Printf("[DEBUG] dependency graph is here: \n%s", graph)
+	}
+
+	resolved, err := dependency.Resolve(graph)
+	if err != nil {
+		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
+	}
+
+	for _, node := range resolved {
+		pkgs = append(pkgs, table[node.Name])
+	}
+
+	return pkgs, errs.ErrorOrNil()
+}
+
+// Validate validates if packages are not violated some rules
+func Validate(pkgs []Package) error {
+	m := make(map[string]bool)
+	var list []string
+
+	for _, pkg := range pkgs {
+		name := pkg.GetName()
+		_, exist := m[name]
+		if exist {
+			list = append(list, name)
+			continue
+		}
+		m[name] = true
+	}
+
+	if len(list) > 0 {
+		return fmt.Errorf("duplicated packages: [%s]", strings.Join(list, ","))
+	}
+
+	return nil
 }

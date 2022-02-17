@@ -49,17 +49,18 @@ func (m *meta) init(args []string) error {
 		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
+	var pkgs []config.Package
 	app := &config.DefaultAppConfig
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
 			return errors.Wrapf(err, "%s: failed to read config", file)
 		}
-		pkgs, err := cfg.Parse()
+		parsed, err := cfg.Parse()
 		if err != nil {
 			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
-		m.Packages = append(m.Packages, pkgs...)
+		pkgs = append(pkgs, parsed...)
 
 		if cfg.AppConfig != nil {
 			app = cfg.AppConfig
@@ -68,9 +69,16 @@ func (m *meta) init(args []string) error {
 
 	m.AppConfig = app
 
-	if err := config.Validate(m.Packages); err != nil {
-		return errors.Wrap(err, "%s: failed to validate packages")
+	if err := config.Validate(pkgs); err != nil {
+		return errors.Wrap(err, "failed to validate packages")
 	}
+
+	pkgs, err = config.Sort(pkgs)
+	if err != nil {
+		return errors.Wrap(err, "failed to resolve dependencies between packages")
+	}
+
+	m.Packages = pkgs
 
 	m.Env = env.New(cache)
 	m.Env.Add(env.Variables{
