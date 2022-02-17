@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mattn/go-shellwords"
 )
@@ -81,18 +80,4 @@ func HasSudoInCommandBuildSteps(pkgs []Package) bool {
 		}
 	}
 	return false
-}
-
-// Validate checks if keys of given packages are not duplicated
-func Validate(pkgs []Package) error {
-	done := make(map[string]bool, len(pkgs))
-	for _, pkg := range pkgs {
-		name := pkg.GetName()
-		_, already := done[name]
-		if already {
-			return fmt.Errorf("%s: duplicated", name)
-		}
-		done[name] = true
-	}
-	return nil
 }

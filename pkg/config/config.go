@@ -117,49 +117,8 @@ func parse(cfg Config) []Package {
 // Parse parses a config given via yaml files and converts it into package interface
 func (c Config) Parse() ([]Package, error) {
 	log.Printf("[INFO] Parsing config...")
-
-	var pkgs []Package
-
-	parsed := parse(c)
-
-	table := map[string]Package{}
-	for _, pkg := range parsed {
-		table[pkg.GetName()] = pkg
-	}
-
-	var errs errors.Errors
-	var graph dependency.Graph
-
-	for name, pkg := range table {
-		dependencies := pkg.GetDependsOn()
-		for _, dep := range dependencies {
-			if !existence(parsed, dep) {
-				errs.Append(
-					fmt.Errorf("%q: not valid package name in depends-on: %s", dep, pkg.GetName()),
-				)
-			}
-		}
-		graph = append(graph, dependency.NewNode(name, dependencies...))
-	}
-
-	if errs.ErrorOrNil() != nil {
-		return pkgs, errs.ErrorOrNil()
-	}
-
-	if dependency.Has(graph) {
-		log.Printf("[DEBUG] dependency graph is here: %s", graph)
-	}
-
-	resolved, err := dependency.Resolve(graph)
-	if err != nil {
-		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
-	}
-
-	for _, node := range resolved {
-		pkgs = append(pkgs, table[node.Name])
-	}
-
-	return pkgs, nil
+	// TODO: divide from parse()
+	return parse(c), nil
 }
 
 func visitYAML(files *[]string) filepath.WalkFunc {
@@ -194,11 +153,46 @@ func WalkDir(path string) ([]string, error) {
 	return files, nil
 }
 
-func existence(pkgs []Package, name string) bool {
-	for _, pkg := range pkgs {
-		if pkg.GetName() == name {
-			return true
-		}
+func Sort(given []Package) ([]Package, error) {
+	var pkgs []Package
+	var graph dependency.Graph
+
+	table := map[string]Package{}
+
+	for _, pkg := range given {
+		table[pkg.GetName()] = pkg
 	}
-	return false
+
+	var errs errors.Errors
+	for name, pkg := range table {
+		dependencies := pkg.GetDependsOn()
+		for _, dep := range pkg.GetDependsOn() {
+			if _, ok := table[dep]; !ok {
+				errs.Append(
+					fmt.Errorf("%q: not valid package name in depends-on: %s", dep, pkg.GetName()),
+				)
+			}
+		}
+		graph = append(graph, dependency.NewNode(name, dependencies...))
+	}
+
+	if dependency.Has(graph) {
+		log.Printf("[DEBUG] dependency graph is here: \n%s", graph)
+	}
+
+	resolved, err := dependency.Resolve(graph)
+	if err != nil {
+		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
+	}
+
+	for _, node := range resolved {
+		pkgs = append(pkgs, table[node.Name])
+	}
+
+	return pkgs, errs.ErrorOrNil()
+}
+
+// Validate validates if packages are not violated some rules
+func Validate(pkgs []Package) error {
+	return nil
 }

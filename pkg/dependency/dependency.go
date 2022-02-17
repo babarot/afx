@@ -54,7 +54,7 @@ func (g Graph) String() string {
 	var buf bytes.Buffer
 	for _, node := range g {
 		for _, dep := range node.Deps {
-			fmt.Fprintf(&buf, "%s -> %s\n", node.Name, dep)
+			fmt.Fprintf(&buf, "* %s -> %s\n", node.Name, dep)
 		}
 	}
 	return buf.String()

@@ -298,6 +298,14 @@ func (s *State) Update(pkg config.Package) {
 	s.save()
 }
 
+func (s *State) New() error {
+	s.Resources = map[string]Resource{}
+	for _, pkg := range s.packages {
+		add(pkg, s)
+	}
+	return s.save()
+}
+
 func (s *State) Refresh() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
