@@ -74,7 +74,7 @@ func Read(path string) (Config, error) {
 }
 
 func parse(cfg Config) []Package {
-	table := map[string]Package{}
+	var pkgs []Package
 
 	for _, pkg := range cfg.GitHub {
 		// TODO: Remove?
@@ -97,33 +97,17 @@ func parse(cfg Config) []Package {
 				pkg.Command = &Command{Link: defaultLinks}
 			}
 		}
-		table[pkg.GetName()] = pkg
+		pkgs = append(pkgs, pkg)
 	}
 
 	for _, pkg := range cfg.Gist {
-		table[pkg.GetName()] = pkg
+		pkgs = append(pkgs, pkg)
 	}
 	for _, pkg := range cfg.Local {
-		table[pkg.GetName()] = pkg
+		pkgs = append(pkgs, pkg)
 	}
 	for _, pkg := range cfg.HTTP {
-		table[pkg.GetName()] = pkg
-	}
-
-	var graph dependency.Graph
-	for name, pkg := range table {
-		graph = append(graph, dependency.NewNode(name, pkg.GetDependsOn()...))
-	}
-
-	resolved, err := dependency.Resolve(graph)
-	if err != nil {
-		// TODO: how do we return value
-		log.Printf("[ERROR] failed to resolve dependency graph: %v\n", err)
-	}
-
-	var pkgs []Package
-	for _, node := range resolved {
-		pkgs = append(pkgs, table[node.Name])
+		pkgs = append(pkgs, pkg)
 	}
 
 	return pkgs
@@ -131,7 +115,44 @@ func parse(cfg Config) []Package {
 
 // Parse parses a config given via yaml files and converts it into package interface
 func (c Config) Parse() ([]Package, error) {
-	return parse(c), nil
+	var pkgs []Package
+
+	parsed := parse(c)
+
+	table := map[string]Package{}
+	for _, pkg := range parsed {
+		table[pkg.GetName()] = pkg
+	}
+
+	var errs errors.Errors
+	var graph dependency.Graph
+
+	for name, pkg := range table {
+		dependencies := pkg.GetDependsOn()
+		for _, dep := range dependencies {
+			if !existence(parsed, dep) {
+				errs.Append(
+					fmt.Errorf("%q: not valid package name in depends-on: %s", dep, pkg.GetName()),
+				)
+			}
+		}
+		graph = append(graph, dependency.NewNode(name, dependencies...))
+	}
+
+	if errs.ErrorOrNil() != nil {
+		return pkgs, errs.ErrorOrNil()
+	}
+
+	resolved, err := dependency.Resolve(graph)
+	if err != nil {
+		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
+	}
+
+	for _, node := range resolved {
+		pkgs = append(pkgs, table[node.Name])
+	}
+
+	return pkgs, nil
 }
 
 func visitYAML(files *[]string) filepath.WalkFunc {
@@ -181,6 +202,15 @@ func validatePackageName(fl validator.FieldLevel) bool {
 			if v == slice.Index(i).String() {
 				return true
 			}
+		}
+	}
+	return false
+}
+
+func existence(pkgs []Package, name string) bool {
+	for _, pkg := range pkgs {
+		if pkg.GetName() == name {
+			return true
 		}
 	}
 	return false
