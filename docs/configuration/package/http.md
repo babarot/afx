@@ -23,3 +23,4 @@ url | string | yes | URL which can be downloaded.
 output | string | | TBD
 command | section | | See [Command](../command.md) page
 plugin | section | | See [Plugin](../plugin.md) page
+depends-on | array | Dependency list (you can write package name here)

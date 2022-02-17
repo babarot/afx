@@ -24,3 +24,4 @@ owner | string | yes | Gist owner
 id | string | yes | Gist page id
 command | section | | See [Command](../command.md) page
 plugin | section | | See [Plugin](../plugin.md) page
+depends-on | array | Dependency list (you can write package name here)

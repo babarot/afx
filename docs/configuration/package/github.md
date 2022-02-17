@@ -48,3 +48,4 @@ release.name | string | yes (in `release`) | GitHub release name
 release.tag | string | | GitHub release tag
 command | section | | See [Command](../command.md) page
 plugin | section | | See [Plugin](../plugin.md) page
+depends-on | array | Dependency list (you can write package name here)
