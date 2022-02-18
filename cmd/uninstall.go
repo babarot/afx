@@ -47,7 +47,6 @@ func newUninstallCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			defer c.meta.printForUpdate()
 
 			resources := c.State.Deletions
 			if len(resources) == 0 {
@@ -71,6 +70,9 @@ func newUninstallCmd() *cobra.Command {
 			}
 
 			return c.run(resources)
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.printForUpdate()
 		},
 	}
 

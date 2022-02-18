@@ -49,7 +49,6 @@ func newInstallCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
-			defer c.meta.printForUpdate()
 
 			pkgs := append(c.State.Additions, c.State.Readditions...)
 			if len(pkgs) == 0 {
@@ -78,6 +77,9 @@ func newInstallCmd() *cobra.Command {
 			})
 
 			return c.run(pkgs)
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.printForUpdate()
 		},
 	}
 

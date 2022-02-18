@@ -139,13 +139,13 @@ func (m *meta) init(args []string) error {
 	return nil
 }
 
-func (m *meta) printForUpdate() {
+func printForUpdate(uriCh chan *update.ReleaseInfo) {
 	switch Version {
 	case "unset":
 		return
 	}
 	log.Printf("[DEBUG] checking updates on afx repo...")
-	newRelease := <-m.updateMessageChan
+	newRelease := <-uriCh
 	if newRelease != nil {
 		fmt.Fprintf(os.Stdout, "\n\n%s %s -> %s\n",
 			ansi.Color("A new release of afx is available:", "yellow"),
@@ -154,6 +154,14 @@ func (m *meta) printForUpdate() {
 		fmt.Fprintf(os.Stdout, "%s\n\n", ansi.Color(newRelease.URL, "yellow"))
 		fmt.Fprintf(os.Stdout, "To upgrade, run: afx self-update\n")
 	}
+}
+
+func (m *meta) printForUpdate() error {
+	if m.updateMessageChan == nil {
+		return errors.New("update message chan is not set")
+	}
+	printForUpdate(m.updateMessageChan)
+	return nil
 }
 
 func (m *meta) prompt() (config.Package, error) {

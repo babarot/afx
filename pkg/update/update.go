@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,6 +36,7 @@ type StateEntry struct {
 func CheckForUpdate(stateFilePath, repo, currentVersion string) (*ReleaseInfo, error) {
 	stateEntry, _ := getStateEntry(stateFilePath)
 	if stateEntry != nil && time.Since(stateEntry.CheckedForUpdateAt).Hours() < 24 {
+		log.Printf("[DEBUG] found state file of release info, so will grab it from the file.")
 		return &stateEntry.LatestRelease, nil
 	}
 
@@ -58,6 +60,7 @@ func CheckForUpdate(stateFilePath, repo, currentVersion string) (*ReleaseInfo, e
 func getLatestReleaseInfo(repo string) (*ReleaseInfo, error) {
 	var latestRelease ReleaseInfo
 
+	log.Printf("[DEBUG] call GitHub Release API to get release info")
 	res, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo))
 	if err != nil {
 		return nil, err

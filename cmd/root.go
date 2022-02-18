@@ -9,6 +9,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +39,27 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors:      true,
 		DisableSuggestions: false,
 		Version:            fmt.Sprintf("%s (%s/%s)", Version, BuildTag, BuildSHA),
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) {
+			uriCh := make(chan *update.ReleaseInfo)
+			go func() {
+				log.Printf("[DEBUG] (goroutine): checking new updates...")
+				release, err := checkForUpdate(Version)
+				if err != nil {
+					log.Printf("[ERROR] (goroutine): cannot check for new updates: %v", err)
+				}
+				uriCh <- release
+			}()
+
+			if cmd.Runnable() {
+				cmd.Help()
+			}
+
+			printForUpdate(uriCh)
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Just define this function to prevent c.Runnable() from becoming false.
+			// if c.Runnable() is true, just c.Help() is called and then stopped.
+			return nil
 		},
 	}
 
