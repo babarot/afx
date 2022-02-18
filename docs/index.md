@@ -6,7 +6,7 @@ So afx's motivation is coming from that and to manage them with YAML files (as a
 
 ```console
 $ afx help
-Package manager for everything
+Package manager for CLI
 
 Usage:
   afx [command]

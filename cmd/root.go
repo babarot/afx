@@ -16,7 +16,7 @@ import (
 var Repository string = "b4b4r07/afx"
 
 var (
-	rootLong = templates.LongDesc(`Package manager for everything`)
+	rootLong = templates.LongDesc(`Package manager for CLI`)
 )
 
 var (
