@@ -71,6 +71,9 @@ func newUninstallCmd() *cobra.Command {
 
 			return c.run(resources)
 		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.printForUpdate()
+		},
 	}
 
 	return uninstallCmd

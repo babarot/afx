@@ -78,6 +78,9 @@ func newInstallCmd() *cobra.Command {
 
 			return c.run(pkgs)
 		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.printForUpdate()
+		},
 	}
 
 	return installCmd
