@@ -31,7 +31,7 @@ var (
 func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:                "afx",
-		Short:              "Package manager for everything",
+		Short:              "Package manager for CLI",
 		Long:               rootLong,
 		SilenceErrors:      true,
 		DisableSuggestions: false,
@@ -46,6 +46,8 @@ func newRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newUpdateCmd())
 	rootCmd.AddCommand(newSelfUpdateCmd())
 	rootCmd.AddCommand(newShowCmd())
+
+	rootCmd.AddCommand(newCompletionCmd())
 
 	return rootCmd
 }

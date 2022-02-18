@@ -6,12 +6,13 @@ So afx's motivation is coming from that and to manage them with YAML files (as a
 
 ```console
 $ afx help
-Package manager for CLI
+Package manager for everything
 
 Usage:
   afx [command]
 
 Available Commands:
+  completion  Generate completion script
   help        Help about any command
   init        Initialize installed packages
   install     Resume installation from paused part (idempotency)
@@ -21,7 +22,8 @@ Available Commands:
   update      Update installed package if version etc is changed
 
 Flags:
-  -h, --help   help for afx
+  -h, --help      help for afx
+  -v, --version   version for afx
 
 Use "afx [command] --help" for more information about a command.
 ```
