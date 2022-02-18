@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -52,7 +53,7 @@ func newUpdateCmd() *cobra.Command {
 
 			pkgs := c.State.Changes
 			if len(pkgs) == 0 {
-				c.UI.Output("No packages to update")
+				fmt.Println("No packages to update")
 				return nil
 			}
 

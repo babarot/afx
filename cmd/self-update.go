@@ -9,6 +9,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/creativeprojects/go-selfupdate"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -53,10 +54,12 @@ func newSelfUpdateCmd() *cobra.Command {
 func (c *selfUpdateCmd) run(args []string) error {
 	switch Version {
 	case "unset":
-		c.UI.Error("Failed to update to new version\n")
-		c.UI.Output("-  You need to get precompiled version from GitHub releases")
-		c.UI.Output(fmt.Sprintf("-  This version (%s/%s) is compiled from source code\n",
-			Version, runtime.Version()))
+		fmt.Fprintf(os.Stderr, "%s\n\n  %s\n  %s\n\n",
+			color.RedString("Failed to update to new version!"),
+			"You need to get precompiled version from GitHub releases.",
+			fmt.Sprintf("This version (%s/%s) is compiled from source code.",
+				Version, runtime.Version()),
+		)
 		return errors.New("failed to run self-update")
 	}
 
@@ -71,7 +74,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 	}
 
 	if latest.LessOrEqual(Version) {
-		c.UI.Info(fmt.Sprintf("Current version (%s) is the latest", Version))
+		fmt.Printf("Current version (%s) is the latest\n", Version)
 		return nil
 	}
 
@@ -96,6 +99,6 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return errors.Wrap(err, "error occurred while updating binary")
 	}
 
-	c.UI.Info(fmt.Sprintf("Successfully updated to version %s", latest.Version()))
+	color.New(color.Bold).Printf("Successfully updated to version %s", latest.Version())
 	return nil
 }

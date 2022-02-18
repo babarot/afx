@@ -17,8 +17,6 @@ import (
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/fatih/color"
-	"github.com/mgutz/ansi"
-	"github.com/mitchellh/cli"
 )
 
 type meta struct {
@@ -26,8 +24,6 @@ type meta struct {
 	Packages  []config.Package
 	AppConfig *config.AppConfig
 	State     *state.State
-
-	UI cli.Ui
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -42,18 +38,6 @@ func (m *meta) init(args []string) error {
 		}
 		m.updateMessageChan <- release
 	}()
-
-	m.UI = &cli.ColoredUi{
-		Ui: &cli.BasicUi{
-			Reader:      os.Stdin,
-			Writer:      os.Stdout,
-			ErrorWriter: os.Stderr,
-		},
-		OutputColor: cli.UiColor{Bold: false},
-		InfoColor:   cli.UiColor{Code: int(color.FgWhite), Bold: true},
-		ErrorColor:  cli.UiColorRed,
-		WarnColor:   cli.UiColorYellow,
-	}
 
 	root := filepath.Join(os.Getenv("HOME"), ".afx")
 	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
@@ -153,10 +137,10 @@ func printForUpdate(uriCh chan *update.ReleaseInfo) {
 	newRelease := <-uriCh
 	if newRelease != nil {
 		fmt.Fprintf(os.Stdout, "\n\n%s %s -> %s\n",
-			ansi.Color("A new release of afx is available:", "yellow"),
-			ansi.Color("v"+Version, "cyan"),
-			ansi.Color(newRelease.Version, "cyan"))
-		fmt.Fprintf(os.Stdout, "%s\n\n", ansi.Color(newRelease.URL, "yellow"))
+			color.YellowString("A new release of afx is available:"),
+			color.CyanString("v"+Version),
+			color.CyanString(newRelease.Version))
+		fmt.Fprintf(os.Stdout, "%s\n\n", color.YellowString(newRelease.URL))
 		fmt.Fprintf(os.Stdout, "To upgrade, run: afx self-update\n")
 	}
 }

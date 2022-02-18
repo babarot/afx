@@ -50,7 +50,7 @@ func newUninstallCmd() *cobra.Command {
 
 			resources := c.State.Deletions
 			if len(resources) == 0 {
-				c.UI.Output("No packages to uninstall")
+				fmt.Println("No packages to uninstall")
 				return nil
 			}
 

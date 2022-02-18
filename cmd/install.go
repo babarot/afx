@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -52,7 +53,7 @@ func newInstallCmd() *cobra.Command {
 
 			pkgs := append(c.State.Additions, c.State.Readditions...)
 			if len(pkgs) == 0 {
-				c.UI.Output("No packages to install")
+				fmt.Println("No packages to install")
 				return nil
 			}
 
