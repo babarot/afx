@@ -51,8 +51,6 @@ func newSelfUpdateCmd() *cobra.Command {
 }
 
 func (c *selfUpdateCmd) run(args []string) error {
-	const repo string = "b4b4r07/afx"
-
 	switch Version {
 	case "unset":
 		c.UI.Error("Failed to update to new version\n")
@@ -62,7 +60,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return errors.New("failed to run self-update")
 	}
 
-	latest, found, err := selfupdate.DetectLatest(repo)
+	latest, found, err := selfupdate.DetectLatest(Repository)
 	if err != nil {
 		return errors.Wrap(err, "error occurred while detecting version")
 	}

@@ -13,8 +13,11 @@ import (
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
+	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/fatih/color"
+	"github.com/mgutz/ansi"
 	"github.com/mitchellh/cli"
 )
 
@@ -25,9 +28,21 @@ type meta struct {
 	State     *state.State
 
 	UI cli.Ui
+
+	updateMessageChan chan *update.ReleaseInfo
 }
 
 func (m *meta) init(args []string) error {
+	m.updateMessageChan = make(chan *update.ReleaseInfo)
+	go func() {
+		log.Printf("[DEBUG] (goroutine): checking new updates...")
+		release, err := checkForUpdate(Version)
+		if err != nil {
+			log.Printf("[ERROR] (goroutine): cannot check for new updates: %v", err)
+		}
+		m.updateMessageChan <- release
+	}()
+
 	m.UI = &cli.ColoredUi{
 		Ui: &cli.BasicUi{
 			Reader:      os.Stdin,
@@ -101,6 +116,7 @@ func (m *meta) init(args []string) error {
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
 		},
+		"AFX_NO_UPDATE_NOTIFIER": env.Variable{},
 	})
 
 	log.Printf("[DEBUG] mkdir %s\n", root)
@@ -115,15 +131,45 @@ func (m *meta) init(args []string) error {
 	}
 	m.State = s
 
-	log.Printf("[INFO] state additions: %#v", getNameInPackages(s.Additions))
-	log.Printf("[INFO] state readditions: %#v", getNameInPackages(s.Readditions))
-	log.Printf("[INFO] state deletions: %#v", getNameInResources(s.Deletions))
-	log.Printf("[INFO] state changes: %#v", getNameInPackages(s.Changes))
+	log.Printf("[INFO] state additions: (%d) %#v",
+		len(s.Additions), getNameInPackages(s.Additions))
+	log.Printf("[INFO] state readditions: (%d) %#v",
+		len(s.Readditions), getNameInPackages(s.Readditions))
+	log.Printf("[INFO] state deletions: (%d) %#v",
+		len(s.Deletions), getNameInResources(s.Deletions))
+	log.Printf("[INFO] state changes: (%d) %#v",
+		len(s.Changes), getNameInPackages(s.Changes))
+	log.Printf("[INFO] state unchanges: (%d) []string{...skip...}", len(s.NoChanges))
 
 	return nil
 }
 
-func (m *meta) Select() (config.Package, error) {
+func printForUpdate(uriCh chan *update.ReleaseInfo) {
+	switch Version {
+	case "unset":
+		return
+	}
+	log.Printf("[DEBUG] checking updates on afx repo...")
+	newRelease := <-uriCh
+	if newRelease != nil {
+		fmt.Fprintf(os.Stdout, "\n\n%s %s -> %s\n",
+			ansi.Color("A new release of afx is available:", "yellow"),
+			ansi.Color("v"+Version, "cyan"),
+			ansi.Color(newRelease.Version, "cyan"))
+		fmt.Fprintf(os.Stdout, "%s\n\n", ansi.Color(newRelease.URL, "yellow"))
+		fmt.Fprintf(os.Stdout, "To upgrade, run: afx self-update\n")
+	}
+}
+
+func (m *meta) printForUpdate() error {
+	if m.updateMessageChan == nil {
+		return errors.New("update message chan is not set")
+	}
+	printForUpdate(m.updateMessageChan)
+	return nil
+}
+
+func (m *meta) prompt() (config.Package, error) {
 	var stdin, stdout bytes.Buffer
 
 	cmd := shell.Shell{
@@ -175,4 +221,26 @@ func getNameInResources(resources []state.Resource) []string {
 		keys = append(keys, resource.Name)
 	}
 	return keys
+}
+
+func shouldCheckForUpdate() bool {
+	if os.Getenv("AFX_NO_UPDATE_NOTIFIER") != "" {
+		return false
+	}
+	return !isCI() && printers.IsTerminal(os.Stdout) && printers.IsTerminal(os.Stderr)
+}
+
+// based on https://github.com/watson/ci-info/blob/HEAD/index.js
+func isCI() bool {
+	return os.Getenv("CI") != "" || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
+		os.Getenv("BUILD_NUMBER") != "" || // Jenkins, TeamCity
+		os.Getenv("RUN_ID") != "" // TaskCluster, dsari
+}
+
+func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
+	if !shouldCheckForUpdate() {
+		return nil, nil
+	}
+	stateFilePath := filepath.Join(os.Getenv("HOME"), ".afx", "version.json")
+	return update.CheckForUpdate(stateFilePath, Repository, Version)
 }
