@@ -115,10 +115,15 @@ func (m *meta) init(args []string) error {
 	}
 	m.State = s
 
-	log.Printf("[INFO] state additions: %#v", getNameInPackages(s.Additions))
-	log.Printf("[INFO] state readditions: %#v", getNameInPackages(s.Readditions))
-	log.Printf("[INFO] state deletions: %#v", getNameInResources(s.Deletions))
-	log.Printf("[INFO] state changes: %#v", getNameInPackages(s.Changes))
+	log.Printf("[INFO] state additions: (%d) %#v",
+		len(s.Additions), getNameInPackages(s.Additions))
+	log.Printf("[INFO] state readditions: (%d) %#v",
+		len(s.Readditions), getNameInPackages(s.Readditions))
+	log.Printf("[INFO] state deletions: (%d) %#v",
+		len(s.Deletions), getNameInResources(s.Deletions))
+	log.Printf("[INFO] state changes: (%d) %#v",
+		len(s.Changes), getNameInPackages(s.Changes))
+	log.Printf("[INFO] state unchanges: (%d) []string{...skip...}", len(s.NoChanges))
 
 	return nil
 }
