@@ -15,37 +15,37 @@ type completionCmd struct {
 var (
 	// completionLong is long description of completion command
 	completionLong = heredoc.Doc(`
-To load completions:
+		To load completions:
 
-Bash:
+		Bash:
 
-  $ source <(afx completion bash)
+		  $ source <(afx completion bash)
 
-  # To load completions for each session, execute once:
-  # Linux:
-  $ afx completion bash > /etc/bash_completion.d/afx
-  # macOS:
-  $ afx completion bash > /usr/local/etc/bash_completion.d/afx
+		  # To load completions for each session, execute once:
+		  # Linux:
+		  $ afx completion bash > /etc/bash_completion.d/afx
+		  # macOS:
+		  $ afx completion bash > /usr/local/etc/bash_completion.d/afx
 
-Zsh:
+		Zsh:
 
-  # If shell completion is not already enabled in your environment,
-  # you will need to enable it.  You can execute the following once:
+		  # If shell completion is not already enabled in your environment,
+		  # you will need to enable it.  You can execute the following once:
 
-  $ echo "autoload -U compinit; compinit" >> ~/.zshrc
+		  $ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
-  # To load completions for each session, execute once:
-  $ afx completion zsh > "${fpath[1]}/_afx"
+		  # To load completions for each session, execute once:
+		  $ afx completion zsh > "${fpath[1]}/_afx"
 
-  # You will need to start a new shell for this setup to take effect.
+		  # You will need to start a new shell for this setup to take effect.
 
-fish:
+		fish:
 
-  $ afx completion fish | source
+		  $ afx completion fish | source
 
-  # To load completions for each session, execute once:
-  $ afx completion fish > ~/.config/fish/completions/afx.fish
-`)
+		  # To load completions for each session, execute once:
+		  $ afx completion fish > ~/.config/fish/completions/afx.fish
+		`)
 
 	// completionExample is examples for completion command
 	completionExample = templates.Examples(`

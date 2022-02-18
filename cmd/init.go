@@ -20,8 +20,19 @@ var (
 
 	// initExample is examples for init command
 	initExample = templates.Examples(`
-		# Start to use pkg
+		# show a source file to start packages installed by afx
 		afx init
+
+		# enable plugins/commands in current shell
+		source <(afx init)
+
+		# automatically load configurations
+		Bash:
+		  echo 'source <(afx init)' ~/.bashrc
+		Zsh:
+		  echo 'source <(afx init)' ~/.zshrc
+		Fish:
+		  echo 'afx init | source' ~/.config/fish/config.fish
 	`)
 )
 
