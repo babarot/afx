@@ -343,11 +343,12 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 		return errors.New("failed to get releases")
 	}
 
-	if err := release.Download(ctx); err != nil {
+	asset, err := release.Download(ctx)
+	if err != nil {
 		return errors.Wrapf(err, "%s: failed to download", release.Name)
 	}
 
-	if err := release.Unarchive(); err != nil {
+	if err := release.Unarchive(asset); err != nil {
 		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
 	}
 
@@ -497,54 +498,48 @@ func (r *GitHubRelease) GetAsset() (Asset, error) {
 }
 
 // Download is
-func (r *GitHubRelease) Download(ctx context.Context) error {
+func (r *GitHubRelease) Download(ctx context.Context) (Asset, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	asset, err := r.GetAsset()
 	if err != nil {
-		return err
+		return asset, err
 	}
 
 	log.Printf("[DEBUG] asset: %#v", asset)
 
 	req, err := http.NewRequest(http.MethodGet, asset.URL, nil)
 	if err != nil {
-		return err
+		return asset, err
 	}
 
 	client := new(http.Client)
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return err
+		return asset, err
 	}
 	defer resp.Body.Close()
 
 	os.MkdirAll(asset.Home, os.ModePerm)
 	file, err := os.Create(asset.Path)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to create file", asset.Path)
+		return asset, errors.Wrapf(err, "%s: failed to create file", asset.Path)
 	}
 	defer file.Close()
 	_, err = io.Copy(file, resp.Body)
 
-	return err
+	return asset, err
 }
 
 // Unarchive is
-func (r *GitHubRelease) Unarchive() error {
-	if len(r.Assets) == 0 {
-		log.Printf("[DEBUG] no assets: %#v\n", r)
-		return nil
-	}
-	a := r.Assets[0]
-
-	uaIface, err := archiver.ByExtension(a.Path)
+func (r *GitHubRelease) Unarchive(asset Asset) error {
+	uaIface, err := archiver.ByExtension(asset.Path)
 	if err != nil {
 		// err: this will be an error of format unrecognized by filename
 		// but in this case, maybe not archived file: e.g. tigrawap/slit
 		//
-		log.Printf("[ERROR] archiver.ByExtension(): %v", err)
+		log.Printf("[WARN] archiver.ByExtension(): %v", err)
 
 		// TODO: remove this logic?
 		// thanks to this logic, we don't need to specify this statement to link.from
@@ -555,10 +550,10 @@ func (r *GitHubRelease) Unarchive() error {
 		//
 		// because this logic renames a binary of 'jq-1.6' to 'jq'
 		//
-		target := filepath.Join(a.Home, r.Name)
+		target := filepath.Join(asset.Home, r.Name)
 		if _, err := os.Stat(target); err != nil {
-			log.Printf("[DEBUG] renamed from %s to %s", a.Path, target)
-			os.Rename(a.Path, target)
+			log.Printf("[DEBUG] renamed from %s to %s", asset.Path, target)
+			os.Rename(asset.Path, target)
 			os.Chmod(target, 0755)
 		}
 		return nil
@@ -598,12 +593,12 @@ func (r *GitHubRelease) Unarchive() error {
 		return errors.New("cannot type assertion with archiver.Unarchiver")
 	}
 
-	if err := u.Unarchive(a.Path, a.Home); err != nil {
+	if err := u.Unarchive(asset.Path, asset.Home); err != nil {
 		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
-	log.Printf("[DEBUG] removed archive file: %s\n", a.Path)
-	os.Remove(a.Path)
+	log.Printf("[DEBUG] removed archive file: %s\n", asset.Path)
+	os.Remove(asset.Path)
 
 	return nil
 }
