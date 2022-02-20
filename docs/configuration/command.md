@@ -16,7 +16,7 @@ list | yes (when using `build`)
 
     ```yaml hl_lines="7 8 9 10" title="Using sudo"
     github:
-    - name: fzy
+    - name: jhawthorn/fzy
       description: A better fuzzy finder
       owner: jhawthorn
       repo: fzy
@@ -33,7 +33,7 @@ list | yes (when using `build`)
 
     ```yaml hl_lines="7 8 9" title="Using go build"
     github:
-    - name: kubectl-trace
+    - name: iovisor/kubectl-trace
       description: Schedule bpftrace programs on your kubernetes cluster using the kubectl
       owner: iovisor
       repo: kubectl-trace
@@ -62,7 +62,7 @@ map | no
 
     ```yaml hl_lines="11 12"
     github:
-    - name: fzy
+    - name: jhawthorn/fzy
       description: A better fuzzy finder
       owner: jhawthorn
       repo: fzy
@@ -89,7 +89,7 @@ string | yes (when using `link`)
 
     ```yaml hl_lines="7 8" title="Just install from current directory"
     github:
-    - name: diff-so-fancy
+    - name: so-fancy/diff-so-fancy
       description: Good-lookin' diffs. Actually… nah… The best-lookin' diffs.
       owner: so-fancy
       repo: diff-so-fancy
@@ -104,7 +104,7 @@ string | yes (when using `link`)
 
     ```yaml hl_lines="10 11 12" title="Case of including version string etc in file name"
     github:
-    - name: jq
+    - name: stedolan/jq
       description: Command-line JSON processor
       owner: stedolan
       repo: jq
@@ -131,7 +131,7 @@ string | no
 
     ```yaml hl_lines="7 8 9" title="Simple case, with renaming by using `to` field"
     github:
-    - name: prok
+    - name: mutantcornholio/prok
       description: easy process grep with ps output
       owner: mutantcornholio
       repo: prok
@@ -149,7 +149,7 @@ string | no
 
     ```yaml hl_lines="7 8 9" title="from current working dir to external dir of afx"
     github:
-    - name: tpm
+    - name: tmux-plugins/tpm
       description: Tmux Plugin Manager
       owner: tmux-plugins
       repo: tpm
@@ -167,7 +167,7 @@ string | no
 
     ```yaml hl_lines="8 9 10 11" title="Several links"
     github:
-    - name: kubectx
+    - name: ahmetb/kubectx
       description: Switch faster between clusters and namespaces in kubectl
       owner: ahmetb
       repo: kubectx
@@ -201,7 +201,7 @@ map | no
 
     ```yaml hl_lines="12 13 14 15"
     github:
-    - name: bat
+    - name: sharkdp/bat
       description: A cat(1) clone with wings.
       owner: sharkdp
       repo: bat
@@ -231,7 +231,7 @@ map | no
 
     ```yaml hl_lines="7 8"
     github:
-    - name: colordiff
+    - name: daveewart/colordiff
       description: Primary development for colordiff
       owner: daveewart
       repo: colordiff
@@ -247,7 +247,7 @@ map | no
 
     ```yaml hl_lines="10 11 12 13 14 15"
     github:
-    - name: exa
+    - name: ogham/exa
       description: A modern version of 'ls'.
       owner: ogham
       repo: exa
@@ -270,7 +270,7 @@ map | no
 
     ```yaml hl_lines="10 11"
     github:
-    - name: bat
+    - name: sharkdp/bat
       description: A cat(1) clone with wings.
       owner: sharkdp
       repo: bat
@@ -300,7 +300,7 @@ string | no
 
     ```yaml hl_lines="10 11 12" title="Login message if tpm is installed"
     github:
-    - name: tpm
+    - name: tmux-plugins/tpm
       description: Tmux Plugin Manager
       owner: tmux-plugins
       repo: tpm
@@ -323,6 +323,8 @@ string | no
 `if` allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.
 
 In `if` field, you can write shell scripts[^1]. The exit code finally returned from that shell script is used to determine whether it links command or not.
+
+[^1]: You can configure your favorite shell to evaluate `if` field by setting `AFX_SHELL`.
 
 === "Case 1"
 
@@ -347,4 +349,14 @@ In `if` field, you can write shell scripts[^1]. The exit code finally returned f
           }
     ```
 
-[^1]: You can configure your favorite shell to evaluate `if` field by setting `AFX_SHELL`.
+!!! hint "Shell used for an evaluation of `if`"
+
+    Defaults to `bash`. But you can change it with setting `AFX_SHELL` (or `main.shell` block on afx configuration)[^2]
+
+    e.g.
+    ```
+    export AFX_SHELL=zsh
+    export AFX_SHELL=/bin/zsh
+    ```
+
+[^2]: Not yet available. Coming soon.

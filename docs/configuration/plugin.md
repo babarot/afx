@@ -16,7 +16,7 @@ list | yes
 
     ```yaml hl_lines="9 10" title="Simple case, just register to init.sh as load scripts"
     github:
-    - name: enhancd
+    - name: b4b4r07/enhancd
       description: A next-generation cd command with your interactive filter
       owner: b4b4r07
       repo: enhancd
@@ -31,7 +31,7 @@ list | yes
 
     ```yaml hl_lines="10 11" title="Using wildcards to register multiple files"
     github:
-    - name: zsh-prompt-minimal
+    - name: b4b4r07/zsh-prompt-minimal
       description: Super super super minimal prompt for zsh
       owner: b4b4r07
       repo: zsh-prompt-minimal
@@ -74,7 +74,7 @@ list | no
 
     ```yaml hl_lines="7 8 9"
     github:
-    - name: zsh-prompt-minimal
+    - name: b4b4r07/zsh-prompt-minimal
       description: Super super super minimal prompt for zsh
       owner: b4b4r07
       repo: zsh-prompt-minimal
@@ -98,7 +98,7 @@ string | no
 
     ```yaml hl_lines="11 12 13" title="Login message if tpm is installed"
     github:
-    - name: enhancd
+    - name: b4b4r07/enhancd
       description: A next-generation cd command with your interactive filter
       owner: b4b4r07
       repo: enhancd

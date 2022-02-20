@@ -70,7 +70,7 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 
     ```diff
       github:
-      - name: enhancd
+      - name: b4b4r07/enhancd
         description: A next-generation cd command with your interactive filter
         owner: b4b4r07
         repo: enhancd
@@ -79,7 +79,7 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
             ENHANCD_FILTER: fzf --height 25% --reverse --ansi:fzy
           sources:
           - init.sh
-    + - name: fzy
+    + - name: jhawthorn/fzy
     +   description: A better fuzzy finder
     +   owner: jhawthorn
     +   repo: fzy
@@ -100,7 +100,7 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 
     ```diff
       github:
-      - name: enhancd
+      - name: b4b4r07/enhancd
         description: A next-generation cd command with your interactive filter
         owner: b4b4r07
         repo: enhancd
@@ -109,7 +109,7 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
             ENHANCD_FILTER: fzf --height 25% --reverse --ansi:fzy
           sources:
           - init.sh
-    - - name: fzy
+    - - name: jhawthorn/fzy
     -   description: A better fuzzy finder
     -   owner: jhawthorn
     -   repo: fzy
