@@ -730,7 +730,9 @@
 
 
 <h1 id="github">GitHub<a class="headerlink" href="#github" title="Permanent link">#</a></h1>
-<p>This <code>github</code> allows you to get GitHub repositories and releases. To get releases, you need to specify <code>release</code> field.</p>
+<p>GitHub type allows you to get GitHub repository or GitHub Release. To get releases, you need to specify <code>release</code> field.</p>
+<p>In GitHub type, there are mainly two type of package style. One is a "repository" and the other is "release". In afx configuration, a <code>release</code> field is optional so basically all of GitHub packages are regard as "repository". It's a same reason why actual GitHub Release pages exists on its GitHub Repository. But if <code>release</code> field is specified, in afx, it's regard as also "release".</p>
+<p>It may be good to think about whether to configure <code>release</code> field depending on where you install it from.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Repository</label><label for="__tabbed_1_2">Release</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -763,9 +765,6 @@
 </code></pre></div>
 </div>
 </div>
-</div>
-<div class="admonition danger">
-<p class="admonition-title">(TODO) More explanation</p>
 </div>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>

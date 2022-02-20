@@ -386,16 +386,64 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     Parameters
   </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#owner" class="md-nav__link">
+    owner
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    depends-on
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#command" class="md-nav__link">
+    command
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -519,16 +567,64 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     Parameters
   </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#owner" class="md-nav__link">
+    owner
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    depends-on
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#command" class="md-nav__link">
+    command
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -550,7 +646,7 @@
 
 
 <h1 id="gist">Gist<a class="headerlink" href="#gist" title="Permanent link">#</a></h1>
-<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
+<p>Gist type allows you to manage <a href="https://gist.github.com/">Gist</a> pages as a plugin or command.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">gist</span><span class="p">:</span><span class="w"></span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hoge.sh</span><span class="w"></span>
 <span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">this is a test for gist</span><span class="w"></span>
@@ -562,60 +658,76 @@
 <span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hoge</span><span class="w"></span>
 </code></pre></div>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
+<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
 <th>Type</th>
-<th>Required</th>
-<th>Description</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>name</td>
 <td>string</td>
-<td>yes</td>
-<td>Package name (must be unique in all packages)</td>
-</tr>
-<tr>
-<td>description</td>
-<td>string</td>
-<td></td>
-<td>A description of a package</td>
-</tr>
-<tr>
-<td>owner</td>
-<td>string</td>
-<td>yes</td>
-<td>Gist owner</td>
-</tr>
-<tr>
-<td>id</td>
-<td>string</td>
-<td>yes</td>
-<td>Gist page id</td>
-</tr>
-<tr>
-<td>command</td>
-<td>section</td>
-<td></td>
-<td>See <a href="../../command/">Command</a> page</td>
-</tr>
-<tr>
-<td>plugin</td>
-<td>section</td>
-<td></td>
-<td>See <a href="../../plugin/">Plugin</a> page</td>
-</tr>
-<tr>
-<td>depends-on</td>
-<td>array</td>
-<td>Dependency list (you can write package name here)</td>
-<td></td>
+<td>(required)</td>
 </tr>
 </tbody>
 </table>
+<p>Package name. Name it as you like. In Gist, there's a case that several files are attached in one Gist. So may be better to name considering it.</p>
+<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td><code>""</code></td>
+</tr>
+</tbody>
+</table>
+<p>Package description.</p>
+<h3 id="owner">owner<a class="headerlink" href="#owner" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td>(required)</td>
+</tr>
+</tbody>
+</table>
+<p>Gist owner.</p>
+<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td>(required)</td>
+</tr>
+</tbody>
+</table>
+<p>Gist page id.</p>
+<h3 id="depends-on">depends-on<a class="headerlink" href="#depends-on" title="Permanent link">#</a></h3>
+<p>See <a href="../github/#depends-on">GitHub#depends-on</a> page. Same as that.</p>
+<h3 id="command">command<a class="headerlink" href="#command" title="Permanent link">#</a></h3>
+<p>See <a href="../../command/">Command</a> page</p>
+<h3 id="plugin">plugin<a class="headerlink" href="#plugin" title="Permanent link">#</a></h3>
+<p>See <a href="../../plugin/">Plugin</a> page</p>
 
               
             </article>

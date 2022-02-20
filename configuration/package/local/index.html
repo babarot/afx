@@ -400,16 +400,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     Parameters
   </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory" class="md-nav__link">
+    directory
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    depends-on
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#command" class="md-nav__link">
+    command
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -519,16 +560,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     Parameters
   </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory" class="md-nav__link">
+    directory
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#depends-on" class="md-nav__link">
+    depends-on
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#command" class="md-nav__link">
+    command
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -550,7 +632,7 @@
 
 
 <h1 id="local">Local<a class="headerlink" href="#local" title="Permanent link">#</a></h1>
-<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
+<p>Local type allows you to manage a plugin or command located locally in your system. You can also just run <code>source</code> command on your rc files (e.g. zshrc) to load your settings divided into other shell scripts without using this Local type. But by using this package type, you can manage them as same like other packages on afx ecosystem.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">local</span><span class="p">:</span><span class="w"></span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zsh</span><span class="w"></span>
 <span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">My zsh scripts</span><span class="w"></span>
@@ -566,54 +648,60 @@
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;*.zsh.inc&#39;</span><span class="w"></span>
 </code></pre></div>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
+<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <table>
 <thead>
 <tr>
-<th>Name</th>
 <th>Type</th>
-<th>Required</th>
-<th>Description</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>name</td>
 <td>string</td>
-<td>yes</td>
-<td>Package name (must be unique in all packages)</td>
-</tr>
-<tr>
-<td>description</td>
-<td>string</td>
-<td></td>
-<td>A description of a package</td>
-</tr>
-<tr>
-<td>directory</td>
-<td>string</td>
-<td>yes</td>
-<td>Directory path where the target files are placed</td>
-</tr>
-<tr>
-<td>command</td>
-<td>section</td>
-<td></td>
-<td>See <a href="../../command/">Command</a> page</td>
-</tr>
-<tr>
-<td>plugin</td>
-<td>section</td>
-<td></td>
-<td>See <a href="../../plugin/">Plugin</a> page</td>
-</tr>
-<tr>
-<td>depends-on</td>
-<td>array</td>
-<td>Dependency list (you can write package name here)</td>
-<td></td>
+<td>(required)</td>
 </tr>
 </tbody>
 </table>
+<p>Package name.</p>
+<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td><code>""</code></td>
+</tr>
+</tbody>
+</table>
+<p>Package description.</p>
+<h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td>(required)</td>
+</tr>
+</tbody>
+</table>
+<p>Specify a directory path that files you want to load are put. Allow to use <code>~</code> (tilda) and environment variables (e.g. <code>$HOME</code>) here. Of course, specifying full path is also acceptable.</p>
+<h3 id="depends-on">depends-on<a class="headerlink" href="#depends-on" title="Permanent link">#</a></h3>
+<p>See <a href="../github/#depends-on">GitHub#depends-on</a> page. Same as that.</p>
+<h3 id="command">command<a class="headerlink" href="#command" title="Permanent link">#</a></h3>
+<p>See <a href="../../command/">Command</a> page</p>
+<h3 id="plugin">plugin<a class="headerlink" href="#plugin" title="Permanent link">#</a></h3>
+<p>See <a href="../../plugin/">Plugin</a> page</p>
 
               
             </article>
