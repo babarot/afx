@@ -69,6 +69,12 @@ func newUninstallCmd() *cobra.Command {
 				resources = given
 			}
 
+			yes, _ := c.askRunCommand(*c, getNameInResources(resources))
+			if !yes {
+				fmt.Println("Cancelled")
+				return nil
+			}
+
 			return c.run(resources)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
