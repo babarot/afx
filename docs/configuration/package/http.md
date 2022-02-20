@@ -1,6 +1,6 @@
 # HTTP
 
-## Example
+HTTP type allows you to manage a plugin or command hosted on any websites except for a source code hosting site such as GitHub etc.
 
 ```yaml
 http:
@@ -15,12 +15,38 @@ http:
 
 ## Parameters
 
-Name | Type | Required | Description
----|---|---|---
-name | string | yes | Package name (must be unique in all packages)
-description | string | | A description of a package
-url | string | yes | URL which can be downloaded.
-output | string | | TBD
-command | section | | See [Command](../command.md) page
-plugin | section | | See [Plugin](../plugin.md) page
-depends-on | array | Dependency list (you can write package name here)
+### name
+
+Type | Default
+---|---
+string | (required)
+
+Package name.
+
+### description
+
+Type | Default
+---|---
+string | `""`
+
+Package description.
+
+### url
+
+Type | Default
+---|---
+string | (required)
+
+Specify a URL that a command or plugin you want to install are hosted.
+
+### depends-on
+
+See [GitHub#depends-on](github.md#depends-on) page. Same as that.
+
+### command
+
+See [Command](../command.md) page
+
+### plugin
+
+See [Plugin](../plugin.md) page

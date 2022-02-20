@@ -20,7 +20,6 @@ type HTTP struct {
 	Name string `yaml:"name" validate:"required"`
 
 	URL         string `yaml:"url" validate:"required,url"`
-	Output      string `yaml:"output"`
 	Description string `yaml:"description"`
 
 	Plugin  *Plugin  `yaml:"plugin"`

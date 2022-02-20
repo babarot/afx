@@ -1,6 +1,6 @@
 # Gist
 
-## Example
+Gist type allows you to manage [Gist](https://gist.github.com/) pages as a plugin or command.
 
 ```yaml
 gist:
@@ -16,12 +16,46 @@ gist:
 
 ## Parameters
 
-Name | Type | Required | Description
----|---|---|---
-name | string | yes | Package name (must be unique in all packages)
-description | string | | A description of a package
-owner | string | yes | Gist owner
-id | string | yes | Gist page id
-command | section | | See [Command](../command.md) page
-plugin | section | | See [Plugin](../plugin.md) page
-depends-on | array | Dependency list (you can write package name here)
+### name
+
+Type | Default
+---|---
+string | (required)
+
+Package name. Name it as you like. In Gist, there's a case that several files are attached in one Gist. So may be better to name considering it.
+
+### description
+
+Type | Default
+---|---
+string | `""`
+
+Package description.
+
+### owner
+
+Type | Default
+---|---
+string | (required)
+
+Gist owner.
+
+### id
+
+Type | Default
+---|---
+string | (required)
+
+Gist page id.
+
+### depends-on
+
+See [GitHub#depends-on](github.md#depends-on) page. Same as that.
+
+### command
+
+See [Command](../command.md) page
+
+### plugin
+
+See [Plugin](../plugin.md) page

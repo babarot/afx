@@ -1,6 +1,10 @@
 # GitHub
 
-This `github` allows you to get GitHub repositories and releases. To get releases, you need to specify `release` field.
+GitHub type allows you to get GitHub repository or GitHub Release. To get releases, you need to specify `release` field.
+
+In GitHub type, there are mainly two type of package style. One is a "repository" and the other is "release". In afx configuration, a `release` field is optional so basically all of GitHub packages are regard as "repository". It's a same reason why actual GitHub Release pages exists on its GitHub Repository. But if `release` field is specified, in afx, it's regard as also "release".
+
+It may be good to think about whether to configure `release` field depending on where you install it from.
 
 === "Repository"
     ```yaml
@@ -32,8 +36,6 @@ This `github` allows you to get GitHub repositories and releases. To get release
         - from: '*jq*'
           to: jq
     ```
-
-!!! danger "(TODO) More explanation"
 
 ## Parameters
 
