@@ -24,7 +24,7 @@ Let's say you want to install `jq` and `enhancd` with afx. So please write YAML 
 
 ```yaml
 github:
-- name: jq
+- name: stedolan/jq
   description: Command-line JSON processor
   owner: stedolan
   repo: jq
@@ -35,7 +35,7 @@ github:
     link:
     - from: '*jq*'
       to: jq
-- name: enhancd
+- name: b4b4r07/enhancd
   description: A next-generation cd command with your interactive filter
   owner: b4b4r07
   repo: enhancd
@@ -93,7 +93,7 @@ If you want to update package to new version etc, all you have to do is just to 
 
 ```diff
 github:
-  - name: jq
+  - name: stedolan/jq
     description: Command-line JSON processor
     owner: stedolan
     repo: jq
