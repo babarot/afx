@@ -17,8 +17,10 @@ import (
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
+	afctx "github.com/b4b4r07/afx/pkg/context"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
+	"github.com/b4b4r07/afx/pkg/tmpl"
 	"github.com/google/go-github/github"
 	"github.com/mholt/archiver"
 	"github.com/tidwall/gjson"
@@ -49,8 +51,14 @@ type GitHubOption struct {
 
 // Release represents a GitHub release structure
 type Release struct {
-	Name string `yaml:"name" validate:"required"`
-	Tag  string `yaml:"tag"`
+	Name     string   `yaml:"name" validate:"required"`
+	Tag      string   `yaml:"tag"`
+	Artifact Artifact `yaml:"asset"`
+}
+
+type Artifact struct {
+	Filename     string            `yaml:"filename"`
+	Replacements map[string]string `yaml:"replacements"`
 }
 
 func NewGitHub(ctx context.Context, owner, repo string) (GitHub, error) {
@@ -305,10 +313,16 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 		}
 	}
 
+	filename, err := c.templateFilename()
+	if err != nil {
+		return errors.Wrapf(err, "failed to template filename")
+	}
+
 	release := GitHubRelease{
-		Name:   c.Release.Name,
-		Client: httpClient,
-		Assets: []Asset{},
+		Name:     c.Release.Name,
+		Client:   httpClient,
+		Assets:   Assets{},
+		Filename: filename,
 	}
 
 	assets.ForEach(func(key, value gjson.Result) bool {
@@ -323,7 +337,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	})
 
 	if len(release.Assets) == 0 {
-		log.Printf("[ERROR] %s is no release assets", c.Release.Name)
+		log.Printf("[ERROR] %s has no release assets", c.Release.Name)
 		return errors.New("failed to get releases")
 	}
 
@@ -338,13 +352,46 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	return nil
 }
 
+func (c GitHub) templateFilename() (string, error) {
+	data := afctx.New(
+		afctx.WithPackage(c),
+		afctx.WithRelease(afctx.Release{
+			Name: c.Release.Name,
+			Tag:  c.Release.Tag,
+		}),
+	)
+
+	filename := c.Release.Artifact.Filename
+	replacements := c.Release.Artifact.Replacements
+
+	if filename == "" {
+		// no filename specified
+		return "", nil
+	}
+
+	log.Printf("[DEBUG] asset: templating filename from %q", filename)
+
+	filename, err := tmpl.New(data).
+		Replace(replacements).
+		Apply(filename)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("[DEBUG] asset: templated filename: -> %q", filename)
+	return filename, nil
+}
+
 // GitHubRelease represents a GitHub release and its client
 // A difference from Release is whether a client or not
 type GitHubRelease struct {
 	Client *http.Client
 
 	Name   string
-	Assets []Asset
+	Assets Assets
+
+	Filename string
 }
 
 // Asset represents GitHub release's asset.
@@ -356,25 +403,29 @@ type Asset struct {
 	URL  string
 }
 
-func (r *GitHubRelease) filter(fn func(Asset) bool) *GitHubRelease {
-	var assets []Asset
-	if len(r.Assets) < 2 {
+type Assets []Asset
+
+func (as *Assets) filter(fn func(Asset) bool) *Assets {
+	var assets Assets
+	if len(*as) < 2 {
 		// no more need to filter
-		return r
+		log.Printf("[DEBUG] assets.filter: stopped because assets is already filtered to one or zero asset")
+		return as
 	}
-	for _, asset := range r.Assets {
+
+	for _, asset := range *as {
 		if fn(asset) {
 			assets = append(assets, asset)
 		}
 	}
 
 	// logging if assets are changed by filter
-	if len(r.Assets) != len(assets) {
-		log.Printf("[DEBUG] assets filter: filtered: %#v", getAssetKeys(assets))
+	if len(*as) != len(assets) {
+		log.Printf("[DEBUG] assets.filter: filtered: %#v", getAssetKeys(assets))
 	}
 
-	r.Assets = assets
-	return r
+	*as = assets
+	return as
 }
 
 // getAssetKeys just returns list of asset.Name
@@ -386,51 +437,74 @@ func getAssetKeys(assets []Asset) []string {
 	return names
 }
 
+func (r *GitHubRelease) GetAsset() (Asset, error) {
+	log.Printf("[DEBUG] assets: %#v\n", getAssetKeys(r.Assets))
+
+	if len(r.Assets) == 0 {
+		return Asset{}, fmt.Errorf("%s: no assets found", r.Name)
+	}
+
+	if r.Filename != "" {
+		log.Printf("[DEBUG] asset: found filename %q is specified in config", r.Filename)
+		for _, asset := range r.Assets {
+			if asset.Name == r.Filename {
+				log.Printf("[DEBUG] asset: filename %q is matched with assets", r.Filename)
+				return asset, nil
+			}
+		}
+		return Asset{}, fmt.Errorf("%s: no matched in assets", r.Filename)
+	}
+
+	assets := *r.Assets.
+		filter(func(asset Asset) bool {
+			expr := ".*(sha256sum|checksum).*"
+			// filter out
+			return !regexp.MustCompile(expr).MatchString(asset.Name)
+		}).
+		filter(func(asset Asset) bool {
+			expr := ""
+			switch runtime.GOOS {
+			case "darwin":
+				expr += ".*(apple|darwin|Darwin|osx|mac|macos|macOS).*"
+			case "linux":
+				expr += ".*(linux|hoe).*"
+			}
+			return regexp.MustCompile(expr).MatchString(asset.Name)
+		}).
+		filter(func(asset Asset) bool {
+			expr := ""
+			switch runtime.GOARCH {
+			case "amd64":
+				expr += ".*(amd64|64).*"
+			case "386":
+				expr += ".*(386|86).*"
+			}
+			return regexp.MustCompile(expr).MatchString(asset.Name)
+		})
+
+	switch len(assets) {
+	case 0:
+		return Asset{}, errors.New("asset not found after filtered")
+	case 1:
+		return assets[0], nil
+	default:
+		log.Printf("[WARN] %d assets found: %#v", len(assets), getAssetKeys(assets))
+		log.Printf("[WARN] first one %q will be used", assets[0].Name)
+		return assets[0], nil
+	}
+}
+
 // Download is
 func (r *GitHubRelease) Download(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	log.Printf("[DEBUG] assets: %#v\n", getAssetKeys(r.Assets))
-
-	if len(r.Assets) == 0 {
-		return fmt.Errorf("%s: no assets found", r.Name)
+	asset, err := r.GetAsset()
+	if err != nil {
+		return err
 	}
 
-	r.filter(func(asset Asset) bool {
-		expr := ".*(sha256sum|checksum).*"
-		// filter out
-		return !regexp.MustCompile(expr).MatchString(asset.Name)
-	})
-
-	r.filter(func(asset Asset) bool {
-		expr := ""
-		switch runtime.GOOS {
-		case "darwin":
-			expr += ".*(apple|darwin|Darwin|osx|mac|macos|macOS).*"
-		case "linux":
-			expr += ".*(linux|hoe).*"
-		}
-		return regexp.MustCompile(expr).MatchString(asset.Name)
-	})
-
-	r.filter(func(asset Asset) bool {
-		expr := ""
-		switch runtime.GOARCH {
-		case "amd64":
-			expr += ".*(amd64|64).*"
-		case "386":
-			expr += ".*(386|86).*"
-		}
-		return regexp.MustCompile(expr).MatchString(asset.Name)
-	})
-
-	if len(r.Assets) == 0 {
-		// as a result of filtering
-		return fmt.Errorf("%s: assets is gone due to filter assets", r.Name)
-	}
-
-	asset := r.Assets[0]
+	log.Printf("[DEBUG] asset: %#v", asset)
 
 	req, err := http.NewRequest(http.MethodGet, asset.URL, nil)
 	if err != nil {
