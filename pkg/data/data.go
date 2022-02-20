@@ -1,4 +1,4 @@
-package context
+package data
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Context struct {
+type Data struct {
 	Env     Env
 	Runtime Runtime
 	Package Package
@@ -35,8 +35,8 @@ type Release struct {
 	Tag  string
 }
 
-func New(fields ...func(*Context)) *Context {
-	ctx := &Context{
+func New(fields ...func(*Data)) *Data {
+	d := &Data{
 		Package: Package{},
 		Release: Release{},
 		Env:     ToEnv(os.Environ()),
@@ -46,23 +46,23 @@ func New(fields ...func(*Context)) *Context {
 		},
 	}
 	for _, f := range fields {
-		f(ctx)
+		f(d)
 	}
-	return ctx
+	return d
 }
 
-func WithPackage(pkg PackageInterface) func(*Context) {
-	return func(ctx *Context) {
-		ctx.Package = Package{
+func WithPackage(pkg PackageInterface) func(*Data) {
+	return func(d *Data) {
+		d.Package = Package{
 			Home: pkg.GetHome(),
 			Name: pkg.GetName(),
 		}
 	}
 }
 
-func WithRelease(r Release) func(*Context) {
-	return func(ctx *Context) {
-		ctx.Release = r
+func WithRelease(r Release) func(*Data) {
+	return func(d *Data) {
+		d.Release = r
 	}
 }
 

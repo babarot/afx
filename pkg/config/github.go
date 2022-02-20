@@ -17,7 +17,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
-	afctx "github.com/b4b4r07/afx/pkg/context"
+	"github.com/b4b4r07/afx/pkg/data"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/tmpl"
@@ -51,8 +51,10 @@ type GitHubOption struct {
 
 // Release represents a GitHub release structure
 type Release struct {
-	Name     string   `yaml:"name" validate:"required"`
-	Tag      string   `yaml:"tag"`
+	Name string `yaml:"name" validate:"required"`
+	Tag  string `yaml:"tag"`
+
+	// TODO: (internal change): rename Artifact to Asset
 	Artifact Artifact `yaml:"asset"`
 }
 
@@ -353,14 +355,6 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 }
 
 func (c GitHub) templateFilename() (string, error) {
-	data := afctx.New(
-		afctx.WithPackage(c),
-		afctx.WithRelease(afctx.Release{
-			Name: c.Release.Name,
-			Tag:  c.Release.Tag,
-		}),
-	)
-
 	filename := c.Release.Artifact.Filename
 	replacements := c.Release.Artifact.Replacements
 
@@ -370,6 +364,14 @@ func (c GitHub) templateFilename() (string, error) {
 	}
 
 	log.Printf("[DEBUG] asset: templating filename from %q", filename)
+
+	data := data.New(
+		data.WithPackage(c),
+		data.WithRelease(data.Release{
+			Name: c.Release.Name,
+			Tag:  c.Release.Tag,
+		}),
+	)
 
 	filename, err := tmpl.New(data).
 		Replace(replacements).

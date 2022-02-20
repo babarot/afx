@@ -7,12 +7,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/b4b4r07/afx/pkg/context"
+	"github.com/b4b4r07/afx/pkg/data"
 )
 
 // Template holds data that can be applied to a template string.
 type Template struct {
-	ctx    *context.Context
+	data   *data.Data
 	fields Fields
 }
 
@@ -34,19 +34,19 @@ const (
 )
 
 // New Template.
-func New(ctx *context.Context) *Template {
+func New(d *data.Data) *Template {
 	return &Template{
-		ctx: ctx,
+		data: d,
 		fields: Fields{
-			env:     ctx.Env,
-			pkgName: ctx.Package.Name,
-			pkgHome: ctx.Package.Home,
-			dir:     ctx.Package.Home,
-			goos:    ctx.Runtime.Goos,
-			goarch:  ctx.Runtime.Goarch,
+			env:     d.Env,
+			pkgName: d.Package.Name,
+			pkgHome: d.Package.Home,
+			dir:     d.Package.Home,
+			goos:    d.Runtime.Goos,
+			goarch:  d.Runtime.Goarch,
 			release: map[string]string{
-				releaseName: ctx.Release.Name,
-				releaseTag:  ctx.Release.Tag,
+				releaseName: d.Release.Name,
+				releaseTag:  d.Release.Tag,
 			},
 		},
 	}
@@ -81,8 +81,8 @@ func (t *Template) Apply(s string) (string, error) {
 
 // Replace populates Fields from the artifact and replacements.
 func (t *Template) Replace(replacements map[string]string) *Template {
-	t.fields[goos] = replace(replacements, t.ctx.Runtime.Goos)
-	t.fields[goarch] = replace(replacements, t.ctx.Runtime.Goarch)
+	t.fields[goos] = replace(replacements, t.data.Runtime.Goos)
+	t.fields[goarch] = replace(replacements, t.data.Runtime.Goarch)
 	return t
 }
 
