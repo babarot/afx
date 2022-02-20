@@ -653,7 +653,7 @@
 <h2 id="write-yaml">Write YAML<a class="headerlink" href="#write-yaml" title="Permanent link">#</a></h2>
 <p>Let's say you want to install <code>jq</code> and <code>enhancd</code> with afx. So please write YAML file like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jq</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stedolan/jq</span><span class="w"></span>
 <span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Command-line JSON processor</span><span class="w"></span>
 <span class="w">  </span><span class="nt">owner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stedolan</span><span class="w"></span>
 <span class="w">  </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jq</span><span class="w"></span>
@@ -664,7 +664,7 @@
 <span class="w">    </span><span class="nt">link</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">from</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*jq*&#39;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jq</span><span class="w"></span>
-<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enhancd</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">b4b4r07/enhancd</span><span class="w"></span>
 <span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">A next-generation cd command with your interactive filter</span><span class="w"></span>
 <span class="w">  </span><span class="nt">owner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">b4b4r07</span><span class="w"></span>
 <span class="w">  </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enhancd</span><span class="w"></span>
@@ -699,7 +699,7 @@
 <h2 id="update-packages">Update packages<a class="headerlink" href="#update-packages" title="Permanent link">#</a></h2>
 <p>If you want to update package to new version etc, all you have to do is just to modify YAML file and then run <code>afx update</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="w">github:</span>
-<span class="w"> </span> - name: jq<span class="w"></span>
+<span class="w"> </span> - name: stedolan/jq<span class="w"></span>
 <span class="w"> </span>   description: Command-line JSON processor<span class="w"></span>
 <span class="w"> </span>   owner: stedolan<span class="w"></span>
 <span class="w"> </span>   repo: jq<span class="w"></span>
