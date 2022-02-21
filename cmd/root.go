@@ -8,7 +8,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
-	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/spf13/cobra"
 )

@@ -6,7 +6,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
-	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/spf13/cobra"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/fatih/color"
 	"github.com/inconshreveable/go-update"
