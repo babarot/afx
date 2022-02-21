@@ -20,7 +20,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/data"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
-	"github.com/b4b4r07/afx/pkg/tmpl"
+	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/google/go-github/github"
 	"github.com/mholt/archiver"
 	"github.com/tidwall/gjson"
@@ -374,7 +374,7 @@ func (c GitHub) templateFilename() (string, error) {
 		}),
 	)
 
-	filename, err := tmpl.New(data).
+	filename, err := templates.New(data).
 		Replace(replacements).
 		Apply(filename)
 
