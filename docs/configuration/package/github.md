@@ -113,7 +113,7 @@ Allows you to specify a filename of GitHub Release asset you want to install. Mo
 
 !!! tip "(Basically) NO NEED TO SET THIS"
 
-    Basically in afx, it's no problem even if you don't specify this field when downloading a package from GitHub Release. Because afx automatically filters release assets that can work on your system (OS/Architecture, etc)even if several release assets are uploaded.
+    Basically in afx, it's no problem even if you don't specify this field when downloading a package from GitHub Release. Because afx automatically filters release assets that can work on your system (OS/Architecture, etc) even if several release assets are uploaded.
 
     But the filename of the package uploaded to GitHub Release can be named by its author freely. So there are cases that afx cannot filter the package which is suitable on your system when too much special wording is included in a filename.
 
@@ -175,6 +175,13 @@ Type | Default
 map | `{}`
 
 Allows you to replace pre-defined OS/Architecture wording with yours. In afx, the templating variables of `.OS` and `.Arch` are coming from `runtime.GOOS` and `runtime.GOARCH` (The Go Programming Language). For example, your system is Mac: In this case, `GOOS` returns `darwin` string, but let's say the filename of the assets on GitHub Release you want has `mac` instead of `darwin`. In this case, you can replace it with `darwin` by defining this `replacements` map.
+
+```yaml hl_lines="4"
+asset:
+  filename: '{{ .Release.Name }}-{{ .Release.Tag }}-{{ .Arch }}-{{ .OS }}.tar.gz'
+  replacements:
+    darwin: mac
+```
 
 Keys should be valid `GOOS`s or `GOARCH`s. Valid name is below (full is are on [Environment - The Go Programming Language](https://go.dev/doc/install/source#environment)). Values are the respective replacements.
 

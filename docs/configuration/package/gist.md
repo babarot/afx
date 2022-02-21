@@ -4,14 +4,14 @@ Gist type allows you to manage [Gist](https://gist.github.com/) pages as a plugi
 
 ```yaml
 gist:
-- name: hoge.sh
-  description: this is a test for gist
+- name: context-scripts
+  description: Get current GCP/Kubernetes context which you are on.
   owner: b4b4r07
-  id: f26dd264f094e0ca834ce9feadc0c3f1
+  id: bb820b99fdba605ea4bd4fb29046ce58
   command:
     link:
-    - from: hoge.sh
-      to: hoge
+    - from: gcp-context
+    - from: kube-context
 ```
 
 ## Parameters
