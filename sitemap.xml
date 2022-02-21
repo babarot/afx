@@ -2,52 +2,52 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://goreleaser.com/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/getting-started/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/how-it-works/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/links/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/command/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/plugin/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/package/gist/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/package/github/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/package/http/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://goreleaser.com/configuration/package/local/</loc>
-         <lastmod>2022-02-20</lastmod>
+         <lastmod>2022-02-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

@@ -913,7 +913,7 @@
 <p>Allows you to specify a filename of GitHub Release asset you want to install. Moreover, this field in afx config file supports templating.</p>
 <div class="admonition tip">
 <p class="admonition-title">(Basically) NO NEED TO SET THIS</p>
-<p>Basically in afx, it's no problem even if you don't specify this field when downloading a package from GitHub Release. Because afx automatically filters release assets that can work on your system (OS/Architecture, etc)even if several release assets are uploaded.</p>
+<p>Basically in afx, it's no problem even if you don't specify this field when downloading a package from GitHub Release. Because afx automatically filters release assets that can work on your system (OS/Architecture, etc) even if several release assets are uploaded.</p>
 <p>But the filename of the package uploaded to GitHub Release can be named by its author freely. So there are cases that afx cannot filter the package which is suitable on your system when too much special wording is included in a filename.</p>
 <p>For example, the following case is,</p>
 <ul>
@@ -999,6 +999,11 @@
 </tbody>
 </table>
 <p>Allows you to replace pre-defined OS/Architecture wording with yours. In afx, the templating variables of <code>.OS</code> and <code>.Arch</code> are coming from <code>runtime.GOOS</code> and <code>runtime.GOARCH</code> (The Go Programming Language). For example, your system is Mac: In this case, <code>GOOS</code> returns <code>darwin</code> string, but let's say the filename of the assets on GitHub Release you want has <code>mac</code> instead of <code>darwin</code>. In this case, you can replace it with <code>darwin</code> by defining this <code>replacements</code> map.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">asset</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">filename</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{</span><span class="nv"> </span><span class="s">.Release.Name</span><span class="nv"> </span><span class="s">}}-{{</span><span class="nv"> </span><span class="s">.Release.Tag</span><span class="nv"> </span><span class="s">}}-{{</span><span class="nv"> </span><span class="s">.Arch</span><span class="nv"> </span><span class="s">}}-{{</span><span class="nv"> </span><span class="s">.OS</span><span class="nv"> </span><span class="s">}}.tar.gz&#39;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">replacements</span><span class="p">:</span><span class="w"></span>
+<span class="hll"><span class="w">    </span><span class="nt">darwin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mac</span><span class="w"></span>
+</span></code></pre></div>
 <p>Keys should be valid <code>GOOS</code>s or <code>GOARCH</code>s. Valid name is below (full is are on <a href="https://go.dev/doc/install/source#environment">Environment - The Go Programming Language</a>). Values are the respective replacements.</p>
 <table>
 <thead>
