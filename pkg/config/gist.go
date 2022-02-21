@@ -36,10 +36,6 @@ func NewGist(owner, id string) (Gist, error) {
 		return Gist{}, err
 	}
 	defer resp.Body.Close()
-	// if res.StatusCode != 200 {
-	//   fmt.Println("StatusCode=%d", res.StatusCode)
-	//   return
-	// }
 	var d data
 	err = json.NewDecoder(resp.Body).Decode(&d)
 	if err != nil {
@@ -76,6 +72,12 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 		return nil
 	default:
 		// Go installing step!
+	}
+
+	if _, err := os.Stat(c.GetHome()); err == nil {
+		log.Printf("[DEBUG] %s: removed because already exists before clone gist: %s",
+			c.GetName(), c.GetHome())
+		os.RemoveAll(c.GetHome())
 	}
 
 	_, err := git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
