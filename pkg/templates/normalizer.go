@@ -94,24 +94,37 @@ func (s normalizer) indent() normalizer {
 	return s
 }
 
-// // Added by me
-// func (s normalizer) newline() normalizer {
-// 	var line string
-// 	var lines []string
-// 	words := strings.Split(s.string, " ")
-// 	for _, word := range words {
-// 		line += word + " "
-// 		if len(line) > 80 {
-// 			lines = append(lines, line)
-// 			line = ""
-// 		}
-// 	}
-// 	// add last line
-// 	lines = append(lines, line)
-// 	s.string = strings.Join(lines, "\n")
-// 	return s
-// }
-
-func (s normalizer) newline() normalizer {
+// Added by me
+func (s normalizer) indent2() normalizer {
+	indentedLines := []string{}
+	for _, line := range strings.Split(s.string, "\n") {
+		trimmed := strings.TrimSpace(line)
+		indented := Indentation + trimmed
+		if len(trimmed) > 0 {
+			switch trimmed[0] {
+			case '$', '#':
+				indented = Indentation + indented
+			}
+		}
+		indentedLines = append(indentedLines, indented)
+	}
+	s.string = strings.Join(indentedLines, "\n")
 	return s
+}
+
+func (s normalizer) space() normalizer {
+	indentedLines := []string{}
+	for _, line := range strings.Split(s.string, "\n") {
+		indented := Indentation + line
+		indentedLines = append(indentedLines, indented)
+	}
+	s.string = strings.Join(indentedLines, "\n")
+	return s
+}
+
+func Raw(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return normalizer{s}.heredoc().space().string
 }

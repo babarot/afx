@@ -32,11 +32,17 @@ type selfUpdateOpt struct {
 
 var (
 	// selfUpdateLong is long description of self-update command
-	selfUpdateLong = templates.LongDesc(``)
+	selfUpdateLong = templates.LongDesc(`
+		self-update requires afx is pre-compiled one to upgrade.
+
+		Those who built afx by go install etc cannot use this feature.
+		(afx --version returns unset/unset)
+	`)
 
 	// selfUpdateExample is examples for selfUpdate command
 	selfUpdateExample = templates.Examples(`
-		afx self-update
+		# upgrade afx to latest version
+		$ afx self-update
 	`)
 )
 
@@ -89,11 +95,12 @@ func (c *selfUpdateCmd) selectTag(args []string) error {
 		})
 
 	var tag string
-	prompt := &survey.Select{
+	if err := survey.AskOne(&survey.Select{
 		Message: "Choose a tag you upgrade/downgrade:",
 		Options: tags,
+	}, &tag, survey.WithValidator(survey.Required)); err != nil {
+		return errors.Wrap(err, "failed to get input from console")
 	}
-	survey.AskOne(prompt, &tag, survey.WithValidator(survey.Required))
 
 	release := config.GitHubRelease{
 		Name:     "afx",
@@ -118,16 +125,16 @@ func (c *selfUpdateCmd) selectTag(args []string) error {
 	ctx := context.Background()
 	asset, err := release.Download(ctx)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to download", release.Name)
 	}
 
 	if err := release.Unarchive(asset); err != nil {
-		return err
+		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
 	}
 
 	fp, err := os.Open(filepath.Join(asset.Home, "afx"))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to open file")
 	}
 	defer fp.Close()
 

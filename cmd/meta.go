@@ -227,7 +227,7 @@ func (m *meta) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	}
 
 	if err := survey.AskOne(&confirm, &yes); err != nil {
-		return false, errors.Wrap(err, "failed to catch answer from console")
+		return false, errors.Wrap(err, "failed to get input from console")
 	}
 	return yes, nil
 }

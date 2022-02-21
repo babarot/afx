@@ -3,7 +3,6 @@ package cmd
 import (
 	"os"
 
-	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +13,10 @@ type completionCmd struct {
 
 var (
 	// completionLong is long description of completion command
-	completionLong = heredoc.Doc(`
+	completionLong = templates.LongDesc(``)
+
+	// completionExample is examples for completion command
+	completionExample = templates.Raw(`
 		To load completions:
 
 		Bash:
@@ -39,19 +41,12 @@ var (
 
 		  # You will need to start a new shell for this setup to take effect.
 
-		fish:
+		Fish:
 
 		  $ afx completion fish | source
 
 		  # To load completions for each session, execute once:
 		  $ afx completion fish > ~/.config/fish/completions/afx.fish
-		`)
-
-	// completionExample is examples for completion command
-	completionExample = templates.Examples(`
-		afx completion bash
-		afx completion zsh
-		afx completion fish
 	`)
 )
 
