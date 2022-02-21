@@ -1,20 +1,33 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/fatih/color"
+	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/gjson"
 )
 
 type selfUpdateCmd struct {
 	meta
+
+	opt selfUpdateOpt
+}
+
+type selfUpdateOpt struct {
+	tag bool
 }
 
 var (
@@ -44,11 +57,88 @@ func newSelfUpdateCmd() *cobra.Command {
 			if err := c.meta.init(args); err != nil {
 				return err
 			}
+
+			if c.opt.tag {
+				return c.selectTag(args)
+			}
+
 			return c.run(args)
 		},
 	}
 
+	flag := selfUpdateCmd.Flags()
+	flag.BoolVarP(&c.opt.tag, "select", "", false, "help message")
+	flag.MarkHidden("select")
+
 	return selfUpdateCmd
+}
+
+func (c *selfUpdateCmd) selectTag(args []string) error {
+	resp, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/releases", Repository))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var tags []string
+	gjson.Get(string(body), "#.tag_name").
+		ForEach(func(key, value gjson.Result) bool {
+			tags = append(tags, value.String())
+			return true
+		})
+
+	var tag string
+	prompt := &survey.Select{
+		Message: "Choose a tag you upgrade/downgrade:",
+		Options: tags,
+	}
+	survey.AskOne(prompt, &tag, survey.WithValidator(survey.Required))
+
+	release := config.GitHubRelease{
+		Name:     "afx",
+		Client:   http.DefaultClient,
+		Assets:   config.Assets{},
+		Filename: "",
+	}
+
+	rel := gjson.Get(string(body), fmt.Sprintf("#(tag_name==\"%s\")", tag))
+	assets := rel.Get("assets")
+	assets.ForEach(func(key, value gjson.Result) bool {
+		name := value.Get("name").String()
+		release.Assets = append(release.Assets, config.Asset{
+			Name: name,
+			Home: filepath.Join(os.Getenv("HOME"), ".afx"),
+			Path: filepath.Join(os.Getenv("HOME"), ".afx", name),
+			URL:  value.Get("browser_download_url").String(),
+		})
+		return true
+	})
+
+	ctx := context.Background()
+	asset, err := release.Download(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := release.Unarchive(asset); err != nil {
+		return err
+	}
+
+	fp, err := os.Open(filepath.Join(asset.Home, "afx"))
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	exe, err := os.Executable()
+	if err != nil {
+		return errors.New("could not locate executable path")
+	}
+
+	return update.Apply(fp, update.Options{
+		TargetPath: exe,
+	})
 }
 
 func (c *selfUpdateCmd) run(args []string) error {
