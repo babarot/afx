@@ -3,6 +3,7 @@ package state
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -59,6 +60,26 @@ func (e Resource) exists() bool {
 	return true
 }
 
+func getStateName(pkg config.Package) string {
+	var name string
+
+	switch pkg := pkg.(type) {
+	case *config.GitHub:
+		name = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
+		if pkg.HasReleaseBlock() {
+			name = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
+		}
+	case *config.Gist:
+		name = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
+	case *config.Local:
+		name = fmt.Sprintf("local/%s", pkg.Directory)
+	case *config.HTTP:
+		name = pkg.URL
+	}
+
+	return name
+}
+
 func toResource(pkg config.Package) Resource {
 	var paths []string
 
@@ -104,7 +125,7 @@ func toResource(pkg config.Package) Resource {
 	}
 
 	return Resource{
-		Name:    pkg.GetName(),
+		Name:    getStateName(pkg),
 		Home:    pkg.GetHome(),
 		Type:    ty,
 		Version: version,
@@ -114,7 +135,8 @@ func toResource(pkg config.Package) Resource {
 
 func add(pkg config.Package, s *State) {
 	log.Printf("[DEBUG] %s: added to state", pkg.GetName())
-	s.Resources[pkg.GetName()] = toResource(pkg)
+	name := getStateName(pkg)
+	s.Resources[name] = toResource(pkg)
 }
 
 func remove(name string, s *State) {
@@ -130,7 +152,7 @@ func remove(name string, s *State) {
 }
 
 func update(pkg config.Package, s *State) {
-	name := pkg.GetName()
+	name := getStateName(pkg)
 	_, ok := s.Resources[name]
 	if !ok {
 		// not found
@@ -180,13 +202,14 @@ func contains(pkgs []config.Package, name string) bool {
 func (s *State) listNoChanges() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		if contains(s.listAdditions(), pkg.GetName()) {
+		name := getStateName(pkg)
+		if contains(s.listAdditions(), name) {
 			continue
 		}
-		if contains(s.listReadditions(), pkg.GetName()) {
+		if contains(s.listReadditions(), name) {
 			continue
 		}
-		if contains(s.listChanges(), pkg.GetName()) {
+		if contains(s.listChanges(), name) {
 			continue
 		}
 		pkgs = append(pkgs, pkg)
@@ -197,7 +220,8 @@ func (s *State) listNoChanges() []config.Package {
 func (s *State) listAdditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		if _, ok := s.Resources[pkg.GetName()]; !ok {
+		name := getStateName(pkg)
+		if _, ok := s.Resources[name]; !ok {
 			pkgs = append(pkgs, pkg)
 		}
 	}
@@ -207,7 +231,8 @@ func (s *State) listAdditions() []config.Package {
 func (s *State) listReadditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		resource, ok := s.Resources[pkg.GetName()]
+		name := getStateName(pkg)
+		resource, ok := s.Resources[name]
 		if !ok {
 			// if it's not in state file,
 			// it means we need to install not reinstall
@@ -238,7 +263,8 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 		mu:       sync.RWMutex{},
 	}
 	for _, pkg := range pkgs {
-		s.packages[pkg.GetName()] = pkg
+		name := getStateName(pkg)
+		s.packages[name] = pkg
 	}
 
 	_, err := os.Stat(path)
@@ -321,7 +347,8 @@ func (s *State) Refresh() error {
 
 	done := false
 	for _, pkg := range s.packages {
-		v1 := s.Resources[pkg.GetName()]
+		name := getStateName(pkg)
+		v1 := s.Resources[name]
 		v2 := toResource(pkg)
 		if diff := cmp.Diff(v1, v2); diff != "" {
 			log.Printf("[DEBUG] refresh state to %s", diff)
