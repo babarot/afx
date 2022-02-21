@@ -324,6 +324,28 @@ func (s *State) Update(pkg config.Package) {
 	s.save()
 }
 
+func (s *State) List() ([]string, error) {
+	_, err := os.Stat(s.path)
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		return []string{}, err
+	default:
+		content, err := ioutil.ReadFile(s.path)
+		if err != nil {
+			return []string{}, err
+		}
+		var state Self
+		if err := json.Unmarshal(content, &state); err != nil {
+			return []string{}, err
+		}
+		var items []string
+		for k := range state.Resources {
+			items = append(items, k)
+		}
+		return items, nil
+	}
+}
+
 func (s *State) New() error {
 	s.Resources = map[string]Resource{}
 	for _, pkg := range s.packages {
