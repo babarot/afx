@@ -460,6 +460,11 @@ func (r *GitHubRelease) GetAsset() (Asset, error) {
 
 	assets := *r.Assets.
 		filter(func(asset Asset) bool {
+			expr := `.*\.sbom`
+			// filter out
+			return !regexp.MustCompile(expr).MatchString(asset.Name)
+		}).
+		filter(func(asset Asset) bool {
 			expr := ".*(sha256sum|checksum).*"
 			// filter out
 			return !regexp.MustCompile(expr).MatchString(asset.Name)
