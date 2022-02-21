@@ -7,8 +7,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/errors"
@@ -189,6 +191,45 @@ func (m *meta) prompt() (config.Package, error) {
 	}
 
 	return nil, errors.New("pkg not found")
+}
+
+func (m *meta) askRunCommand(op interface{}, pkgs []string) (bool, error) {
+	var do string
+	switch op.(type) {
+	case installCmd:
+		do = "install"
+	case uninstallCmd:
+		do = "uninstall"
+	case updateCmd:
+		do = "update"
+	default:
+		return false, errors.New("unsupported command type")
+	}
+
+	length := 3
+	target := strings.Join(pkgs, ", ")
+	if len(pkgs) > length {
+		target = fmt.Sprintf("%s, ... (%d packages)", strings.Join(pkgs[:length], ", "), len(pkgs))
+	}
+
+	yes := false
+	confirm := survey.Confirm{
+		Message: fmt.Sprintf("OK to %s these packages? %s", do, color.YellowString(target)),
+	}
+
+	if len(pkgs) > length {
+		helpMessage := "\n"
+		sort.Strings(pkgs)
+		for _, pkg := range pkgs {
+			helpMessage += fmt.Sprintf("- %s\n", pkg)
+		}
+		confirm.Help = helpMessage
+	}
+
+	if err := survey.AskOne(&confirm, &yes); err != nil {
+		return false, errors.Wrap(err, "failed to catch answer from console")
+	}
+	return yes, nil
 }
 
 func getNameInPackages(pkgs []config.Package) []string {

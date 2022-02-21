@@ -72,6 +72,12 @@ func newInstallCmd() *cobra.Command {
 				pkgs = given
 			}
 
+			yes, _ := c.askRunCommand(*c, getNameInPackages(pkgs))
+			if !yes {
+				fmt.Println("Cancelled")
+				return nil
+			}
+
 			c.Env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
