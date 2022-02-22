@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/fatih/color"
@@ -11,6 +12,12 @@ import (
 
 type stateCmd struct {
 	meta
+
+	opt stateOpt
+}
+
+type stateOpt struct {
+	force bool
 }
 
 var (
@@ -23,8 +30,10 @@ var (
 
 // newStateCmd creates a new state command
 func newStateCmd() *cobra.Command {
+	c := &stateCmd{}
+
 	stateCmd := &cobra.Command{
-		Use:                   "state [list|refresh]",
+		Use:                   "state [list|refresh|remove]",
 		Short:                 "Advanced state management",
 		Long:                  stateLong,
 		Example:               stateExample,
@@ -33,67 +42,105 @@ func newStateCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(1),
 		Hidden:                true,
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.init(args)
+		},
 	}
 
-	stateListCmd := newStateListCmd()
-	stateRefreshCmd := newStateRefreshCmd()
-	stateRefreshCmd.Flags().BoolP("force", "", false, "Force update")
-
 	stateCmd.AddCommand(
-		stateListCmd,
-		stateRefreshCmd,
+		c.newStateListCmd(),
+		c.newStateRefreshCmd(),
+		c.newStateRemoveCmd(),
 	)
 
 	return stateCmd
 }
 
-func newStateListCmd() *cobra.Command {
-	c := &stateCmd{}
-
+func (c stateCmd) newStateListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:                   "list",
 		Short:                 "List your state items",
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return c.meta.init(args)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
-			for _, pkg := range c.State.NoChanges {
-				fmt.Println(pkg.GetName())
+		RunE: func(cmd *cobra.Command, args []string) error {
+			items, err := c.State.List()
+			if err != nil {
+				return err
 			}
+			for _, item := range items {
+				fmt.Println(item)
+			}
+			return nil
 		},
 	}
 }
 
-func newStateRefreshCmd() *cobra.Command {
-	c := &stateCmd{}
-
-	return &cobra.Command{
+func (c stateCmd) newStateRefreshCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:                   "refresh",
 		Short:                 "Refresh your state file",
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return c.meta.init(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			force, err := cmd.Flags().GetBool("force")
-			if err != nil {
-				return err
-			}
-			if force {
+			if c.opt.force {
 				return c.State.New()
 			}
-
 			if err := c.State.Refresh(); err != nil {
 				return errors.Wrap(err, "failed to refresh state")
 			}
 			fmt.Println(color.WhiteString("Successfully refreshed"))
+			return nil
+		},
+	}
+	cmd.Flags().BoolVarP(&c.opt.force, "force", "", false, "force update")
+	return cmd
+}
+
+func (c stateCmd) newStateRemoveCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:                   "remove",
+		Short:                 "Remove selected packages from state file",
+		DisableFlagsInUseLine: true,
+		SilenceUsage:          true,
+		SilenceErrors:         true,
+		Aliases:               []string{"rm"},
+		Args:                  cobra.MinimumNArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.init(args)
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var resources []string
+			switch len(cmd.Flags().Args()) {
+			case 0:
+				list, err := c.State.List()
+				if err != nil {
+					return errors.Wrap(err, "failed to list state items")
+				}
+				var selected string
+				if err := survey.AskOne(&survey.Select{
+					Message: "Choose a package:",
+					Options: list,
+				}, &selected); err != nil {
+					return errors.Wrap(err, "failed to get input from console")
+				}
+				resources = append(resources, selected)
+			default:
+				// TODO: check valid or invalid
+				resources = cmd.Flags().Args()
+			}
+			for _, resource := range resources {
+				c.State.Remove(resource)
+			}
 			return nil
 		},
 	}

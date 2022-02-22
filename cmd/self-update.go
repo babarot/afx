@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/Masterminds/semver/v3"
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
@@ -24,6 +28,8 @@ type selfUpdateCmd struct {
 	meta
 
 	opt selfUpdateOpt
+
+	annotation map[string]string
 }
 
 type selfUpdateOpt struct {
@@ -48,7 +54,12 @@ var (
 
 // newSelfUpdateCmd creates a new selfUpdate command
 func newSelfUpdateCmd() *cobra.Command {
-	c := &selfUpdateCmd{}
+	info := color.New(color.FgGreen).SprintFunc()
+	c := &selfUpdateCmd{
+		annotation: map[string]string{
+			"0.1.11": info(`Run "afx state refresh --force" at first!`),
+		},
+	}
 
 	selfUpdateCmd := &cobra.Command{
 		Use:                   "self-update",
@@ -196,6 +207,36 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return errors.Wrap(err, "error occurred while updating binary")
 	}
 
-	color.New(color.Bold).Printf("Successfully updated to version %s", latest.Version())
+	color.New(color.Bold).Printf("Successfully updated to version %s\n", latest.Version())
+
+	var vs []*semver.Version
+	for v := range c.annotation {
+		vs = append(vs, semver.MustParse(v))
+	}
+	sort.Sort(semver.Collection(vs))
+
+	var messages []string
+	for _, v := range vs {
+		start := semver.MustParse(Version)
+		stop := semver.MustParse(latest.Version())
+
+		log.Printf("[DEBUG] (self-update) Current version: %s", start)
+		log.Printf("[DEBUG] (self-update) Next version:    %s", v)
+
+		if stop.LessThan(v) {
+			break
+		}
+
+		if v.GreaterThan(start) {
+			messages = append(messages, "- "+c.annotation[v.String()])
+		}
+	}
+
+	if len(messages) > 0 {
+		fmt.Printf("\nTo use %q version:\n%s\n",
+			latest.Version(),
+			strings.Join(messages, "\n"))
+	}
+
 	return nil
 }

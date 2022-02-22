@@ -6,6 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.0.2
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
+	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/creativeprojects/go-selfupdate v0.6.1
