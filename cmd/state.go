@@ -121,24 +121,26 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 			return c.meta.init(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var selected []string
+			var resources []string
 			switch len(cmd.Flags().Args()) {
 			case 0:
-				resources, err := c.State.List()
+				list, err := c.State.List()
 				if err != nil {
 					return errors.Wrap(err, "failed to list state items")
 				}
-				prompt := &survey.MultiSelect{
-					Message:  "Choose a package:",
-					Options:  resources,
-					PageSize: 10,
+				var selected string
+				if err := survey.AskOne(&survey.Select{
+					Message: "Choose a package:",
+					Options: list,
+				}, &selected); err != nil {
+					return errors.Wrap(err, "failed to get input from console")
 				}
-				survey.AskOne(prompt, &selected)
+				resources = append(resources, selected)
 			default:
 				// TODO: check valid or invalid
-				selected = cmd.Flags().Args()
+				resources = cmd.Flags().Args()
 			}
-			for _, resource := range selected {
+			for _, resource := range resources {
 				c.State.Remove(resource)
 			}
 			return nil
