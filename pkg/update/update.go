@@ -36,8 +36,7 @@ type StateEntry struct {
 func CheckForUpdate(stateFilePath, repo, currentVersion string) (*ReleaseInfo, error) {
 	stateEntry, _ := getStateEntry(stateFilePath)
 	if stateEntry != nil && time.Since(stateEntry.CheckedForUpdateAt).Hours() < 24 {
-		log.Printf("[DEBUG] found state file of release info, so will grab it from the file.")
-		return &stateEntry.LatestRelease, nil
+		return nil, nil
 	}
 
 	releaseInfo, err := getLatestReleaseInfo(repo)
