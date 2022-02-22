@@ -20,7 +20,7 @@ import (
 // Command is
 type Command struct {
 	Build   *Build            `yaml:"build"`
-	Link    []*Link           `yaml:"link"` // validate:"required"
+	Link    []*Link           `yaml:"link" validate:"required"`
 	Env     map[string]string `yaml:"env"`
 	Alias   map[string]string `yaml:"alias"`
 	Snippet string            `yaml:"snippet"`
@@ -107,20 +107,21 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		if err != nil {
 			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
 		}
+
+		log.Printf("[DEBUG] Run file globbing: %s", file)
 		var src string
 		switch len(matches) {
 		case 0:
-			log.Printf("[ERROR] %s: no matches\n", file)
-			continue
+			return links, fmt.Errorf("%q: no matches", link.From)
 		case 1:
 			// OK pattern: matches should be only one
 			src = matches[0]
 		case 2:
 			// TODO: Update this with more flexiblities
-			msg := fmt.Sprintf("[ERROR] %s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
-			return links, errors.New(msg)
+			return links, fmt.Errorf("%s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
 		default:
-			return links, errors.New("unknown error occured")
+			log.Printf("[ERROR] matched files: %#v", matches)
+			return links, errors.New("too many files are matched in file glob")
 		}
 		links = append(links, Link{
 			From: src,
