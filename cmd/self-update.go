@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Masterminds/semver/v3"
@@ -46,9 +48,10 @@ var (
 
 // newSelfUpdateCmd creates a new selfUpdate command
 func newSelfUpdateCmd() *cobra.Command {
+	info := color.New(color.FgGreen).SprintFunc()
 	c := &selfUpdateCmd{
 		annotation: map[string]string{
-			"0.1.11": `Please run "afx state refresh --force"`,
+			"0.1.11": info(`Run "afx state refresh --force" at first!`),
 		},
 	}
 
@@ -199,17 +202,33 @@ func (c *selfUpdateCmd) run(args []string) error {
 
 	color.New(color.Bold).Printf("Successfully updated to version %s\n", latest.Version())
 
-	for version, message := range c.annotation {
-		current := semver.MustParse(Version)
-		next := semver.MustParse(version)
+	var vs []*semver.Version
+	for v := range c.annotation {
+		vs = append(vs, semver.MustParse(v))
+	}
+	sort.Sort(semver.Collection(vs))
 
-		log.Printf("[DEBUG] Current version: %s", current)
-		log.Printf("[DEBUG] Next version:    %s", next)
+	var messages []string
+	for _, v := range vs {
+		start := semver.MustParse(Version)
+		stop := semver.MustParse(latest.Version())
 
-		if next.GreaterThan(current) {
-			yellow := color.New(color.FgYellow).Add(color.Underline).SprintFunc()
-			fmt.Printf("To use %q version: %s\n", next.String(), yellow(message))
+		log.Printf("[DEBUG] (self-update) Current version: %s", start)
+		log.Printf("[DEBUG] (self-update) Next version:    %s", v)
+
+		if stop.LessThan(v) {
+			break
 		}
+
+		if v.GreaterThan(start) {
+			messages = append(messages, "- "+c.annotation[v.String()])
+		}
+	}
+
+	if len(messages) > 0 {
+		fmt.Printf("\nTo use %q version:\n%s\n",
+			latest.Version(),
+			strings.Join(messages, "\n"))
 	}
 
 	return nil

@@ -41,7 +41,8 @@ type State struct {
 	// Something changes happened between config file and state file
 	// Currently only version (github.release.tag) is detected as changes
 	Changes []config.Package
-	//
+	// All items recorded in state file. It means no changes between state file
+	// and config file
 	NoChanges []config.Package
 }
 
