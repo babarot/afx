@@ -13,15 +13,20 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// ID is to prevent from detecting state changes unexpected by package name changing
+// By using fixed string instead of package name, we can forcus on detecting the
+// changes of only package contents itself.
+type ID = string
+
 type Self struct {
-	Resources map[string]Resource `json:"resources"`
+	Resources map[ID]Resource `json:"resources"`
 }
 
 type State struct {
 	// State itself of state file
 	Self
 
-	packages map[string]config.Package
+	packages map[ID]config.Package
 	path     string
 	mu       sync.RWMutex
 
@@ -41,6 +46,7 @@ type State struct {
 }
 
 type Resource struct {
+	ID      ID       `json:"id"`
 	Name    string   `json:"name"`
 	Home    string   `json:"home"`
 	Type    string   `json:"type"`
@@ -60,24 +66,24 @@ func (e Resource) exists() bool {
 	return true
 }
 
-func getStateName(pkg config.Package) string {
-	var name string
+func getStateID(pkg config.Package) ID {
+	var id string
 
 	switch pkg := pkg.(type) {
 	case *config.GitHub:
-		name = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
+		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
 		if pkg.HasReleaseBlock() {
-			name = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
+			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
 		}
 	case *config.Gist:
-		name = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
+		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
 	case *config.Local:
-		name = fmt.Sprintf("local/%s", pkg.Directory)
+		id = fmt.Sprintf("local/%s", pkg.Directory)
 	case *config.HTTP:
-		name = pkg.URL
+		id = pkg.URL
 	}
 
-	return name
+	return id
 }
 
 func toResource(pkg config.Package) Resource {
@@ -125,8 +131,9 @@ func toResource(pkg config.Package) Resource {
 	}
 
 	return Resource{
-		Name:    getStateName(pkg),
+		ID:      getStateID(pkg),
 		Home:    pkg.GetHome(),
+		Name:    pkg.GetName(),
 		Type:    ty,
 		Version: version,
 		Paths:   paths,
@@ -135,31 +142,31 @@ func toResource(pkg config.Package) Resource {
 
 func add(pkg config.Package, s *State) {
 	log.Printf("[DEBUG] %s: added to state", pkg.GetName())
-	name := getStateName(pkg)
-	s.Resources[name] = toResource(pkg)
+	id := getStateID(pkg)
+	s.Resources[id] = toResource(pkg)
 }
 
-func remove(name string, s *State) {
-	resources := map[string]Resource{}
+func remove(id ID, s *State) {
+	resources := map[ID]Resource{}
 	for _, resource := range s.Resources {
-		if resource.Name == name {
+		if resource.ID == id {
 			continue
 		}
-		resources[resource.Name] = resource
+		resources[resource.ID] = resource
 	}
-	log.Printf("[DEBUG] %s: removed from state", name)
+	log.Printf("[DEBUG] %s: removed from state", id)
 	s.Resources = resources
 }
 
 func update(pkg config.Package, s *State) {
-	name := getStateName(pkg)
-	_, ok := s.Resources[name]
+	id := getStateID(pkg)
+	_, ok := s.Resources[id]
 	if !ok {
 		// not found
 		return
 	}
 	log.Printf("[DEBUG] %s: updated in state", pkg.GetName())
-	s.Resources[name] = toResource(pkg)
+	s.Resources[id] = toResource(pkg)
 }
 
 func (s *State) save() error {
@@ -177,7 +184,7 @@ func (s *State) listChanges() []config.Package {
 			// not target resource
 			continue
 		}
-		pkg, ok := s.packages[resource.Name]
+		pkg, ok := s.packages[resource.ID]
 		if !ok {
 			// something wrong happend
 			continue
@@ -202,14 +209,13 @@ func contains(pkgs []config.Package, name string) bool {
 func (s *State) listNoChanges() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		name := getStateName(pkg)
-		if contains(s.listAdditions(), name) {
+		if contains(s.listAdditions(), pkg.GetName()) {
 			continue
 		}
-		if contains(s.listReadditions(), name) {
+		if contains(s.listReadditions(), pkg.GetName()) {
 			continue
 		}
-		if contains(s.listChanges(), name) {
+		if contains(s.listChanges(), pkg.GetName()) {
 			continue
 		}
 		pkgs = append(pkgs, pkg)
@@ -220,8 +226,8 @@ func (s *State) listNoChanges() []config.Package {
 func (s *State) listAdditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		name := getStateName(pkg)
-		if _, ok := s.Resources[name]; !ok {
+		id := getStateID(pkg)
+		if _, ok := s.Resources[id]; !ok {
 			pkgs = append(pkgs, pkg)
 		}
 	}
@@ -231,8 +237,8 @@ func (s *State) listAdditions() []config.Package {
 func (s *State) listReadditions() []config.Package {
 	var pkgs []config.Package
 	for _, pkg := range s.packages {
-		name := getStateName(pkg)
-		resource, ok := s.Resources[name]
+		id := getStateID(pkg)
+		resource, ok := s.Resources[id]
 		if !ok {
 			// if it's not in state file,
 			// it means we need to install not reinstall
@@ -249,7 +255,7 @@ func (s *State) listReadditions() []config.Package {
 func (s *State) listDeletions() []Resource {
 	var resources []Resource
 	for _, resource := range s.Resources {
-		if _, ok := s.packages[resource.Name]; !ok {
+		if _, ok := s.packages[resource.ID]; !ok {
 			resources = append(resources, resource)
 		}
 	}
@@ -258,20 +264,20 @@ func (s *State) listDeletions() []Resource {
 
 func Open(path string, pkgs []config.Package) (*State, error) {
 	s := State{
-		packages: map[string]config.Package{},
+		packages: map[ID]config.Package{},
 		path:     path,
 		mu:       sync.RWMutex{},
 	}
 	for _, pkg := range pkgs {
-		name := getStateName(pkg)
-		s.packages[name] = pkg
+		id := getStateID(pkg)
+		s.packages[id] = pkg
 	}
 
 	_, err := os.Stat(path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
 		// just create empty state when state has not been created yet
-		s.Resources = map[string]Resource{}
+		s.Resources = map[ID]Resource{}
 	default:
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -308,11 +314,11 @@ func (s *State) Add(pkg config.Package) {
 	s.save()
 }
 
-func (s *State) Remove(name string) {
+func (s *State) Remove(id ID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	remove(name, s)
+	remove(id, s)
 	s.save()
 }
 
@@ -339,15 +345,15 @@ func (s *State) List() ([]string, error) {
 			return []string{}, err
 		}
 		var items []string
-		for k := range state.Resources {
-			items = append(items, k)
+		for id := range state.Resources {
+			items = append(items, string(id))
 		}
 		return items, nil
 	}
 }
 
 func (s *State) New() error {
-	s.Resources = map[string]Resource{}
+	s.Resources = map[ID]Resource{}
 	for _, pkg := range s.packages {
 		add(pkg, s)
 	}
@@ -369,8 +375,8 @@ func (s *State) Refresh() error {
 
 	done := false
 	for _, pkg := range s.packages {
-		name := getStateName(pkg)
-		v1 := s.Resources[name]
+		id := getStateID(pkg)
+		v1 := s.Resources[id]
 		v2 := toResource(pkg)
 		if diff := cmp.Diff(v1, v2); diff != "" {
 			log.Printf("[DEBUG] refresh state to %s", diff)

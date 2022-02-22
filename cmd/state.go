@@ -30,9 +30,7 @@ var (
 
 // newStateCmd creates a new state command
 func newStateCmd() *cobra.Command {
-	c := &stateCmd{
-		opt: stateOpt{},
-	}
+	c := &stateCmd{}
 
 	stateCmd := &cobra.Command{
 		Use:                   "state [list|refresh|remove]",
@@ -44,17 +42,15 @@ func newStateCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(1),
 		Hidden:                true,
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+			return c.meta.init(args)
+		},
 	}
 
-	stateListCmd := c.newStateListCmd()
-	stateRefreshCmd := c.newStateRefreshCmd()
-	stateRefreshCmd.Flags().BoolVarP(&c.opt.force, "force", "", false, "force update")
-	stateRemoveCmd := c.newStateRemoveCmd()
-
 	stateCmd.AddCommand(
-		stateListCmd,
-		stateRefreshCmd,
-		stateRemoveCmd,
+		c.newStateListCmd(),
+		c.newStateRefreshCmd(),
+		c.newStateRemoveCmd(),
 	)
 
 	return stateCmd
@@ -67,7 +63,7 @@ func (c stateCmd) newStateListCmd() *cobra.Command {
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return c.meta.init(args)
 		},
@@ -85,13 +81,13 @@ func (c stateCmd) newStateListCmd() *cobra.Command {
 }
 
 func (c stateCmd) newStateRefreshCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:                   "refresh",
 		Short:                 "Refresh your state file",
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		Args:                  cobra.ExactArgs(0),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return c.meta.init(args)
 		},
@@ -106,6 +102,8 @@ func (c stateCmd) newStateRefreshCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().BoolVarP(&c.opt.force, "force", "", false, "force update")
+	return cmd
 }
 
 func (c stateCmd) newStateRemoveCmd() *cobra.Command {
