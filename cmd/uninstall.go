@@ -30,7 +30,7 @@ var (
 
 // newUninstallCmd creates a new uninstall command
 func (m metaCmd) newUninstallCmd() *cobra.Command {
-	c := &uninstallCmd{m}
+	c := &uninstallCmd{metaCmd: m}
 
 	uninstallCmd := &cobra.Command{
 		Use:                   "uninstall",
@@ -45,7 +45,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 		Args:                  cobra.MinimumNArgs(0),
 		ValidArgs:             getNameInResources(m.State.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resources := c.State.Deletions
+			resources := m.State.Deletions
 			if len(resources) == 0 {
 				fmt.Println("No packages to uninstall")
 				return nil
@@ -66,7 +66,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				resources = given
 			}
 
-			yes, _ := c.askRunCommand(*c, getNameInResources(resources))
+			yes, _ := m.askRunCommand(*c, getNameInResources(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
@@ -75,7 +75,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 			return c.run(resources)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.printForUpdate()
+			return m.printForUpdate()
 		},
 	}
 

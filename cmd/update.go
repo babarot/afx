@@ -34,7 +34,7 @@ var (
 
 // newUpdateCmd creates a new fmt command
 func (m metaCmd) newUpdateCmd() *cobra.Command {
-	c := &updateCmd{m}
+	c := &updateCmd{metaCmd: m}
 
 	updateCmd := &cobra.Command{
 		Use:                   "update",
@@ -48,7 +48,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		Args:                  cobra.MinimumNArgs(0),
 		ValidArgs:             getNameInPackages(m.State.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pkgs := c.State.Changes
+			pkgs := m.State.Changes
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to update")
 				return nil
@@ -69,13 +69,13 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 				pkgs = given
 			}
 
-			yes, _ := c.askRunCommand(*c, getNameInPackages(pkgs))
+			yes, _ := m.askRunCommand(*c, getNameInPackages(pkgs))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
 			}
 
-			c.Env.AskWhen(map[string]bool{
+			m.Env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
 			})
@@ -83,7 +83,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 			return c.run(pkgs)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.printForUpdate()
+			return m.printForUpdate()
 		},
 	}
 
