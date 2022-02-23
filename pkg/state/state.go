@@ -9,7 +9,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -26,24 +25,28 @@ type State struct {
 	// State itself of state file
 	Self
 
-	packages map[ID]config.Package
+	packages map[ID]Resource
 	path     string
 	mu       sync.RWMutex
 
 	// No record in state file
-	Additions []config.Package
-	// Exists but resource paths has something problem
-	// so it's likely to have had problem when installing before
-	Readditions []config.Package
+	Additions []Resource
+
 	// Exists in state file but no in config file
 	// so maybe users had deleted the package from config file
 	Deletions []Resource
+
 	// Something changes happened between config file and state file
 	// Currently only version (github.release.tag) is detected as changes
-	Changes []config.Package
+	Changes []Resource
+
 	// All items recorded in state file. It means no changes between state file
 	// and config file
-	NoChanges []config.Package
+	NoChanges []Resource
+}
+
+type Resourcer interface {
+	GetResource() Resource
 }
 
 type Resource struct {
@@ -53,6 +56,10 @@ type Resource struct {
 	Type    string   `json:"type"`
 	Version string   `json:"version"`
 	Paths   []string `json:"paths"`
+}
+
+func (e Resource) GetResource() Resource {
+	return e
 }
 
 func (e Resource) exists() bool {
@@ -67,111 +74,34 @@ func (e Resource) exists() bool {
 	return true
 }
 
-func getStateID(pkg config.Package) ID {
-	var id string
-
-	switch pkg := pkg.(type) {
-	case *config.GitHub:
-		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
-		if pkg.HasReleaseBlock() {
-			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
-		}
-	case *config.Gist:
-		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
-	case *config.Local:
-		id = fmt.Sprintf("local/%s", pkg.Directory)
-	case *config.HTTP:
-		id = pkg.URL
-	}
-
-	return id
+func add(r Resource, s *State) {
+	log.Printf("[DEBUG] %s: added to state", r.Name)
+	s.Resources[r.ID] = r
 }
 
-func toResource(pkg config.Package) Resource {
-	var paths []string
-
-	// repository existence is also one of the path resource
-	paths = append(paths, pkg.GetHome())
-
-	if pkg.HasPluginBlock() {
-		plugin := pkg.GetPluginBlock()
-		paths = append(paths, plugin.GetSources(pkg)...)
-	}
-
-	if pkg.HasCommandBlock() {
-		command := pkg.GetCommandBlock()
-		links, err := command.GetLink(pkg)
-		if err != nil {
-			// TODO: thinking about what to do here
-			// no handling
-		}
-		for _, link := range links {
-			paths = append(paths, link.From)
-			paths = append(paths, link.To)
-		}
-	}
-
-	var ty string
-	var version string
-
-	switch pkg := pkg.(type) {
-	case *config.GitHub:
-		ty = "GitHub"
-		if pkg.HasReleaseBlock() {
-			ty = "GitHub Release"
-			version = pkg.Release.Tag
-		}
-	case *config.Gist:
-		ty = "Gist"
-	case *config.Local:
-		ty = "Local"
-	case *config.HTTP:
-		ty = "HTTP"
-	default:
-		ty = "Unknown"
-	}
-
-	return Resource{
-		ID:      getStateID(pkg),
-		Home:    pkg.GetHome(),
-		Name:    pkg.GetName(),
-		Type:    ty,
-		Version: version,
-		Paths:   paths,
-	}
-}
-
-func add(pkg config.Package, s *State) {
-	log.Printf("[DEBUG] %s: added to state", pkg.GetName())
-	id := getStateID(pkg)
-	s.Resources[id] = toResource(pkg)
-}
-
-func remove(id ID, s *State) {
+func remove(r Resource, s *State) {
 	resources := map[ID]Resource{}
 	for _, resource := range s.Resources {
-		if resource.ID == id {
-			log.Printf("[DEBUG] %s: removed from state", id)
+		if resource.ID == r.ID {
+			log.Printf("[DEBUG] %s: removed from state", r.Name)
 			continue
 		}
 		resources[resource.ID] = resource
 	}
 	if len(s.Resources) == len(resources) {
-		log.Printf("[WARN] %s: failed to remove from state", id)
+		log.Printf("[WARN] %s: failed to remove from state", r.Name)
 		return
 	}
 	s.Resources = resources
 }
 
-func update(pkg config.Package, s *State) {
-	id := getStateID(pkg)
-	_, ok := s.Resources[id]
+func update(r Resource, s *State) {
+	_, ok := s.Resources[r.ID]
 	if !ok {
-		// not found
 		return
 	}
-	log.Printf("[DEBUG] %s: updated in state", pkg.GetName())
-	s.Resources[id] = toResource(pkg)
+	log.Printf("[DEBUG] %s: updated in state", r.Name)
+	s.Resources[r.ID] = r
 }
 
 func (s *State) save() error {
@@ -182,79 +112,71 @@ func (s *State) save() error {
 	return json.NewEncoder(f).Encode(s.Self)
 }
 
-func (s *State) listChanges() []config.Package {
-	var pkgs []config.Package
-	for _, resource := range s.Resources {
-		if resource.Version == "" {
-			// not target resource
-			continue
-		}
-		pkg, ok := s.packages[resource.ID]
-		if !ok {
-			// something wrong happend
-			continue
-		}
-		version := pkg.(*config.GitHub).Release.Tag
-		if resource.Version != version {
-			pkgs = append(pkgs, pkg)
-		}
-	}
-	return pkgs
-}
-
-func contains(pkgs []config.Package, name string) bool {
-	for _, pkg := range pkgs {
-		if pkg.GetName() == name {
+func contains(resources []Resource, name string) bool {
+	for _, resource := range resources {
+		if resource.Name == name {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *State) listNoChanges() []config.Package {
-	var pkgs []config.Package
-	for _, pkg := range s.packages {
-		if contains(s.listAdditions(), pkg.GetName()) {
+func (s *State) listChanges() []Resource {
+	var resources []Resource
+	for _, resource := range s.Resources {
+		if resource.Version == "" {
 			continue
 		}
-		if contains(s.listReadditions(), pkg.GetName()) {
+		r, ok := s.packages[resource.ID]
+		if !ok {
 			continue
 		}
-		if contains(s.listChanges(), pkg.GetName()) {
-			continue
-		}
-		pkgs = append(pkgs, pkg)
-	}
-	return pkgs
-}
-
-func (s *State) listAdditions() []config.Package {
-	var pkgs []config.Package
-	for _, pkg := range s.packages {
-		id := getStateID(pkg)
-		if _, ok := s.Resources[id]; !ok {
-			pkgs = append(pkgs, pkg)
+		if resource.Version != r.Version {
+			resources = append(resources, resource)
 		}
 	}
-	return pkgs
+	return resources
 }
 
-func (s *State) listReadditions() []config.Package {
-	var pkgs []config.Package
-	for _, pkg := range s.packages {
-		id := getStateID(pkg)
-		resource, ok := s.Resources[id]
+func (s *State) listNoChanges() []Resource {
+	var resources []Resource
+	for _, resource := range s.packages {
+		if contains(append(s.listAdditions(), s.listReadditions()...), resource.Name) {
+			continue
+		}
+		if contains(s.listChanges(), resource.Name) {
+			continue
+		}
+		resources = append(resources, resource)
+	}
+	return resources
+}
+
+func (s *State) listAdditions() []Resource {
+	var resources []Resource
+	for _, resource := range s.packages {
+		if _, ok := s.Resources[resource.ID]; !ok {
+			resources = append(resources, resource)
+		}
+	}
+	return resources
+}
+
+func (s *State) listReadditions() []Resource {
+	var resources []Resource
+	for _, resource := range s.packages {
+		resource, ok := s.Resources[resource.ID]
 		if !ok {
 			// if it's not in state file,
 			// it means we need to install not reinstall
 			continue
 		}
 		if !resource.exists() {
-			pkgs = append(pkgs, pkg)
+			resources = append(resources, resource)
 			continue
 		}
 	}
-	return pkgs
+	return resources
 }
 
 func (s *State) listDeletions() []Resource {
@@ -267,15 +189,24 @@ func (s *State) listDeletions() []Resource {
 	return resources
 }
 
-func Open(path string, pkgs []config.Package) (*State, error) {
+func Keys(resources []Resource) []string {
+	var keys []string
+	for _, resource := range resources {
+		keys = append(keys, resource.Name)
+	}
+	return keys
+}
+
+func Open(path string, resourcers []Resourcer) (*State, error) {
 	s := State{
-		packages: map[ID]config.Package{},
 		path:     path,
+		packages: map[ID]Resource{},
 		mu:       sync.RWMutex{},
 	}
-	for _, pkg := range pkgs {
-		id := getStateID(pkg)
-		s.packages[id] = pkg
+
+	for _, resourcer := range resourcers {
+		resource := resourcer.GetResource()
+		s.packages[resource.ID] = resource
 	}
 
 	_, err := os.Stat(path)
@@ -293,8 +224,7 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 		}
 	}
 
-	s.Additions = s.listAdditions()
-	s.Readditions = s.listReadditions()
+	s.Additions = append(s.listAdditions(), s.listReadditions()...)
 	s.Deletions = s.listDeletions()
 	s.Changes = s.listChanges()
 	s.NoChanges = s.listNoChanges()
@@ -311,65 +241,56 @@ func Open(path string, pkgs []config.Package) (*State, error) {
 	return &s, s.save()
 }
 
-func (s *State) Add(pkg config.Package) {
+func (s *State) Add(resourcer Resourcer) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	add(pkg, s)
+	add(resourcer.GetResource(), s)
 	s.save()
 }
 
-func (s *State) Remove(id ID) {
+func (s *State) Remove(resourcer Resourcer) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	remove(id, s)
+	remove(resourcer.GetResource(), s)
 	s.save()
 }
 
-func (s *State) Update(pkg config.Package) {
+func (s *State) Update(resourcer Resourcer) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	update(pkg, s)
+	update(resourcer.GetResource(), s)
 	s.save()
 }
 
-func (s *State) List() ([]string, error) {
+func (s *State) List() ([]Resource, error) {
 	_, err := os.Stat(s.path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
-		return []string{}, err
+		return []Resource{}, err
 	default:
 		content, err := ioutil.ReadFile(s.path)
 		if err != nil {
-			return []string{}, err
+			return []Resource{}, err
 		}
 		var state Self
 		if err := json.Unmarshal(content, &state); err != nil {
-			return []string{}, err
+			return []Resource{}, err
 		}
-		var items []string
-		for id := range state.Resources {
-			items = append(items, string(id))
+		var resources []Resource
+		for _, resource := range state.Resources {
+			resources = append(resources, resource)
 		}
-		return items, nil
+		return resources, nil
 	}
-}
-
-func (s *State) ToID(name string) ID {
-	for _, pkg := range s.NoChanges {
-		if pkg.GetName() == name {
-			return getStateID(pkg)
-		}
-	}
-	return ""
 }
 
 func (s *State) New() error {
 	s.Resources = map[ID]Resource{}
-	for _, pkg := range s.packages {
-		add(pkg, s)
+	for _, resource := range s.packages {
+		add(resource, s)
 	}
 	return s.save()
 }
@@ -379,7 +300,6 @@ func (s *State) Refresh() error {
 	defer s.mu.Unlock()
 
 	someChanges := len(s.Additions) > 0 ||
-		len(s.Readditions) > 0 ||
 		len(s.Changes) > 0 ||
 		len(s.Deletions) > 0
 
@@ -388,13 +308,12 @@ func (s *State) Refresh() error {
 	}
 
 	done := false
-	for _, pkg := range s.packages {
-		id := getStateID(pkg)
-		v1 := s.Resources[id]
-		v2 := toResource(pkg)
+	for _, resource := range s.packages {
+		v1 := s.Resources[resource.ID]
+		v2 := resource
 		if diff := cmp.Diff(v1, v2); diff != "" {
 			log.Printf("[DEBUG] refresh state to %s", diff)
-			update(pkg, s)
+			update(resource, s)
 			done = true
 		}
 	}
@@ -404,4 +323,21 @@ func (s *State) Refresh() error {
 	}
 
 	return nil
+}
+
+func Map(resources []Resource) map[string]Resource {
+	m := map[string]Resource{}
+	for _, resource := range resources {
+		m[resource.Name] = resource
+	}
+	return m
+}
+
+func (s *State) Get(name string) (Resource, error) {
+	for _, resource := range s.Resources {
+		if resource.Name == name {
+			return resource, nil
+		}
+	}
+	return Resource{}, fmt.Errorf("%s: not found in state file", name)
 }

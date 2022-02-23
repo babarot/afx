@@ -10,6 +10,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -46,35 +47,33 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInPackages(m.state.Additions),
+		ValidArgs:             state.Keys(m.state.Changes),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pkgs := m.state.Changes
-			if len(pkgs) == 0 {
+			resources := m.state.Changes
+			if len(resources) == 0 {
 				fmt.Println("No packages to update")
 				return nil
 			}
 
-			// not update all packages. Instead just only update
-			// given packages when not updated yet.
-			var given []config.Package
+			var tmp []state.Resource
 			for _, arg := range args {
-				pkg, err := c.getFromChanges(arg)
-				if err != nil {
-					// no hit in changes
+				resource, ok := state.Map(resources)[arg]
+				if !ok {
 					continue
 				}
-				given = append(given, pkg)
+				tmp = append(tmp, resource)
 			}
-			if len(given) > 0 {
-				pkgs = given
+			if len(tmp) > 0 {
+				resources = tmp
 			}
 
-			yes, _ := m.askRunCommand(*c, getNameInPackages(pkgs))
+			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
 			}
 
+			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
@@ -150,16 +149,4 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 	}(exit.ErrorOrNil())
 
 	return exit.ErrorOrNil()
-}
-
-func (c *updateCmd) getFromChanges(name string) (config.Package, error) {
-	pkgs := c.state.Changes
-
-	for _, pkg := range pkgs {
-		if pkg.GetName() == name {
-			return pkg, nil
-		}
-	}
-
-	return nil, errors.New("not found")
 }

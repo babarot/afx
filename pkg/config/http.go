@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/h2non/filetype"
 	"github.com/mholt/archiver"
 )
@@ -217,4 +218,8 @@ func (c HTTP) GetHome() string {
 
 func (c HTTP) GetDependsOn() []string {
 	return c.DependsOn
+}
+
+func (c HTTP) GetResource() state.Resource {
+	return getResource(c)
 }

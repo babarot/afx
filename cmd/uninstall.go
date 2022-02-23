@@ -43,7 +43,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInResources(m.state.Deletions),
+		ValidArgs:             state.Keys(m.state.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := m.state.Deletions
 			if len(resources) == 0 {
@@ -51,22 +51,19 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				return nil
 			}
 
-			// not uninstall all old packages. Instead just only uninstall
-			// given packages when not uninstalled yet.
-			var given []state.Resource
+			var tmp []state.Resource
 			for _, arg := range args {
-				resource, err := c.getFromDeletions(arg)
-				if err != nil {
-					// no hit in deletions
+				resource, ok := state.Map(resources)[arg]
+				if !ok {
 					continue
 				}
-				given = append(given, resource)
+				tmp = append(tmp, resource)
 			}
-			if len(given) > 0 {
-				resources = given
+			if len(tmp) > 0 {
+				resources = tmp
 			}
 
-			yes, _ := m.askRunCommand(*c, getNameInResources(resources))
+			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
@@ -85,35 +82,23 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 func (c *uninstallCmd) run(resources []state.Resource) error {
 	var errs errors.Errors
 
+	delete := func(paths ...string) error {
+		var errs errors.Errors
+		for _, path := range paths {
+			errs.Append(os.RemoveAll(path))
+		}
+		return errs.ErrorOrNil()
+	}
+
 	for _, resource := range resources {
 		err := delete(append(resource.Paths, resource.Home)...)
 		if err != nil {
 			errs.Append(err)
 			continue
 		}
-		c.state.Remove(resource.ID)
+		c.state.Remove(resource)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 
 	return errs.ErrorOrNil()
-}
-
-func delete(paths ...string) error {
-	var errs errors.Errors
-	for _, path := range paths {
-		errs.Append(os.RemoveAll(path))
-	}
-	return errs.ErrorOrNil()
-}
-
-func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
-	resources := c.state.Deletions
-
-	for _, resource := range resources {
-		if resource.Name == name {
-			return resource, nil
-		}
-	}
-
-	return state.Resource{}, errors.New("not found")
 }

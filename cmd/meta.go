@@ -111,20 +111,20 @@ func (m *metaCmd) init() error {
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
 
-	s, err := state.Open(filepath.Join(root, "state.json"), m.packages)
+	resourcers := make([]state.Resourcer, len(m.packages))
+	for i, pkg := range m.packages {
+		resourcers[i] = pkg
+	}
+
+	s, err := state.Open(filepath.Join(root, "state.json"), resourcers)
 	if err != nil {
 		return errors.Wrap(err, "faield to open state file")
 	}
 	m.state = s
 
-	log.Printf("[INFO] state additions: (%d) %#v",
-		len(s.Additions), getNameInPackages(s.Additions))
-	log.Printf("[INFO] state readditions: (%d) %#v",
-		len(s.Readditions), getNameInPackages(s.Readditions))
-	log.Printf("[INFO] state deletions: (%d) %#v",
-		len(s.Deletions), getNameInResources(s.Deletions))
-	log.Printf("[INFO] state changes: (%d) %#v",
-		len(s.Changes), getNameInPackages(s.Changes))
+	log.Printf("[INFO] state additions: (%d) %#v", len(s.Additions), state.Keys(s.Additions))
+	log.Printf("[INFO] state deletions: (%d) %#v", len(s.Deletions), state.Keys(s.Deletions))
+	log.Printf("[INFO] state changes: (%d) %#v", len(s.Changes), state.Keys(s.Changes))
 	log.Printf("[INFO] state unchanges: (%d) []string{...skip...}", len(s.NoChanges))
 
 	return nil
@@ -232,22 +232,6 @@ func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	return yes, nil
 }
 
-func getNameInPackages(pkgs []config.Package) []string {
-	var keys []string
-	for _, pkg := range pkgs {
-		keys = append(keys, pkg.GetName())
-	}
-	return keys
-}
-
-func getNameInResources(resources []state.Resource) []string {
-	var keys []string
-	for _, resource := range resources {
-		keys = append(keys, resource.Name)
-	}
-	return keys
-}
-
 func shouldCheckForUpdate() bool {
 	if os.Getenv("AFX_NO_UPDATE_NOTIFIER") != "" {
 		return false
@@ -268,4 +252,21 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 	}
 	stateFilePath := filepath.Join(os.Getenv("HOME"), ".afx", "version.json")
 	return update.CheckForUpdate(stateFilePath, Repository, Version)
+}
+
+func (m metaCmd) GetPackage(resource state.Resource) config.Package {
+	for _, pkg := range m.packages {
+		if pkg.GetName() == resource.Name {
+			return pkg
+		}
+	}
+	return nil
+}
+
+func (m metaCmd) GetPackages(resources []state.Resource) []config.Package {
+	var pkgs []config.Package
+	for _, resource := range resources {
+		pkgs = append(pkgs, m.GetPackage(resource))
+	}
+	return pkgs
 }

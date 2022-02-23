@@ -6,6 +6,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -62,12 +63,12 @@ func (c stateCmd) newStateListCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			items, err := c.state.List()
+			resources, err := c.state.List()
 			if err != nil {
 				return err
 			}
-			for _, item := range items {
-				fmt.Println(item)
+			for _, resource := range resources {
+				fmt.Println(resource.Name)
 			}
 			return nil
 		},
@@ -106,30 +107,42 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInPackages(c.state.NoChanges),
+		ValidArgs:             state.Keys(c.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var resources []string
+			var resources []state.Resource
 			switch len(cmd.Flags().Args()) {
 			case 0:
-				list, err := c.state.List()
+				rs, err := c.state.List()
 				if err != nil {
 					return errors.Wrap(err, "failed to list state items")
+				}
+				var items []string
+				for _, r := range rs {
+					items = append(items, r.Name)
 				}
 				var selected string
 				if err := survey.AskOne(&survey.Select{
 					Message: "Choose a package:",
-					Options: list,
+					Options: items,
 				}, &selected); err != nil {
 					return errors.Wrap(err, "failed to get input from console")
 				}
-				resources = append(resources, selected)
+				resource, err := c.state.Get(selected)
+				if err != nil {
+					return errors.Wrapf(err, "%s: failed to get state file", selected)
+				}
+				resources = append(resources, resource)
 			default:
-				// TODO: check valid or invalid
-				resources = cmd.Flags().Args()
+				for _, arg := range cmd.Flags().Args() {
+					resource, err := c.state.Get(arg)
+					if err != nil {
+						return errors.Wrapf(err, "%s: failed to get state file", arg)
+					}
+					resources = append(resources, resource)
+				}
 			}
 			for _, resource := range resources {
-				id := c.state.ToID(resource)
-				c.state.Remove(id)
+				c.state.Remove(resource)
 			}
 			return nil
 		},

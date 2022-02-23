@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/spf13/cobra"
@@ -51,26 +50,6 @@ func (c *showCmd) run(args []string) error {
 	w := printers.GetNewTabWriter(os.Stdout)
 	headers := []string{"NAME", "TYPE", "STATUS"}
 
-	getType := func(pkg config.Package) string {
-		var ty string
-		switch pkg := pkg.(type) {
-		case *config.GitHub:
-			ty = "GitHub"
-			if pkg.HasReleaseBlock() {
-				ty = "GitHub Release"
-			}
-		case *config.Gist:
-			ty = "Gist"
-		case *config.Local:
-			ty = "Local"
-		case *config.HTTP:
-			ty = "HTTP"
-		default:
-			ty = "Unknown"
-		}
-		return ty
-	}
-
 	type Item struct {
 		Name   string
 		Type   string
@@ -78,31 +57,31 @@ func (c *showCmd) run(args []string) error {
 	}
 
 	var items []Item
-	for _, pkg := range append(c.state.Additions, c.state.Readditions...) {
+	for _, pkg := range c.state.Additions {
 		items = append(items, Item{
-			Name:   pkg.GetName(),
-			Type:   getType(pkg),
+			Name:   pkg.Name,
+			Type:   pkg.Type,
 			Status: "WaitingInstall",
 		})
 	}
 	for _, pkg := range c.state.Changes {
 		items = append(items, Item{
-			Name:   pkg.GetName(),
-			Type:   getType(pkg),
+			Name:   pkg.Name,
+			Type:   pkg.Type,
 			Status: "WaitingUpdate",
 		})
 	}
-	for _, resource := range c.state.Deletions {
+	for _, pkg := range c.state.Deletions {
 		items = append(items, Item{
-			Name:   resource.Name,
-			Type:   resource.Type,
+			Name:   pkg.Name,
+			Type:   pkg.Type,
 			Status: "WaitingUninstall",
 		})
 	}
 	for _, pkg := range c.state.NoChanges {
 		items = append(items, Item{
-			Name:   pkg.GetName(),
-			Type:   getType(pkg),
+			Name:   pkg.Name,
+			Type:   pkg.Type,
 			Status: "Installed",
 		})
 	}

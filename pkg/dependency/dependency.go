@@ -108,7 +108,7 @@ func Resolve(graph Graph) (Graph, error) {
 				g = append(g, nodeNames[name])
 			}
 
-			return g, errors.New("Circular dependency found")
+			return g, errors.New("circular dependency found")
 		}
 
 		// Remove the ready nodes and add them to the resolved graph

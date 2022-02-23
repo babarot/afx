@@ -118,7 +118,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 			src = matches[0]
 		case 2:
 			// TODO: Update this with more flexiblities
-			return links, fmt.Errorf("%s: %d files matched: %#v\n", pkg.GetName(), len(matches), matches)
+			return links, fmt.Errorf("%s: %d files matched: %#v", pkg.GetName(), len(matches), matches)
 		default:
 			log.Printf("[ERROR] matched files: %#v", matches)
 			return links, errors.New("too many files are matched in file glob")
