@@ -6,7 +6,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -107,7 +107,7 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state2.GetKeys(c.state.NoChanges),
+		ValidArgs:             state.GetKeys(c.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resources []string
 			switch len(cmd.Flags().Args()) {

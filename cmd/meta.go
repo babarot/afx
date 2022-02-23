@@ -16,7 +16,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/printers"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/fatih/color"
 )
@@ -25,7 +25,7 @@ type metaCmd struct {
 	env       *env.Config
 	packages  []config.Package
 	appConfig *config.AppConfig
-	state     *state2.State
+	state     *state.State
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -111,25 +111,25 @@ func (m *metaCmd) init() error {
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
 
-	resourcers := make([]state2.Resourcer, len(m.packages))
+	resourcers := make([]state.Resourcer, len(m.packages))
 	for i, pkg := range m.packages {
 		resourcers[i] = pkg
 	}
 
-	s, err := state2.Open(filepath.Join(root, "state.json"), resourcers)
+	s, err := state.Open(filepath.Join(root, "state.json"), resourcers)
 	if err != nil {
 		return errors.Wrap(err, "faield to open state file")
 	}
 	m.state = s
 
 	log.Printf("[INFO] state additions: (%d) %#v",
-		len(s.Additions), state2.GetKeys(s.Additions))
+		len(s.Additions), state.GetKeys(s.Additions))
 	log.Printf("[INFO] state readditions: (%d) %#v",
-		len(s.Readditions), state2.GetKeys(s.Readditions))
+		len(s.Readditions), state.GetKeys(s.Readditions))
 	log.Printf("[INFO] state deletions: (%d) %#v",
-		len(s.Deletions), state2.GetKeys(s.Deletions))
+		len(s.Deletions), state.GetKeys(s.Deletions))
 	log.Printf("[INFO] state changes: (%d) %#v",
-		len(s.Changes), state2.GetKeys(s.Changes))
+		len(s.Changes), state.GetKeys(s.Changes))
 	log.Printf("[INFO] state unchanges: (%d) []string{...skip...}", len(s.NoChanges))
 
 	return nil
@@ -259,7 +259,7 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 	return update.CheckForUpdate(stateFilePath, Repository, Version)
 }
 
-func (m metaCmd) GetPackage(resource state2.Resource) config.Package {
+func (m metaCmd) GetPackage(resource state.Resource) config.Package {
 	for _, pkg := range m.packages {
 		if pkg.GetName() == resource.Name {
 			return pkg
@@ -268,7 +268,7 @@ func (m metaCmd) GetPackage(resource state2.Resource) config.Package {
 	return nil
 }
 
-func (m metaCmd) GetPackages(resources []state2.Resource) []config.Package {
+func (m metaCmd) GetPackages(resources []state.Resource) []config.Package {
 	var pkgs []config.Package
 	for _, resource := range resources {
 		pkgs = append(pkgs, m.GetPackage(resource))

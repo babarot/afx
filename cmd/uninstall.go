@@ -6,7 +6,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state2.GetKeys(m.state.Deletions),
+		ValidArgs:             state.GetKeys(m.state.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := m.state.Deletions
 			if len(resources) == 0 {
@@ -53,7 +53,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 
 			// not uninstall all old packages. Instead just only uninstall
 			// given packages when not uninstalled yet.
-			var given []state2.Resource
+			var given []state.Resource
 			for _, arg := range args {
 				resource, err := c.getFromDeletions(arg)
 				if err != nil {
@@ -66,7 +66,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				resources = given
 			}
 
-			yes, _ := m.askRunCommand(*c, state2.GetKeys(resources))
+			yes, _ := m.askRunCommand(*c, state.GetKeys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
@@ -82,7 +82,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 	return uninstallCmd
 }
 
-func (c *uninstallCmd) run(resources []state2.Resource) error {
+func (c *uninstallCmd) run(resources []state.Resource) error {
 	var errs errors.Errors
 
 	for _, resource := range resources {
@@ -106,7 +106,7 @@ func delete(paths ...string) error {
 	return errs.ErrorOrNil()
 }
 
-func (c *uninstallCmd) getFromDeletions(name string) (state2.Resource, error) {
+func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
 	resources := c.state.Deletions
 
 	for _, resource := range resources {
@@ -115,5 +115,5 @@ func (c *uninstallCmd) getFromDeletions(name string) (state2.Resource, error) {
 		}
 	}
 
-	return state2.Resource{}, errors.New("not found")
+	return state.Resource{}, errors.New("not found")
 }

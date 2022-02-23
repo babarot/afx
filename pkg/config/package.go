@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -30,7 +30,7 @@ type Handler interface {
 	GetCommandBlock() Command
 
 	GetDependsOn() []string
-	GetResource() state2.Resource
+	GetResource() state.Resource
 }
 
 // Package is an interface related to package itself

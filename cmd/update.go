@@ -10,7 +10,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -47,7 +47,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state2.GetKeys(m.state.Additions),
+		ValidArgs:             state.GetKeys(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := m.state.Changes
 			pkgs := m.GetPackages(resources)
@@ -71,7 +71,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 				pkgs = given
 			}
 
-			yes, _ := m.askRunCommand(*c, state2.GetKeys(resources))
+			yes, _ := m.askRunCommand(*c, state.GetKeys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil

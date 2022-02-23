@@ -10,7 +10,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 )
@@ -195,7 +195,7 @@ func Validate(pkgs []Package) error {
 	return nil
 }
 
-func getResource(pkg Package) state2.Resource {
+func getResource(pkg Package) state.Resource {
 	var paths []string
 
 	// repository existence is also one of the path resource
@@ -247,7 +247,7 @@ func getResource(pkg Package) state2.Resource {
 		ty = "Unknown"
 	}
 
-	return state2.Resource{
+	return state.Resource{
 		ID:      id,
 		Home:    pkg.GetHome(),
 		Name:    pkg.GetName(),

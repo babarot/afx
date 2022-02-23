@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state2"
+	"github.com/b4b4r07/afx/pkg/state"
 )
 
 // Local represents
@@ -88,6 +88,6 @@ func (c Local) GetDependsOn() []string {
 	return c.DependsOn
 }
 
-func (c Local) GetResource() state2.Resource {
+func (c Local) GetResource() state.Resource {
 	return getResource(c)
 }
