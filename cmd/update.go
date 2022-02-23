@@ -150,15 +150,3 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 
 	return exit.ErrorOrNil()
 }
-
-func (c *updateCmd) getFromChanges(name string) (config.Package, error) {
-	resources := c.state.Changes
-
-	for _, resource := range resources {
-		if resource.Name == name {
-			return c.GetPackage(resource), nil
-		}
-	}
-
-	return nil, errors.New("not found")
-}

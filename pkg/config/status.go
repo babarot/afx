@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // Progress is
@@ -86,7 +86,7 @@ func countRemaining(status map[string]Status) (int, []string) {
 
 func getTerminalSize() (int, int) {
 	id := int(os.Stdout.Fd())
-	width, height, err := terminal.GetSize(id)
+	width, height, err := term.GetSize(id)
 	if err != nil {
 		log.Printf("[ERROR]: getTerminalSize(): %s", err)
 	}

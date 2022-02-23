@@ -82,6 +82,14 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 func (c *uninstallCmd) run(resources []state.Resource) error {
 	var errs errors.Errors
 
+	delete := func(paths ...string) error {
+		var errs errors.Errors
+		for _, path := range paths {
+			errs.Append(os.RemoveAll(path))
+		}
+		return errs.ErrorOrNil()
+	}
+
 	for _, resource := range resources {
 		err := delete(append(resource.Paths, resource.Home)...)
 		if err != nil {
@@ -93,24 +101,4 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 	}
 
 	return errs.ErrorOrNil()
-}
-
-func delete(paths ...string) error {
-	var errs errors.Errors
-	for _, path := range paths {
-		errs.Append(os.RemoveAll(path))
-	}
-	return errs.ErrorOrNil()
-}
-
-func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
-	resources := c.state.Deletions
-
-	for _, resource := range resources {
-		if resource.Name == name {
-			return resource, nil
-		}
-	}
-
-	return state.Resource{}, errors.New("not found")
 }

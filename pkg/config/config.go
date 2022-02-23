@@ -208,11 +208,7 @@ func getResource(pkg Package) state.Resource {
 
 	if pkg.HasCommandBlock() {
 		command := pkg.GetCommandBlock()
-		links, err := command.GetLink(pkg)
-		if err != nil {
-			// TODO: thinking about what to do here
-			// no handling
-		}
+		links, _ := command.GetLink(pkg)
 		for _, link := range links {
 			paths = append(paths, link.From)
 			paths = append(paths, link.To)
