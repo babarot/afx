@@ -20,6 +20,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/data"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
+	"github.com/b4b4r07/afx/pkg/state2"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/google/go-github/github"
 	"github.com/mholt/archiver"
@@ -679,4 +680,8 @@ func (c GitHub) GetHome() string {
 
 func (c GitHub) GetDependsOn() []string {
 	return c.DependsOn
+}
+
+func (c GitHub) GetResource() state2.Resource {
+	return getResource(c)
 }

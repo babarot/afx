@@ -10,6 +10,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/pkg/state2"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 )
@@ -192,4 +193,66 @@ func Validate(pkgs []Package) error {
 	}
 
 	return nil
+}
+
+func getResource(pkg Package) state2.Resource {
+	var paths []string
+
+	// repository existence is also one of the path resource
+	paths = append(paths, pkg.GetHome())
+
+	if pkg.HasPluginBlock() {
+		plugin := pkg.GetPluginBlock()
+		paths = append(paths, plugin.GetSources(pkg)...)
+	}
+
+	if pkg.HasCommandBlock() {
+		command := pkg.GetCommandBlock()
+		links, err := command.GetLink(pkg)
+		if err != nil {
+			// TODO: thinking about what to do here
+			// no handling
+		}
+		for _, link := range links {
+			paths = append(paths, link.From)
+			paths = append(paths, link.To)
+		}
+	}
+
+	var ty string
+	var version string
+	var id string
+
+	switch pkg := pkg.(type) {
+	case GitHub:
+		ty = "GitHub"
+		if pkg.HasReleaseBlock() {
+			ty = "GitHub Release"
+			version = pkg.Release.Tag
+		}
+		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
+		if pkg.HasReleaseBlock() {
+			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
+		}
+	case Gist:
+		ty = "Gist"
+		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
+	case Local:
+		ty = "Local"
+		id = fmt.Sprintf("local/%s", pkg.Directory)
+	case HTTP:
+		ty = "HTTP"
+		id = pkg.URL
+	default:
+		ty = "Unknown"
+	}
+
+	return state2.Resource{
+		ID:      id,
+		Home:    pkg.GetHome(),
+		Name:    pkg.GetName(),
+		Type:    ty,
+		Version: version,
+		Paths:   paths,
+	}
 }

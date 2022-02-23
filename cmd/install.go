@@ -10,6 +10,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/state2"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
@@ -46,9 +47,10 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInPackages(m.state.Additions),
+		ValidArgs:             state2.GetKeys(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pkgs := append(m.state.Additions, m.state.Readditions...)
+			resources := append(m.state.Additions, m.state.Readditions...)
+			pkgs := m.GetPackages(resources)
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to install")
 				return nil
@@ -69,7 +71,7 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 				pkgs = given
 			}
 
-			yes, _ := m.askRunCommand(*c, getNameInPackages(pkgs))
+			yes, _ := m.askRunCommand(*c, state2.GetKeys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
@@ -157,11 +159,11 @@ func (c *installCmd) run(pkgs []config.Package) error {
 }
 
 func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
-	pkgs := append(c.state.Additions, c.state.Readditions...)
+	resources := append(c.state.Additions, c.state.Readditions...)
 
-	for _, pkg := range pkgs {
-		if pkg.GetName() == name {
-			return pkg, nil
+	for _, resource := range resources {
+		if resource.Name == name {
+			return c.GetPackage(resource), nil
 		}
 	}
 
