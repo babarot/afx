@@ -357,6 +357,15 @@ func (s *State) List() ([]string, error) {
 	}
 }
 
+func (s *State) ToID(name string) ID {
+	for _, pkg := range s.NoChanges {
+		if pkg.GetName() == name {
+			return getStateID(pkg)
+		}
+	}
+	return ""
+}
+
 func (s *State) New() error {
 	s.Resources = map[ID]Resource{}
 	for _, pkg := range s.packages {

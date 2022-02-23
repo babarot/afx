@@ -106,6 +106,7 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInPackages(c.State.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resources []string
 			switch len(cmd.Flags().Args()) {
@@ -127,7 +128,8 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 				resources = cmd.Flags().Args()
 			}
 			for _, resource := range resources {
-				c.State.Remove(resource)
+				id := c.State.ToID(resource)
+				c.State.Remove(id)
 			}
 			return nil
 		},

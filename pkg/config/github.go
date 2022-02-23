@@ -411,7 +411,7 @@ func (as *Assets) filter(fn func(Asset) bool) *Assets {
 	var assets Assets
 	if len(*as) < 2 {
 		// no more need to filter
-		log.Printf("[DEBUG] assets.filter: stopped because assets is already filtered to one or zero asset")
+		log.Printf("[DEBUG] assets.filter: finished filtering because length of assets is less than two")
 		return as
 	}
 
