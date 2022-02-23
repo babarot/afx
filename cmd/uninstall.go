@@ -51,19 +51,16 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				return nil
 			}
 
-			// not uninstall all old packages. Instead just only uninstall
-			// given packages when not uninstalled yet.
-			var given []state.Resource
+			var tmp []state.Resource
 			for _, arg := range args {
-				resource, err := c.getFromDeletions(arg)
-				if err != nil {
-					// no hit in deletions
+				resource, ok := state.Map(resources)[arg]
+				if !ok {
 					continue
 				}
-				given = append(given, resource)
+				tmp = append(tmp, resource)
 			}
-			if len(given) > 0 {
-				resources = given
+			if len(tmp) > 0 {
+				resources = tmp
 			}
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))

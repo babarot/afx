@@ -30,15 +30,15 @@ type State struct {
 
 	// No record in state file
 	Additions []Resource
-	// Exists but resource paths has something problem
-	// so it's likely to have had problem when installing before
-	Readditions []Resource
+
 	// Exists in state file but no in config file
 	// so maybe users had deleted the package from config file
 	Deletions []Resource
+
 	// Something changes happened between config file and state file
 	// Currently only version (github.release.tag) is detected as changes
 	Changes []Resource
+
 	// All items recorded in state file. It means no changes between state file
 	// and config file
 	NoChanges []Resource
@@ -140,10 +140,7 @@ func (s *State) listChanges() []Resource {
 func (s *State) listNoChanges() []Resource {
 	var resources []Resource
 	for _, resource := range s.packages {
-		if contains(s.listAdditions(), resource.Name) {
-			continue
-		}
-		if contains(s.listReadditions(), resource.Name) {
+		if contains(append(s.listAdditions(), s.listReadditions()...), resource.Name) {
 			continue
 		}
 		if contains(s.listChanges(), resource.Name) {
@@ -226,8 +223,7 @@ func Open(path string, resourcers []Resourcer) (*State, error) {
 		}
 	}
 
-	s.Additions = s.listAdditions()
-	s.Readditions = s.listReadditions()
+	s.Additions = append(s.listAdditions(), s.listReadditions()...)
 	s.Deletions = s.listDeletions()
 	s.Changes = s.listChanges()
 	s.NoChanges = s.listNoChanges()
@@ -303,7 +299,6 @@ func (s *State) Refresh() error {
 	defer s.mu.Unlock()
 
 	someChanges := len(s.Additions) > 0 ||
-		len(s.Readditions) > 0 ||
 		len(s.Changes) > 0 ||
 		len(s.Deletions) > 0
 
@@ -327,4 +322,12 @@ func (s *State) Refresh() error {
 	}
 
 	return nil
+}
+
+func Map(resources []Resource) map[string]Resource {
+	m := map[string]Resource{}
+	for _, resource := range resources {
+		m[resource.Name] = resource
+	}
+	return m
 }

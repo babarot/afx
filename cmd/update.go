@@ -47,28 +47,24 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state.Keys(m.state.Additions),
+		ValidArgs:             state.Keys(m.state.Changes),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := m.state.Changes
-			pkgs := m.GetPackages(resources)
-			if len(pkgs) == 0 {
+			if len(resources) == 0 {
 				fmt.Println("No packages to update")
 				return nil
 			}
 
-			// not update all packages. Instead just only update
-			// given packages when not updated yet.
-			var given []config.Package
+			var tmp []state.Resource
 			for _, arg := range args {
-				pkg, err := c.getFromChanges(arg)
-				if err != nil {
-					// no hit in changes
+				resource, ok := state.Map(resources)[arg]
+				if !ok {
 					continue
 				}
-				given = append(given, pkg)
+				tmp = append(tmp, resource)
 			}
-			if len(given) > 0 {
-				pkgs = given
+			if len(tmp) > 0 {
+				resources = tmp
 			}
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))
@@ -77,6 +73,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 				return nil
 			}
 
+			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),

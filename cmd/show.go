@@ -57,7 +57,7 @@ func (c *showCmd) run(args []string) error {
 	}
 
 	var items []Item
-	for _, pkg := range append(c.state.Additions, c.state.Readditions...) {
+	for _, pkg := range c.state.Additions {
 		items = append(items, Item{
 			Name:   pkg.Name,
 			Type:   pkg.Type,

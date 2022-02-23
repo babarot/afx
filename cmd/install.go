@@ -49,26 +49,22 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 		Args:                  cobra.MinimumNArgs(0),
 		ValidArgs:             state.Keys(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resources := append(m.state.Additions, m.state.Readditions...)
-			pkgs := m.GetPackages(resources)
-			if len(pkgs) == 0 {
+			resources := m.state.Additions
+			if len(resources) == 0 {
 				fmt.Println("No packages to install")
 				return nil
 			}
 
-			// not install all new packages. Instead just only install
-			// given packages when not installed yet.
-			var given []config.Package
+			var tmp []state.Resource
 			for _, arg := range args {
-				pkg, err := c.getFromAdditions(arg)
-				if err != nil {
-					// no hit in additions
+				resource, ok := state.Map(resources)[arg]
+				if !ok {
 					continue
 				}
-				given = append(given, pkg)
+				tmp = append(tmp, resource)
 			}
-			if len(given) > 0 {
-				pkgs = given
+			if len(tmp) > 0 {
+				resources = tmp
 			}
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))
@@ -77,6 +73,7 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 				return nil
 			}
 
+			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
@@ -156,16 +153,4 @@ func (c *installCmd) run(pkgs []config.Package) error {
 	}(exit.ErrorOrNil())
 
 	return exit.ErrorOrNil()
-}
-
-func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
-	resources := append(c.state.Additions, c.state.Readditions...)
-
-	for _, resource := range resources {
-		if resource.Name == name {
-			return c.GetPackage(resource), nil
-		}
-	}
-
-	return nil, errors.New("not found")
 }
