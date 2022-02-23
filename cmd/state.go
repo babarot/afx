@@ -107,7 +107,7 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state.GetKeys(c.state.NoChanges),
+		ValidArgs:             state.Keys(c.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resources []string
 			switch len(cmd.Flags().Args()) {

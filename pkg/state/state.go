@@ -191,7 +191,7 @@ func (s *State) listDeletions() []Resource {
 	return resources
 }
 
-func GetKeys(resources []Resource) []string {
+func Keys(resources []Resource) []string {
 	var keys []string
 	for _, resource := range resources {
 		keys = append(keys, resource.Name)

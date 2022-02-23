@@ -43,7 +43,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state.GetKeys(m.state.Deletions),
+		ValidArgs:             state.Keys(m.state.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := m.state.Deletions
 			if len(resources) == 0 {
@@ -66,7 +66,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				resources = given
 			}
 
-			yes, _ := m.askRunCommand(*c, state.GetKeys(resources))
+			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil

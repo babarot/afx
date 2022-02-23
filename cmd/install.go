@@ -47,7 +47,7 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state.GetKeys(m.state.Additions),
+		ValidArgs:             state.Keys(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resources := append(m.state.Additions, m.state.Readditions...)
 			pkgs := m.GetPackages(resources)
@@ -71,7 +71,7 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 				pkgs = given
 			}
 
-			yes, _ := m.askRunCommand(*c, state.GetKeys(resources))
+			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil

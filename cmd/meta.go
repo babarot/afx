@@ -123,13 +123,13 @@ func (m *metaCmd) init() error {
 	m.state = s
 
 	log.Printf("[INFO] state additions: (%d) %#v",
-		len(s.Additions), state.GetKeys(s.Additions))
+		len(s.Additions), state.Keys(s.Additions))
 	log.Printf("[INFO] state readditions: (%d) %#v",
-		len(s.Readditions), state.GetKeys(s.Readditions))
+		len(s.Readditions), state.Keys(s.Readditions))
 	log.Printf("[INFO] state deletions: (%d) %#v",
-		len(s.Deletions), state.GetKeys(s.Deletions))
+		len(s.Deletions), state.Keys(s.Deletions))
 	log.Printf("[INFO] state changes: (%d) %#v",
-		len(s.Changes), state.GetKeys(s.Changes))
+		len(s.Changes), state.Keys(s.Changes))
 	log.Printf("[INFO] state unchanges: (%d) []string{...skip...}", len(s.NoChanges))
 
 	return nil
