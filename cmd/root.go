@@ -7,8 +7,8 @@ import (
 	"runtime"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/spf13/cobra"
 )
@@ -45,7 +45,7 @@ func newRootCmd() *cobra.Command {
 				log.Printf("[DEBUG] (goroutine): checking new updates...")
 				release, err := checkForUpdate(Version)
 				if err != nil {
-					log.Printf("[ERROR] (goroutine): cannot check for new updates: %v", err)
+					log.Printf("[ERROR] (goroutine): cannot check for new updates: %s", err)
 				}
 				uriCh <- release
 			}()

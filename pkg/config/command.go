@@ -225,8 +225,7 @@ func (c Command) Install(pkg Package) error {
 	}
 
 	if len(links) == 0 {
-		log.Printf("[ERROR] %s: no links", pkg.GetName())
-		return fmt.Errorf("%s: GetLink() returns nothing", pkg.GetName())
+		return fmt.Errorf("%s: failed to install command due to no links specified", pkg.GetName())
 	}
 
 	var errs errors.Errors
@@ -240,7 +239,7 @@ func (c Command) Install(pkg Package) error {
 
 		fi, err := os.Stat(link.From)
 		if err != nil {
-			log.Printf("[ERROR] %s: no such file or directory\n", link.From)
+			log.Printf("[WARN] %s: no such file or directory", link.From)
 			continue
 		}
 		switch fi.Mode() {

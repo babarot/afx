@@ -142,7 +142,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 		exit.Append(result.Error)
 	}
 	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to update: %s\n", err)
+		log.Printf("[ERROR] failed to update: %s", err)
 		exit.Append(err)
 	}
 

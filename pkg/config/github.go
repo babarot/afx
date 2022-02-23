@@ -339,8 +339,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	})
 
 	if len(release.Assets) == 0 {
-		log.Printf("[ERROR] %s has no release assets", c.Release.Name)
-		return errors.New("failed to get releases")
+		return errors.Wrapf(err, "%s: failed to get releases", release.Name)
 	}
 
 	asset, err := release.Download(ctx)

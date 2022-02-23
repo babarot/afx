@@ -146,7 +146,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 	}
 
 	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to install: %s\n", err)
+		log.Printf("[ERROR] failed to install: %s", err)
 		exit.Append(err)
 	}
 

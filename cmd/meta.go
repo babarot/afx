@@ -36,7 +36,7 @@ func (m *meta) init(args []string) error {
 		log.Printf("[DEBUG] (goroutine): checking new updates...")
 		release, err := checkForUpdate(Version)
 		if err != nil {
-			log.Printf("[ERROR] (goroutine): cannot check for new updates: %v", err)
+			log.Printf("[ERROR] (goroutine): cannot check for new updates: %s", err)
 		}
 		m.updateMessageChan <- release
 	}()

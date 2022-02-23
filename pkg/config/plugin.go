@@ -74,8 +74,8 @@ func (p Plugin) Init(pkg Package) error {
 		switch cmd.ProcessState.ExitCode() {
 		case 0:
 		default:
-			log.Printf("[ERROR] %s: plugin.if returns not zero, so stopped to install package", pkg.GetName())
-			return fmt.Errorf("%s: failed to run plugin.if: %w", pkg.GetName(), err)
+			log.Printf("[ERROR] %s: plugin.if exit code is not zero, so stopped to init package", pkg.GetName())
+			return fmt.Errorf("%s: returned non-zero value with evaluation of `if` field: %w", pkg.GetName(), err)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (p Plugin) Init(pkg Package) error {
 
 	sources := p.GetSources(pkg)
 	if len(sources) == 0 {
-		return errors.New("no source files")
+		return fmt.Errorf("%s: failed to get sources", pkg.GetName())
 	}
 
 	for _, src := range sources {

@@ -88,7 +88,7 @@ func getTerminalSize() (int, int) {
 	id := int(os.Stdout.Fd())
 	width, height, err := terminal.GetSize(id)
 	if err != nil {
-		log.Printf("[ERROR]: getTerminalSize(): %v\n", err)
+		log.Printf("[ERROR]: getTerminalSize(): %s", err)
 	}
 	return height, width
 }
