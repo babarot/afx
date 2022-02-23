@@ -62,7 +62,7 @@ func (c stateCmd) newStateListCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			items, err := c.State.List()
+			items, err := c.state.List()
 			if err != nil {
 				return err
 			}
@@ -84,9 +84,9 @@ func (c stateCmd) newStateRefreshCmd() *cobra.Command {
 		Args:                  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if c.opt.force {
-				return c.State.New()
+				return c.state.New()
 			}
-			if err := c.State.Refresh(); err != nil {
+			if err := c.state.Refresh(); err != nil {
 				return errors.Wrap(err, "failed to refresh state")
 			}
 			fmt.Println(color.WhiteString("Successfully refreshed"))
@@ -106,12 +106,12 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInPackages(c.State.NoChanges),
+		ValidArgs:             getNameInPackages(c.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resources []string
 			switch len(cmd.Flags().Args()) {
 			case 0:
-				list, err := c.State.List()
+				list, err := c.state.List()
 				if err != nil {
 					return errors.Wrap(err, "failed to list state items")
 				}
@@ -128,8 +128,8 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 				resources = cmd.Flags().Args()
 			}
 			for _, resource := range resources {
-				id := c.State.ToID(resource)
-				c.State.Remove(id)
+				id := c.state.ToID(resource)
+				c.state.Remove(id)
 			}
 			return nil
 		},

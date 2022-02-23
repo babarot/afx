@@ -43,9 +43,9 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInResources(m.State.Deletions),
+		ValidArgs:             getNameInResources(m.state.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resources := m.State.Deletions
+			resources := m.state.Deletions
 			if len(resources) == 0 {
 				fmt.Println("No packages to uninstall")
 				return nil
@@ -91,7 +91,7 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs.Append(err)
 			continue
 		}
-		c.State.Remove(resource.ID)
+		c.state.Remove(resource.ID)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 
@@ -107,7 +107,7 @@ func delete(paths ...string) error {
 }
 
 func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
-	resources := c.State.Deletions
+	resources := c.state.Deletions
 
 	for _, resource := range resources {
 		if resource.Name == name {

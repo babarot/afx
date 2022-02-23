@@ -78,28 +78,28 @@ func (c *showCmd) run(args []string) error {
 	}
 
 	var items []Item
-	for _, pkg := range append(c.State.Additions, c.State.Readditions...) {
+	for _, pkg := range append(c.state.Additions, c.state.Readditions...) {
 		items = append(items, Item{
 			Name:   pkg.GetName(),
 			Type:   getType(pkg),
 			Status: "WaitingInstall",
 		})
 	}
-	for _, pkg := range c.State.Changes {
+	for _, pkg := range c.state.Changes {
 		items = append(items, Item{
 			Name:   pkg.GetName(),
 			Type:   getType(pkg),
 			Status: "WaitingUpdate",
 		})
 	}
-	for _, resource := range c.State.Deletions {
+	for _, resource := range c.state.Deletions {
 		items = append(items, Item{
 			Name:   resource.Name,
 			Type:   resource.Type,
 			Status: "WaitingUninstall",
 		})
 	}
-	for _, pkg := range c.State.NoChanges {
+	for _, pkg := range c.state.NoChanges {
 		items = append(items, Item{
 			Name:   pkg.GetName(),
 			Type:   getType(pkg),

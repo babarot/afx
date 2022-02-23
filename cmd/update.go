@@ -46,9 +46,9 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             getNameInPackages(m.State.Additions),
+		ValidArgs:             getNameInPackages(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pkgs := m.State.Changes
+			pkgs := m.state.Changes
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to update")
 				return nil
@@ -75,7 +75,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 				return nil
 			}
 
-			m.Env.AskWhen(map[string]bool{
+			m.env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
 			})
@@ -118,7 +118,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
-				c.State.Update(pkg)
+				c.state.Update(pkg)
 			}
 			select {
 			case results <- updateResult{Package: pkg, Error: err}:
@@ -145,7 +145,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 
 	defer func(err error) {
 		if err != nil {
-			c.Env.Refresh()
+			c.env.Refresh()
 		}
 	}(exit.ErrorOrNil())
 
@@ -153,7 +153,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 }
 
 func (c *updateCmd) getFromChanges(name string) (config.Package, error) {
-	pkgs := c.State.Changes
+	pkgs := c.state.Changes
 
 	for _, pkg := range pkgs {
 		if pkg.GetName() == name {
