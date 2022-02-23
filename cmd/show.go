@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/goccy/go-yaml"
@@ -29,7 +28,8 @@ var (
 
 	// showExample is examples for show command
 	showExample = templates.Examples(`
-		afx show
+		$ afx show
+		$ afx show -o json | jq .github
 	`)
 )
 
@@ -47,17 +47,7 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var master config.Config
-			for _, config := range c.configs {
-				if config.AppConfig != nil {
-					master.AppConfig = config.AppConfig
-				}
-				master.GitHub = append(master.GitHub, config.GitHub...)
-				master.Gist = append(master.Gist, config.Gist...)
-				master.HTTP = append(master.HTTP, config.HTTP...)
-				master.Local = append(master.Local, config.Local...)
-			}
-			b, err := yaml.Marshal(master)
+			b, err := yaml.Marshal(m.GetConfig())
 			if err != nil {
 				return err
 			}
@@ -79,7 +69,6 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 			default:
 				return fmt.Errorf("%s: not supported output style", c.opt.output)
 			}
-
 			return nil
 		},
 	}
