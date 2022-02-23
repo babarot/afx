@@ -26,6 +26,7 @@ type metaCmd struct {
 	packages  []config.Package
 	appConfig *config.AppConfig
 	state     *state.State
+	configs   []config.Config
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -62,6 +63,9 @@ func (m *metaCmd) init() error {
 			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		pkgs = append(pkgs, parsed...)
+
+		// Append config to one struct
+		m.configs = append(m.configs, cfg)
 
 		if cfg.AppConfig != nil {
 			app = cfg.AppConfig

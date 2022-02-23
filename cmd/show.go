@@ -6,13 +6,21 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/printers"
+	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 )
 
 type showCmd struct {
 	metaCmd
+
+	opt showOpt
+}
+
+type showOpt struct {
+	output string
 }
 
 var (
@@ -27,7 +35,7 @@ var (
 
 // newShowCmd creates a new show command
 func (m metaCmd) newShowCmd() *cobra.Command {
-	c := &showCmd{m}
+	c := &showCmd{metaCmd: m}
 
 	showCmd := &cobra.Command{
 		Use:                   "show",
@@ -39,9 +47,48 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.run(args)
+			var master config.Config
+			for _, config := range c.configs {
+				if config.AppConfig != nil {
+					master.AppConfig = config.AppConfig
+				}
+				master.GitHub = append(master.GitHub, config.GitHub...)
+				master.Gist = append(master.Gist, config.Gist...)
+				master.HTTP = append(master.HTTP, config.HTTP...)
+				master.Local = append(master.Local, config.Local...)
+			}
+			b, err := yaml.Marshal(master)
+			if err != nil {
+				return err
+			}
+
+			switch c.opt.output {
+			case "default":
+				return c.run(args)
+			case "json":
+				yb, err := yaml.YAMLToJSON(b)
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(yb))
+			case "yaml":
+				fmt.Println(string(b))
+			default:
+				return fmt.Errorf("%s: not supported output style", c.opt.output)
+			}
+
+			return nil
 		},
 	}
+
+	flag := showCmd.Flags()
+	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style (default,json,yaml) [Default: default]")
+
+	showCmd.RegisterFlagCompletionFunc("output",
+		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			out := []string{"default", "json", "yaml"}
+			return out, cobra.ShellCompDirectiveNoFileComp
+		})
 
 	return showCmd
 }
