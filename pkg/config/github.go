@@ -40,7 +40,7 @@ type GitHub struct {
 	Release *Release `yaml:"release"`
 
 	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command"` //  validate:"required_with=Release"
+	Command *Command `yaml:"command" validate:"required_with=Release"` // TODO: (not required Release)
 
 	DependsOn []string `yaml:"depends-on"`
 }
@@ -602,7 +602,7 @@ func (r *GitHubRelease) Unarchive(asset Asset) error {
 		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
-	log.Printf("[DEBUG] removed archive file: %s\n", asset.Path)
+	log.Printf("[DEBUG] removed archive file: %s", asset.Path)
 	os.Remove(asset.Path)
 
 	return nil

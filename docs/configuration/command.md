@@ -4,84 +4,11 @@ afx's goal is to finally support to install packages as `command`, `plugin` or b
 
 ## Parameters
 
-### build.steps
-
-Type | Required
----|---
-list | yes (when using `build`)
-
-`build.steps` can be specified build commands to build a package.
-
-=== "Case 1"
-
-    ```yaml hl_lines="7 8 9 10" title="Using sudo"
-    github:
-    - name: jhawthorn/fzy
-      description: A better fuzzy finder
-      owner: jhawthorn
-      repo: fzy
-      command:
-        build:
-          steps:
-          - make
-          - sudo make install
-    ```
-
-    In this case, build steps has `sudo` command but it can be run as expected. But in advance you will be asked to input sudo password.
-
-=== "Case 2"
-
-    ```yaml hl_lines="7 8 9" title="Using go build"
-    github:
-    - name: iovisor/kubectl-trace
-      description: Schedule bpftrace programs on your kubernetes cluster using the kubectl
-      owner: iovisor
-      repo: kubectl-trace
-      command:
-        build:
-          steps:
-          - go build -o kubectl-trace cmd/kubectl-trace/root.go
-        link:
-        - from: kubectl-trace
-          to: kubectl-trace
-    ```
-
-    In this case, build steps run `go build` command because this package does not provide GitHub releases on its own page. So we need to build by ourselves. afx build feature is very helpful in such a case.
-
-    `go build` command creates `red` command to current working directory so you need to have `link` section to install the built binary to your PATH.
-
-### build.env
-
-Type | Required
----|---
-map | no
-
-`build.env` can be specified environemnt variables used when running build a package.
-
-=== "Case 1"
-
-    ```yaml hl_lines="11 12"
-    github:
-    - name: jhawthorn/fzy
-      description: A better fuzzy finder
-      owner: jhawthorn
-      repo: fzy
-      command:
-        build:
-          steps:
-          - make
-          - sudo make install
-          env:
-            VERSION: 1.0
-    ```
-
-    In this case, VERSION is specified to change version used in build steps.
-
 ### link.from
 
-Type | Required
+Type | Default
 ---|---
-string | yes (when using `link`)
+string | (required)
 
 `link.from` can be specified where to install from.
 
@@ -121,11 +48,11 @@ string | yes (when using `link`)
 
 ### link.to
 
-Type | Required
+Type | Default
 ---|---
-string | no
+string | `$AFX_COMMAND_PATH/(command-name)`
 
-`link.to` can be specified where to install to.
+`link.to` can be specified where to install to. If omitted, the command will be installed to `$AFX_COMMAND_PATH`.
 
 === "Case 1"
 
@@ -183,9 +110,9 @@ string | no
 
 ### env
 
-Type | Required
+Type | Default
 ---|---
-map | no
+map | `{}`
 
 `env` allows you to set environment variables. By having this section in same YAML file of package declaration, you can manage it with same file. When we don't have afx, we should have environment variables in shell config (e.g. zshrc) even if not installed it yet or failed to install it. But thanks to afx, afx users can keep it with same files and enable it only while a package is installed.
 
@@ -221,9 +148,9 @@ map | no
 
 ### alias
 
-Type | Required
+Type | Default
 ---|---
-map | no
+map | `{}`
 
 `alias` allows you to set command aliases.
 
@@ -288,11 +215,84 @@ map | no
         - from: '**/bat'
     ```
 
+### build.steps
+
+Type | Default
+---|---
+list | `[]`
+
+`build.steps` can be specified build commands to build a package.
+
+=== "Case 1"
+
+    ```yaml hl_lines="7 8 9 10" title="Using sudo"
+    github:
+    - name: jhawthorn/fzy
+      description: A better fuzzy finder
+      owner: jhawthorn
+      repo: fzy
+      command:
+        build:
+          steps:
+          - make
+          - sudo make install
+    ```
+
+    In this case, build steps has `sudo` command but it can be run as expected. But in advance you will be asked to input sudo password.
+
+=== "Case 2"
+
+    ```yaml hl_lines="7 8 9" title="Using go build"
+    github:
+    - name: iovisor/kubectl-trace
+      description: Schedule bpftrace programs on your kubernetes cluster using the kubectl
+      owner: iovisor
+      repo: kubectl-trace
+      command:
+        build:
+          steps:
+          - go build -o kubectl-trace cmd/kubectl-trace/root.go
+        link:
+        - from: kubectl-trace
+          to: kubectl-trace
+    ```
+
+    In this case, build steps run `go build` command because this package does not provide GitHub releases on its own page. So we need to build by ourselves. afx build feature is very helpful in such a case.
+
+    `go build` command creates `red` command to current working directory so you need to have `link` section to install the built binary to your PATH.
+
+### build.env
+
+Type | Required
+---|---
+map | `{}`
+
+`build.env` can be specified environemnt variables used when running build a package.
+
+=== "Case 1"
+
+    ```yaml hl_lines="11 12"
+    github:
+    - name: jhawthorn/fzy
+      description: A better fuzzy finder
+      owner: jhawthorn
+      repo: fzy
+      command:
+        build:
+          steps:
+          - make
+          - sudo make install
+          env:
+            VERSION: 1.0
+    ```
+
+    In this case, VERSION is specified to change version used in build steps.
+
 ### snippet
 
 Type | Required
 ---|---
-string | no
+string | `""`
 
 `snippet` allows you to specify the command which are runned when starting new shell.
 
@@ -318,7 +318,7 @@ string | no
 
 Type | Required
 ---|---
-string | no
+string | `""`
 
 `if` allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.
 
