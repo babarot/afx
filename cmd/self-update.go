@@ -25,7 +25,7 @@ import (
 )
 
 type selfUpdateCmd struct {
-	meta
+	metaCmd
 
 	opt selfUpdateOpt
 
@@ -53,9 +53,10 @@ var (
 )
 
 // newSelfUpdateCmd creates a new selfUpdate command
-func newSelfUpdateCmd() *cobra.Command {
+func (m metaCmd) newSelfUpdateCmd() *cobra.Command {
 	info := color.New(color.FgGreen).SprintFunc()
 	c := &selfUpdateCmd{
+		metaCmd: m,
 		annotation: map[string]string{
 			"0.1.11": info(`Run "afx state refresh --force" at first!`),
 		},
@@ -71,10 +72,6 @@ func newSelfUpdateCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
 			if c.opt.tag {
 				return c.selectTag(args)
 			}

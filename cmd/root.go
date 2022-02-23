@@ -31,7 +31,7 @@ var (
 )
 
 // newRootCmd returns the root command
-func newRootCmd() *cobra.Command {
+func newRootCmd(m metaCmd) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:                "afx",
 		Short:              "Package manager for CLI",
@@ -63,20 +63,20 @@ func newRootCmd() *cobra.Command {
 		},
 	}
 
-	rootCmd.AddCommand(newInitCmd())
-	rootCmd.AddCommand(newInstallCmd())
-	rootCmd.AddCommand(newUninstallCmd())
-	rootCmd.AddCommand(newUpdateCmd())
-	rootCmd.AddCommand(newSelfUpdateCmd())
-	rootCmd.AddCommand(newShowCmd())
-
-	rootCmd.AddCommand(newCompletionCmd())
-	rootCmd.AddCommand(newStateCmd())
+	rootCmd.AddCommand(
+		m.newInitCmd(),
+		m.newInstallCmd(),
+		m.newUninstallCmd(),
+		m.newUpdateCmd(),
+		m.newSelfUpdateCmd(),
+		m.newShowCmd(),
+		m.newCompletionCmd(),
+		m.newStateCmd(),
+	)
 
 	return rootCmd
 }
 
-// Execute is
 func Execute() error {
 	logWriter, err := logging.LogOutput()
 	if err != nil {
@@ -89,6 +89,11 @@ func Execute() error {
 	log.Printf("[INFO] Build tag/SHA: %s/%s", BuildTag, BuildSHA)
 	log.Printf("[INFO] CLI args: %#v", os.Args)
 
+	meta := metaCmd{}
+	if err := meta.init(); err != nil {
+		return errors.Wrap(err, "failed to initialize afx")
+	}
+
 	defer log.Printf("[INFO] root command execution finished")
-	return newRootCmd().Execute()
+	return newRootCmd(meta).Execute()
 }

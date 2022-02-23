@@ -7,10 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type completionCmd struct {
-	meta
-}
-
 var (
 	// completionLong is long description of completion command
 	completionLong = templates.LongDesc(``)
@@ -51,10 +47,8 @@ var (
 )
 
 // newCompletionCmd creates a new completion command
-func newCompletionCmd() *cobra.Command {
-	c := &completionCmd{}
-
-	completionCmd := &cobra.Command{
+func (m metaCmd) newCompletionCmd() *cobra.Command {
+	return &cobra.Command{
 		Use:                   "completion [bash|zsh|fish]",
 		Short:                 "Generate completion script",
 		Long:                  completionLong,
@@ -65,20 +59,15 @@ func newCompletionCmd() *cobra.Command {
 		ValidArgs:             []string{"bash", "zsh", "fish"},
 		Args:                  cobra.ExactValidArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
 			switch args[0] {
 			case "bash":
-				newRootCmd().GenBashCompletion(os.Stdout)
+				newRootCmd(m).GenBashCompletion(os.Stdout)
 			case "zsh":
-				newRootCmd().GenZshCompletion(os.Stdout)
+				newRootCmd(m).GenZshCompletion(os.Stdout)
 			case "fish":
-				newRootCmd().GenFishCompletion(os.Stdout, true)
+				newRootCmd(m).GenFishCompletion(os.Stdout, true)
 			}
 			return nil
 		},
 	}
-
-	return completionCmd
 }

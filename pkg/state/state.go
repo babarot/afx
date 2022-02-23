@@ -151,11 +151,15 @@ func remove(id ID, s *State) {
 	resources := map[ID]Resource{}
 	for _, resource := range s.Resources {
 		if resource.ID == id {
+			log.Printf("[DEBUG] %s: removed from state", id)
 			continue
 		}
 		resources[resource.ID] = resource
 	}
-	log.Printf("[DEBUG] %s: removed from state", id)
+	if len(s.Resources) == len(resources) {
+		log.Printf("[WARN] %s: failed to remove from state", id)
+		return
+	}
 	s.Resources = resources
 }
 

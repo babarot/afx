@@ -21,7 +21,7 @@ import (
 	"github.com/fatih/color"
 )
 
-type meta struct {
+type metaCmd struct {
 	Env       *env.Config
 	Packages  []config.Package
 	AppConfig *config.AppConfig
@@ -30,7 +30,7 @@ type meta struct {
 	updateMessageChan chan *update.ReleaseInfo
 }
 
-func (m *meta) init(args []string) error {
+func (m *metaCmd) init() error {
 	m.updateMessageChan = make(chan *update.ReleaseInfo)
 	go func() {
 		log.Printf("[DEBUG] (goroutine): checking new updates...")
@@ -147,7 +147,7 @@ func printForUpdate(uriCh chan *update.ReleaseInfo) {
 	}
 }
 
-func (m *meta) printForUpdate() error {
+func (m *metaCmd) printForUpdate() error {
 	if m.updateMessageChan == nil {
 		return errors.New("update message chan is not set")
 	}
@@ -155,7 +155,7 @@ func (m *meta) printForUpdate() error {
 	return nil
 }
 
-func (m *meta) prompt() (config.Package, error) {
+func (m *metaCmd) prompt() (config.Package, error) {
 	var stdin, stdout bytes.Buffer
 
 	cmd := shell.Shell{
@@ -193,7 +193,7 @@ func (m *meta) prompt() (config.Package, error) {
 	return nil, errors.New("pkg not found")
 }
 
-func (m *meta) askRunCommand(op interface{}, pkgs []string) (bool, error) {
+func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	var do string
 	switch op.(type) {
 	case installCmd:

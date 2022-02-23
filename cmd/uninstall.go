@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
 )
 
 type uninstallCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -29,8 +29,8 @@ var (
 )
 
 // newUninstallCmd creates a new uninstall command
-func newUninstallCmd() *cobra.Command {
-	c := &uninstallCmd{}
+func (m metaCmd) newUninstallCmd() *cobra.Command {
+	c := &uninstallCmd{m}
 
 	uninstallCmd := &cobra.Command{
 		Use:                   "uninstall",
@@ -43,11 +43,8 @@ func newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInResources(m.State.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
 			resources := c.State.Deletions
 			if len(resources) == 0 {
 				fmt.Println("No packages to uninstall")
@@ -78,7 +75,7 @@ func newUninstallCmd() *cobra.Command {
 			return c.run(resources)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.printForUpdate()
+			return c.printForUpdate()
 		},
 	}
 
@@ -94,7 +91,7 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs.Append(err)
 			continue
 		}
-		c.State.Remove(resource.Name)
+		c.State.Remove(resource.ID)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 

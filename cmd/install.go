@@ -15,7 +15,7 @@ import (
 )
 
 type installCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -33,8 +33,8 @@ var (
 )
 
 // newInstallCmd creates a new fmt command
-func newInstallCmd() *cobra.Command {
-	c := &installCmd{}
+func (m metaCmd) newInstallCmd() *cobra.Command {
+	c := &installCmd{m}
 
 	installCmd := &cobra.Command{
 		Use:                   "install",
@@ -46,11 +46,8 @@ func newInstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInPackages(m.State.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
 			pkgs := append(c.State.Additions, c.State.Readditions...)
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to install")
@@ -86,7 +83,7 @@ func newInstallCmd() *cobra.Command {
 			return c.run(pkgs)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.printForUpdate()
+			return c.printForUpdate()
 		},
 	}
 

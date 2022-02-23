@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/spf13/cobra"
 )
 
 type showCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -27,8 +27,8 @@ var (
 )
 
 // newShowCmd creates a new show command
-func newShowCmd() *cobra.Command {
-	c := &showCmd{}
+func (m metaCmd) newShowCmd() *cobra.Command {
+	c := &showCmd{m}
 
 	showCmd := &cobra.Command{
 		Use:                   "show",
@@ -40,9 +40,6 @@ func newShowCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
 			return c.run(args)
 		},
 	}

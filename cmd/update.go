@@ -15,7 +15,7 @@ import (
 )
 
 type updateCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -33,8 +33,8 @@ var (
 )
 
 // newUpdateCmd creates a new fmt command
-func newUpdateCmd() *cobra.Command {
-	c := &updateCmd{}
+func (m metaCmd) newUpdateCmd() *cobra.Command {
+	c := &updateCmd{m}
 
 	updateCmd := &cobra.Command{
 		Use:                   "update",
@@ -46,11 +46,8 @@ func newUpdateCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInPackages(m.State.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
 			pkgs := c.State.Changes
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to update")
@@ -86,7 +83,7 @@ func newUpdateCmd() *cobra.Command {
 			return c.run(pkgs)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.printForUpdate()
+			return c.printForUpdate()
 		},
 	}
 
