@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
 )
 
 type uninstallCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -29,8 +29,8 @@ var (
 )
 
 // newUninstallCmd creates a new uninstall command
-func newUninstallCmd() *cobra.Command {
-	c := &uninstallCmd{}
+func (m metaCmd) newUninstallCmd() *cobra.Command {
+	c := &uninstallCmd{metaCmd: m}
 
 	uninstallCmd := &cobra.Command{
 		Use:                   "uninstall",
@@ -43,12 +43,9 @@ func newUninstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInResources(m.state.Deletions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
-			resources := c.State.Deletions
+			resources := m.state.Deletions
 			if len(resources) == 0 {
 				fmt.Println("No packages to uninstall")
 				return nil
@@ -69,7 +66,7 @@ func newUninstallCmd() *cobra.Command {
 				resources = given
 			}
 
-			yes, _ := c.askRunCommand(*c, getNameInResources(resources))
+			yes, _ := m.askRunCommand(*c, getNameInResources(resources))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
@@ -78,7 +75,7 @@ func newUninstallCmd() *cobra.Command {
 			return c.run(resources)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.printForUpdate()
+			return m.printForUpdate()
 		},
 	}
 
@@ -94,7 +91,7 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs.Append(err)
 			continue
 		}
-		c.State.Remove(resource.Name)
+		c.state.Remove(resource.ID)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 
@@ -110,7 +107,7 @@ func delete(paths ...string) error {
 }
 
 func (c *uninstallCmd) getFromDeletions(name string) (state.Resource, error) {
-	resources := c.State.Deletions
+	resources := c.state.Deletions
 
 	for _, resource := range resources {
 		if resource.Name == name {

@@ -15,7 +15,7 @@ import (
 )
 
 type installCmd struct {
-	meta
+	metaCmd
 }
 
 var (
@@ -33,8 +33,8 @@ var (
 )
 
 // newInstallCmd creates a new fmt command
-func newInstallCmd() *cobra.Command {
-	c := &installCmd{}
+func (m metaCmd) newInstallCmd() *cobra.Command {
+	c := &installCmd{metaCmd: m}
 
 	installCmd := &cobra.Command{
 		Use:                   "install",
@@ -46,12 +46,9 @@ func newInstallCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
+		ValidArgs:             getNameInPackages(m.state.Additions),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := c.meta.init(args); err != nil {
-				return err
-			}
-
-			pkgs := append(c.State.Additions, c.State.Readditions...)
+			pkgs := append(m.state.Additions, m.state.Readditions...)
 			if len(pkgs) == 0 {
 				fmt.Println("No packages to install")
 				return nil
@@ -72,13 +69,13 @@ func newInstallCmd() *cobra.Command {
 				pkgs = given
 			}
 
-			yes, _ := c.askRunCommand(*c, getNameInPackages(pkgs))
+			yes, _ := m.askRunCommand(*c, getNameInPackages(pkgs))
 			if !yes {
 				fmt.Println("Cancelled")
 				return nil
 			}
 
-			c.Env.AskWhen(map[string]bool{
+			m.env.AskWhen(map[string]bool{
 				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
 				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
 			})
@@ -86,7 +83,7 @@ func newInstallCmd() *cobra.Command {
 			return c.run(pkgs)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.printForUpdate()
+			return m.printForUpdate()
 		},
 	}
 
@@ -121,7 +118,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
-				c.State.Add(pkg)
+				c.state.Add(pkg)
 			default:
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
@@ -152,7 +149,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 
 	defer func(err error) {
 		if err != nil {
-			c.Env.Refresh()
+			c.env.Refresh()
 		}
 	}(exit.ErrorOrNil())
 
@@ -160,7 +157,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 }
 
 func (c *installCmd) getFromAdditions(name string) (config.Package, error) {
-	pkgs := append(c.State.Additions, c.State.Readditions...)
+	pkgs := append(c.state.Additions, c.state.Readditions...)
 
 	for _, pkg := range pkgs {
 		if pkg.GetName() == name {

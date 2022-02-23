@@ -108,7 +108,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
 		}
 
-		log.Printf("[DEBUG] Run file globbing: %s", file)
+		log.Printf("[TRACE] Run zglob.Glob() to search files: %s", file)
 		var src string
 		switch len(matches) {
 		case 0:

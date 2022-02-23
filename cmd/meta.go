@@ -21,16 +21,16 @@ import (
 	"github.com/fatih/color"
 )
 
-type meta struct {
-	Env       *env.Config
-	Packages  []config.Package
-	AppConfig *config.AppConfig
-	State     *state.State
+type metaCmd struct {
+	env       *env.Config
+	packages  []config.Package
+	appConfig *config.AppConfig
+	state     *state.State
 
 	updateMessageChan chan *update.ReleaseInfo
 }
 
-func (m *meta) init(args []string) error {
+func (m *metaCmd) init() error {
 	m.updateMessageChan = make(chan *update.ReleaseInfo)
 	go func() {
 		log.Printf("[DEBUG] (goroutine): checking new updates...")
@@ -68,7 +68,7 @@ func (m *meta) init(args []string) error {
 		}
 	}
 
-	m.AppConfig = app
+	m.appConfig = app
 
 	if err := config.Validate(pkgs); err != nil {
 		return errors.Wrap(err, "failed to validate packages")
@@ -79,25 +79,25 @@ func (m *meta) init(args []string) error {
 		return errors.Wrap(err, "failed to resolve dependencies between packages")
 	}
 
-	m.Packages = pkgs
+	m.packages = pkgs
 
-	m.Env = env.New(cache)
-	m.Env.Add(env.Variables{
+	m.env = env.New(cache)
+	m.env.Add(env.Variables{
 		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
-		"AFX_SHELL":        env.Variable{Default: m.AppConfig.Shell},
+		"AFX_SHELL":        env.Variable{Default: m.appConfig.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
-				When:    config.HasSudoInCommandBuildSteps(m.Packages),
+				When:    config.HasSudoInCommandBuildSteps(m.packages),
 				Message: "Please enter sudo command password",
 				Help:    "Some packages build steps requires sudo command",
 			},
 		},
 		"GITHUB_TOKEN": env.Variable{
 			Input: env.Input{
-				When:    config.HasGitHubReleaseBlock(m.Packages),
+				When:    config.HasGitHubReleaseBlock(m.packages),
 				Message: "Please type your GITHUB_TOKEN",
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
@@ -111,11 +111,11 @@ func (m *meta) init(args []string) error {
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
 
-	s, err := state.Open(filepath.Join(root, "state.json"), m.Packages)
+	s, err := state.Open(filepath.Join(root, "state.json"), m.packages)
 	if err != nil {
 		return errors.Wrap(err, "faield to open state file")
 	}
-	m.State = s
+	m.state = s
 
 	log.Printf("[INFO] state additions: (%d) %#v",
 		len(s.Additions), getNameInPackages(s.Additions))
@@ -147,7 +147,7 @@ func printForUpdate(uriCh chan *update.ReleaseInfo) {
 	}
 }
 
-func (m *meta) printForUpdate() error {
+func (m *metaCmd) printForUpdate() error {
 	if m.updateMessageChan == nil {
 		return errors.New("update message chan is not set")
 	}
@@ -155,19 +155,19 @@ func (m *meta) printForUpdate() error {
 	return nil
 }
 
-func (m *meta) prompt() (config.Package, error) {
+func (m *metaCmd) prompt() (config.Package, error) {
 	var stdin, stdout bytes.Buffer
 
 	cmd := shell.Shell{
 		Stdin:   &stdin,
 		Stdout:  &stdout,
 		Stderr:  os.Stderr,
-		Command: m.AppConfig.Filter.Command,
-		Args:    m.AppConfig.Filter.Args,
-		Env:     m.AppConfig.Filter.Env,
+		Command: m.appConfig.Filter.Command,
+		Args:    m.appConfig.Filter.Args,
+		Env:     m.appConfig.Filter.Env,
 	}
 
-	for _, pkg := range m.Packages {
+	for _, pkg := range m.packages {
 		fmt.Fprintln(&stdin, pkg.GetName())
 	}
 
@@ -176,7 +176,7 @@ func (m *meta) prompt() (config.Package, error) {
 	}
 
 	search := func(name string) config.Package {
-		for _, pkg := range m.Packages {
+		for _, pkg := range m.packages {
 			if pkg.GetName() == name {
 				return pkg
 			}
@@ -193,7 +193,7 @@ func (m *meta) prompt() (config.Package, error) {
 	return nil, errors.New("pkg not found")
 }
 
-func (m *meta) askRunCommand(op interface{}, pkgs []string) (bool, error) {
+func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	var do string
 	switch op.(type) {
 	case installCmd:

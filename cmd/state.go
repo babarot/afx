@@ -11,7 +11,7 @@ import (
 )
 
 type stateCmd struct {
-	meta
+	metaCmd
 
 	opt stateOpt
 }
@@ -29,8 +29,8 @@ var (
 )
 
 // newStateCmd creates a new state command
-func newStateCmd() *cobra.Command {
-	c := &stateCmd{}
+func (m metaCmd) newStateCmd() *cobra.Command {
+	c := &stateCmd{metaCmd: m}
 
 	stateCmd := &cobra.Command{
 		Use:                   "state [list|refresh|remove]",
@@ -42,9 +42,6 @@ func newStateCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Args:                  cobra.MaximumNArgs(1),
 		Hidden:                true,
-		PostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.init(args)
-		},
 	}
 
 	stateCmd.AddCommand(
@@ -64,11 +61,8 @@ func (c stateCmd) newStateListCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.ExactArgs(0),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.init(args)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			items, err := c.State.List()
+			items, err := c.state.List()
 			if err != nil {
 				return err
 			}
@@ -88,14 +82,11 @@ func (c stateCmd) newStateRefreshCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.ExactArgs(0),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.init(args)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if c.opt.force {
-				return c.State.New()
+				return c.state.New()
 			}
-			if err := c.State.Refresh(); err != nil {
+			if err := c.state.Refresh(); err != nil {
 				return errors.Wrap(err, "failed to refresh state")
 			}
 			fmt.Println(color.WhiteString("Successfully refreshed"))
@@ -115,14 +106,12 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 		SilenceErrors:         true,
 		Aliases:               []string{"rm"},
 		Args:                  cobra.MinimumNArgs(0),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return c.meta.init(args)
-		},
+		ValidArgs:             getNameInPackages(c.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resources []string
 			switch len(cmd.Flags().Args()) {
 			case 0:
-				list, err := c.State.List()
+				list, err := c.state.List()
 				if err != nil {
 					return errors.Wrap(err, "failed to list state items")
 				}
@@ -139,7 +128,8 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 				resources = cmd.Flags().Args()
 			}
 			for _, resource := range resources {
-				c.State.Remove(resource)
+				id := c.state.ToID(resource)
+				c.state.Remove(id)
 			}
 			return nil
 		},
