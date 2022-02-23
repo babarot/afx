@@ -6,9 +6,9 @@ afx's goal is to finally support to install packages as `command`, `plugin` or b
 
 ### sources
 
-Type | Required
+Type | Default
 ---|---
-list | yes
+list | (required)
 
 `sources` allows you to select what to load files when starting shell.
 
@@ -56,9 +56,9 @@ list | yes
 
 ### env
 
-Type | Required
+Type | Default
 ---|---
-list | no
+map | `{}`
 
 `env` allows you to set environment variables. By having this section in same YAML file of package declaration, you can manage it with same file. When we don't have afx, we should have environment variables in shell config (e.g. zshrc) even if not installed it yet or failed to install it. But thanks to afx, afx users can keep it with same files and enable it only while a package is installed.
 
@@ -88,9 +88,9 @@ list | no
 
 ### snippet
 
-Type | Required
+Type | Default
 ---|---
-string | no
+string | `""`
 
 `snippet` allows you to specify the command which are runned when starting new shell.
 
@@ -114,9 +114,9 @@ string | no
 
 ### snippet-prepare (beta)
 
-Type | Required
+Type | Default
 ---|---
-string | no
+string | `""`
 
 `snippet-prepare` allows you to specify the command which are runned when starting new shell. Unlike `snippet`, this `snippet-prepare` is run before `source` command.
 
@@ -147,9 +147,9 @@ This option comes from https://github.com/b4b4r07/afx/issues/6.
 
 ### if
 
-Type | Required
+Type | Default
 ---|---
-string | no
+string | `""`
 
 `if` allows you to specify the condition to load packages. If it returns true, then the plugin will be loaded. But if it returns false, the plugin will not be loaded.
 

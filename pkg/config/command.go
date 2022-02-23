@@ -112,7 +112,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		var src string
 		switch len(matches) {
 		case 0:
-			return links, fmt.Errorf("%q: no matches", link.From)
+			return links, fmt.Errorf("%s: %q no matches", pkg.GetName(), link.From)
 		case 1:
 			// OK pattern: matches should be only one
 			src = matches[0]
