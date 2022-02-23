@@ -88,7 +88,7 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs.Append(err)
 			continue
 		}
-		c.state.Remove(resource.Name)
+		c.state.Remove(resource)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 

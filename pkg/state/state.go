@@ -3,6 +3,7 @@ package state
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -78,17 +79,17 @@ func add(r Resource, s *State) {
 	s.Resources[r.ID] = r
 }
 
-func remove(name string, s *State) {
+func remove(r Resource, s *State) {
 	resources := map[ID]Resource{}
 	for _, resource := range s.Resources {
-		if resource.Name == name {
-			log.Printf("[DEBUG] %s: removed from state", resource.Name)
+		if resource.ID == r.ID {
+			log.Printf("[DEBUG] %s: removed from state", r.Name)
 			continue
 		}
 		resources[resource.ID] = resource
 	}
 	if len(s.Resources) == len(resources) {
-		log.Printf("[WARN] %s: failed to remove from state", name)
+		log.Printf("[WARN] %s: failed to remove from state", r.Name)
 		return
 	}
 	s.Resources = resources
@@ -248,11 +249,11 @@ func (s *State) Add(resourcer Resourcer) {
 	s.save()
 }
 
-func (s *State) Remove(id ID) {
+func (s *State) Remove(resourcer Resourcer) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	remove(id, s)
+	remove(resourcer.GetResource(), s)
 	s.save()
 }
 
@@ -264,25 +265,25 @@ func (s *State) Update(resourcer Resourcer) {
 	s.save()
 }
 
-func (s *State) List() ([]string, error) {
+func (s *State) List() ([]Resource, error) {
 	_, err := os.Stat(s.path)
 	switch {
 	case errors.Is(err, os.ErrNotExist):
-		return []string{}, err
+		return []Resource{}, err
 	default:
 		content, err := ioutil.ReadFile(s.path)
 		if err != nil {
-			return []string{}, err
+			return []Resource{}, err
 		}
 		var state Self
 		if err := json.Unmarshal(content, &state); err != nil {
-			return []string{}, err
+			return []Resource{}, err
 		}
-		var items []string
+		var resources []Resource
 		for _, resource := range state.Resources {
-			items = append(items, resource.Name)
+			resources = append(resources, resource)
 		}
-		return items, nil
+		return resources, nil
 	}
 }
 
@@ -330,4 +331,13 @@ func Map(resources []Resource) map[string]Resource {
 		m[resource.Name] = resource
 	}
 	return m
+}
+
+func (s *State) Get(name string) (Resource, error) {
+	for _, resource := range s.Resources {
+		if resource.Name == name {
+			return resource, nil
+		}
+	}
+	return Resource{}, fmt.Errorf("%s: not found in state file", name)
 }
