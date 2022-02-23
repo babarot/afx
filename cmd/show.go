@@ -61,7 +61,6 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			switch c.opt.output {
 			case "default":
 				return c.run(args)
@@ -73,6 +72,10 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 				fmt.Println(string(yb))
 			case "yaml":
 				fmt.Println(string(b))
+			case "path":
+				for _, pkg := range c.GetPackages(c.state.NoChanges) {
+					fmt.Println(pkg.GetHome())
+				}
 			default:
 				return fmt.Errorf("%s: not supported output style", c.opt.output)
 			}
@@ -82,11 +85,11 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 	}
 
 	flag := showCmd.Flags()
-	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style (default,json,yaml) [Default: default]")
+	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style [default,json,yaml,path]")
 
 	showCmd.RegisterFlagCompletionFunc("output",
 		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			out := []string{"default", "json", "yaml"}
+			out := []string{"default", "json", "yaml", "path"}
 			return out, cobra.ShellCompDirectiveNoFileComp
 		})
 
