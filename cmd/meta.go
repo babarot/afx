@@ -26,6 +26,7 @@ type metaCmd struct {
 	packages  []config.Package
 	appConfig *config.AppConfig
 	state     *state.State
+	configs   map[string]config.Config
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -52,6 +53,7 @@ func (m *metaCmd) init() error {
 
 	var pkgs []config.Package
 	app := &config.DefaultAppConfig
+	m.configs = map[string]config.Config{}
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
@@ -62,6 +64,9 @@ func (m *metaCmd) init() error {
 			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		pkgs = append(pkgs, parsed...)
+
+		// Append config to one struct
+		m.configs[file] = cfg
 
 		if cfg.AppConfig != nil {
 			app = cfg.AppConfig
@@ -269,4 +274,18 @@ func (m metaCmd) GetPackages(resources []state.Resource) []config.Package {
 		pkgs = append(pkgs, m.GetPackage(resource))
 	}
 	return pkgs
+}
+
+func (m metaCmd) GetConfig() config.Config {
+	var all config.Config
+	for _, config := range m.configs {
+		if config.AppConfig != nil {
+			all.AppConfig = config.AppConfig
+		}
+		all.GitHub = append(all.GitHub, config.GitHub...)
+		all.Gist = append(all.Gist, config.Gist...)
+		all.HTTP = append(all.HTTP, config.HTTP...)
+		all.Local = append(all.Local, config.Local...)
+	}
+	return all
 }
