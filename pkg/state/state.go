@@ -78,17 +78,17 @@ func add(r Resource, s *State) {
 	s.Resources[r.ID] = r
 }
 
-func remove(id ID, s *State) {
+func remove(name string, s *State) {
 	resources := map[ID]Resource{}
 	for _, resource := range s.Resources {
-		if resource.ID == id {
+		if resource.Name == name {
 			log.Printf("[DEBUG] %s: removed from state", resource.Name)
 			continue
 		}
 		resources[resource.ID] = resource
 	}
 	if len(s.Resources) == len(resources) {
-		log.Printf("[WARN] %s: failed to remove from state", id)
+		log.Printf("[WARN] %s: failed to remove from state", name)
 		return
 	}
 	s.Resources = resources
@@ -279,8 +279,8 @@ func (s *State) List() ([]string, error) {
 			return []string{}, err
 		}
 		var items []string
-		for id := range state.Resources {
-			items = append(items, string(id))
+		for _, resource := range state.Resources {
+			items = append(items, resource.Name)
 		}
 		return items, nil
 	}
