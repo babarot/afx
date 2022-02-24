@@ -443,6 +443,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#templatesreplacements" class="md-nav__link">
+    templates.replacements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#depends-on" class="md-nav__link">
     depends-on
   </a>
@@ -589,6 +596,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#templatesreplacements" class="md-nav__link">
+    templates.replacements
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#depends-on" class="md-nav__link">
     depends-on
   </a>
@@ -691,12 +705,78 @@
 </tbody>
 </table>
 <p>Specify a URL that a command or plugin you want to install are hosted.</p>
+<p>In this field, you can use template variables:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Case 1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nt">http</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcping</span><span class="w"></span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Like gcping.com but a command line tool</span><span class="w"></span>
+<span class="hll"><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;https://storage.googleapis.com/gcping-release/{{</span><span class="nv"> </span><span class="s">.Name</span><span class="nv"> </span><span class="s">}}_{{</span><span class="nv"> </span><span class="s">.OS</span><span class="nv"> </span><span class="s">}}_{{</span><span class="nv"> </span><span class="s">.Arch</span><span class="nv"> </span><span class="s">}}_latest&#39;</span><span class="w"></span>
+</span><span class="hll"><span class="w">  </span><span class="nt">templates</span><span class="p">:</span><span class="w"></span>
+</span><span class="hll"><span class="w">    </span><span class="nt">replacements</span><span class="p">:</span><span class="w"></span>
+</span><span class="hll"><span class="w">      </span><span class="nt">darwin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">darwin</span><span class="w"> </span><span class="c1"># can replace &quot;darwin&quot; as you like!</span><span class="w"></span>
+</span><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">link</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcping_*</span><span class="w"></span>
+<span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gcping</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.Name</code></td>
+<td>Same as <code>.name</code> (Package name)</td>
+</tr>
+<tr>
+<td><code>.OS</code></td>
+<td><a href="https://go.dev/doc/install/source#environment">GOOS</a><sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup> (e.g. <code>darwin</code> etc)</td>
+</tr>
+<tr>
+<td><code>.Arch</code></td>
+<td><a href="https://go.dev/doc/install/source#environment">GOARCH</a><sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup> (e.g. <code>amd64</code> etc)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="templatesreplacements">templates.replacements<a class="headerlink" href="#templatesreplacements" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>list</td>
+<td><code>[]</code></td>
+</tr>
+</tbody>
+</table>
+<p>In <code>.url</code> field, the template variables can be used. Also you can replace it with your own values. For more details, see also below page.</p>
+<p>See <a href="../github/#releaseassetreplacements">GitHub#release.asset.replacements</a></p>
 <h3 id="depends-on">depends-on<a class="headerlink" href="#depends-on" title="Permanent link">#</a></h3>
 <p>See <a href="../github/#depends-on">GitHub#depends-on</a> page. Same as that.</p>
 <h3 id="command">command<a class="headerlink" href="#command" title="Permanent link">#</a></h3>
 <p>See <a href="../../command/">Command</a> page</p>
 <h3 id="plugin">plugin<a class="headerlink" href="#plugin" title="Permanent link">#</a></h3>
 <p>See <a href="../../plugin/">Plugin</a> page</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>This can be overwritten by <code>templates.replacements</code>.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
               
             </article>
