@@ -114,13 +114,13 @@ func unarchive(f string) error {
 	switch {
 	case filetype.IsArchive(buf):
 		if err := archiver.Unarchive(f, filepath.Dir(f)); err != nil {
-			return err
+			return errors.Wrapf(err, "%s: failed to unarhive", f)
 		}
-		return nil
 	default:
-		log.Printf("[INFO] %s no need to unarchive\n", f)
-		return nil
+		log.Printf("[DEBUG] %s: no need to unarchive", f)
 	}
+
+	return nil
 }
 
 // Installed is
@@ -182,7 +182,7 @@ func (c HTTP) Uninstall(ctx context.Context) error {
 			errs.Append(err)
 			return
 		}
-		log.Printf("[INFO] Delete %s\n", f)
+		log.Printf("[INFO] Delete %s", f)
 	}
 
 	if c.HasCommandBlock() {

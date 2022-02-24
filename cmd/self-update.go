@@ -14,8 +14,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Masterminds/semver/v3"
-	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/pkg/github"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/fatih/color"
@@ -110,18 +110,17 @@ func (c *selfUpdateCmd) selectTag(args []string) error {
 		return errors.Wrap(err, "failed to get input from console")
 	}
 
-	release := config.GitHubRelease{
-		Name:     "afx",
-		Client:   http.DefaultClient,
-		Assets:   config.Assets{},
-		Filename: "",
+	release := github.Release{
+		Name:   "afx",
+		Client: http.DefaultClient,
+		Assets: github.Assets{},
 	}
 
 	rel := gjson.Get(string(body), fmt.Sprintf("#(tag_name==\"%s\")", tag))
 	assets := rel.Get("assets")
 	assets.ForEach(func(key, value gjson.Result) bool {
 		name := value.Get("name").String()
-		release.Assets = append(release.Assets, config.Asset{
+		release.Assets = append(release.Assets, github.Asset{
 			Name: name,
 			Home: filepath.Join(os.Getenv("HOME"), ".afx"),
 			Path: filepath.Join(os.Getenv("HOME"), ".afx", name),

@@ -2,10 +2,8 @@ package config
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -26,28 +24,6 @@ type Gist struct {
 	Command *Command `yaml:"command"`
 
 	DependsOn []string `yaml:"depends-on"`
-}
-
-func NewGist(owner, id string) (Gist, error) {
-	type data struct {
-		Description string `json:"description"`
-	}
-	resp, err := http.Get(fmt.Sprintf("https://api.github.com/gists/%s", id))
-	if err != nil {
-		return Gist{}, err
-	}
-	defer resp.Body.Close()
-	var d data
-	err = json.NewDecoder(resp.Body).Decode(&d)
-	if err != nil {
-		return Gist{}, err
-	}
-	return Gist{
-		Name:        id,
-		Owner:       owner,
-		ID:          id,
-		Description: d.Description,
-	}, nil
 }
 
 // Init is
