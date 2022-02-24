@@ -8,6 +8,7 @@ import (
 
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/printers"
+	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 )
@@ -45,9 +46,14 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
-		Args:                  cobra.MaximumNArgs(0),
+		ValidArgs:             state.Keys(m.state.NoChanges),
+		Args:                  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := yaml.Marshal(m.GetConfig())
+			cfg := m.GetConfig()
+			if len(args) > 0 {
+				cfg = cfg.Contains(args...)
+			}
+			b, err := yaml.Marshal(cfg)
 			if err != nil {
 				return err
 			}
@@ -66,6 +72,10 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 				for _, pkg := range c.GetPackages(c.state.NoChanges) {
 					fmt.Println(pkg.GetHome())
 				}
+			case "name":
+				for _, pkg := range c.GetPackages(c.state.NoChanges) {
+					fmt.Println(pkg.GetName())
+				}
 			default:
 				return fmt.Errorf("%s: not supported output style", c.opt.output)
 			}
@@ -74,11 +84,11 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 	}
 
 	flag := showCmd.Flags()
-	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style [default,json,yaml,path]")
+	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style [default,json,yaml,path,name]")
 
 	showCmd.RegisterFlagCompletionFunc("output",
 		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			out := []string{"default", "json", "yaml", "path"}
+			out := []string{"default", "json", "yaml", "path", "name"}
 			return out, cobra.ShellCompDirectiveNoFileComp
 		})
 
@@ -93,6 +103,17 @@ func (c *showCmd) run(args []string) error {
 		Name   string
 		Type   string
 		Status string
+	}
+	type Items []Item
+
+	filter := func(items []Item, input string) []Item {
+		var tmp []Item
+		for _, item := range items {
+			if strings.Contains(item.Name, input) {
+				tmp = append(tmp, item)
+			}
+		}
+		return tmp
 	}
 
 	var items []Item
@@ -123,6 +144,14 @@ func (c *showCmd) run(args []string) error {
 			Type:   pkg.Type,
 			Status: "Installed",
 		})
+	}
+
+	if len(args) > 0 {
+		var tmp []Item
+		for _, arg := range args {
+			tmp = append(tmp, filter(items, arg)...)
+		}
+		items = tmp
 	}
 
 	sort.Slice(items, func(i, j int) bool {

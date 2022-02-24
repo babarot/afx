@@ -18,12 +18,12 @@ import (
 // Config structure for file describing deployment. This includes the module source, inputs
 // dependencies, backend etc. One config element is connected to a single deployment
 type Config struct {
-	GitHub []*GitHub `yaml:"github"`
-	Gist   []*Gist   `yaml:"gist"`
-	Local  []*Local  `yaml:"local"`
-	HTTP   []*HTTP   `yaml:"http"`
+	GitHub []*GitHub `yaml:"github,omitempty"`
+	Gist   []*Gist   `yaml:"gist,omitempty"`
+	Local  []*Local  `yaml:"local,omitempty"`
+	HTTP   []*HTTP   `yaml:"http,omitempty"`
 
-	AppConfig *AppConfig `yaml:"config"`
+	AppConfig *AppConfig `yaml:"config,omitempty"`
 }
 
 // AppConfig represents configurations of this application itself
@@ -251,4 +251,58 @@ func getResource(pkg Package) state.Resource {
 		Version: version,
 		Paths:   paths,
 	}
+}
+
+func (c Config) Get(args ...string) Config {
+	var part Config
+	for _, arg := range args {
+		for _, github := range c.GitHub {
+			if github.Name == arg {
+				part.GitHub = append(part.GitHub, github)
+			}
+		}
+		for _, gist := range c.Gist {
+			if gist.Name == arg {
+				part.Gist = append(part.Gist, gist)
+			}
+		}
+		for _, local := range c.Local {
+			if local.Name == arg {
+				part.Local = append(part.Local, local)
+			}
+		}
+		for _, http := range c.HTTP {
+			if http.Name == arg {
+				part.HTTP = append(part.HTTP, http)
+			}
+		}
+	}
+	return part
+}
+
+func (c Config) Contains(args ...string) Config {
+	var part Config
+	for _, arg := range args {
+		for _, github := range c.GitHub {
+			if strings.Contains(github.Name, arg) {
+				part.GitHub = append(part.GitHub, github)
+			}
+		}
+		for _, gist := range c.Gist {
+			if strings.Contains(gist.Name, arg) {
+				part.Gist = append(part.Gist, gist)
+			}
+		}
+		for _, local := range c.Local {
+			if strings.Contains(local.Name, arg) {
+				part.Local = append(part.Local, local)
+			}
+		}
+		for _, http := range c.HTTP {
+			if strings.Contains(http.Name, arg) {
+				part.HTTP = append(part.HTTP, http)
+			}
+		}
+	}
+	return part
 }

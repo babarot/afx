@@ -39,18 +39,6 @@ type Link struct {
 	To   string `yaml:"to"`
 }
 
-func (l *Link) MarshalYAML() ([]byte, error) {
-	type alias Link
-
-	return yaml.Marshal(struct {
-		*alias
-		To string `yaml:"to"`
-	}{
-		alias: (*alias)(l),
-		To:    os.ExpandEnv(l.To),
-	})
-}
-
 func (l *Link) UnmarshalYAML(b []byte) error {
 	type alias Link
 
