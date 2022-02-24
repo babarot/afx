@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://goreleaser.com/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/getting-started/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/getting-started/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/how-it-works/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/how-it-works/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/links/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/links/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/command/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/command/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/plugin/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/plugin/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/package/gist/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/package/gist/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/package/github/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/package/github/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/package/http/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/package/http/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://goreleaser.com/configuration/package/local/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <loc>https://babarot.me/afx/configuration/package/local/</loc>
+         <lastmod>2022-02-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
