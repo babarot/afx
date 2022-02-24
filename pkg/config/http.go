@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -10,8 +11,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/b4b4r07/afx/pkg/data"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/h2non/filetype"
 	"github.com/mholt/archiver"
 )
@@ -26,7 +29,12 @@ type HTTP struct {
 	Plugin  *Plugin  `yaml:"plugin"`
 	Command *Command `yaml:"command"`
 
-	DependsOn []string `yaml:"depends-on"`
+	DependsOn []string  `yaml:"depends-on"`
+	Templates Templates `yaml:"templates"`
+}
+
+type Templates struct {
+	Replacements map[string]string `yaml:"replacements"`
 }
 
 // Init is
@@ -55,6 +63,16 @@ func (c HTTP) call(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
+	log.Printf("[DEBUG] response code: %d", resp.StatusCode)
+	switch resp.StatusCode {
+	case 200, 301, 302:
+		// go
+	case 404:
+		return fmt.Errorf("%s: %d Not Found in %s", c.GetName(), resp.StatusCode, c.URL)
+	default:
+		return fmt.Errorf("%s: %d %s", c.GetName(), resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+
 	os.MkdirAll(c.GetHome(), os.ModePerm)
 	dest := filepath.Join(c.GetHome(), filepath.Base(c.URL))
 	file, err := os.Create(dest)
@@ -82,6 +100,17 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 		return nil
 	default:
 		// Go installing step!
+	}
+
+	url, err := templates.New(data.New(data.WithPackage(c))).
+		Replace(c.Templates.Replacements).
+		Apply(c.URL)
+	if err != nil {
+		return err
+	}
+	if url != c.URL {
+		log.Printf("[DEBUG] %s: templating url %s", c.GetName(), url)
+		c.URL = url
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
