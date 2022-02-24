@@ -1,7 +1,7 @@
 # Example: https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
 
 site_name: AFX
-site_url: https://goreleaser.com
+site_url: https://babarot.me/afx/
 site_description: Package manager for CLI
 repo_name: b4b4r07/afx
 repo_url: https://github.com/b4b4r07/afx
@@ -23,14 +23,14 @@ theme:
       icon: material/toggle-switch-off-outline
       name: Switch to dark mode
     primary: deep orange
-    accent: red # indigo
+    accent: red
   - media: "(prefers-color-scheme: dark)"
     scheme: slate
     toggle:
       icon: material/toggle-switch
       name: Switch to light mode
     primary: teal
-    accent: green # indigo
+    accent: green
   features:
   - search.suggest
   - search.highlight

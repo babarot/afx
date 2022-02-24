@@ -55,11 +55,11 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 			case "default":
 				return c.run(args)
 			case "json":
-				yb, err := yaml.YAMLToJSON(b)
+				b, err := yaml.YAMLToJSON(b)
 				if err != nil {
 					return err
 				}
-				fmt.Println(string(yb))
+				fmt.Println(string(b))
 			case "yaml":
 				fmt.Println(string(b))
 			case "path":
