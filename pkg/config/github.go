@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/templates"
-	"github.com/tidwall/gjson"
 )
 
 // GitHub represents GitHub repository
@@ -202,82 +200,31 @@ func (c GitHub) Installed() bool {
 	return check(list)
 }
 
-// ReleaseURL returns URL of GitHub release
-func (c GitHub) ReleaseURL() string {
-	tag := c.Release.Tag
-	if tag == "" {
-		tag = "latest"
-	}
-	return fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/tags/%s",
-		c.Owner, c.Repo, c.Release.Tag)
-}
-
 // InstallFromRelease runs install from GitHub release, from not repository
 func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	req, err := http.NewRequest(http.MethodGet, c.ReleaseURL(), nil)
-	if err != nil {
-		return errors.Wrapf(err,
-			"failed to complete the request to %v to fetch asset list",
-			c.ReleaseURL())
-	}
-
-	token := os.Getenv("GITHUB_TOKEN")
-	if token == "" {
-		return errors.New("GITHUB_TOKEN is missing")
-	}
-	req.Header.Set("Authorization", "token "+token)
-
-	httpClient := http.DefaultClient
-	httpClient.Transport = logging.NewTransport("GitHub", http.DefaultTransport)
-
-	resp, err := httpClient.Do(req.WithContext(ctx))
+	release, err := github.NewRelease(
+		ctx, c.Owner, c.Repo, c.Release.Tag,
+		github.WithWorkdir(c.GetHome()),
+		github.WithFilter(func(filename string) github.FilterFunc {
+			if filename == "" {
+				// do not use filterfunc
+				return nil
+			}
+			return func(assets github.Assets) *github.Asset {
+				for _, asset := range assets {
+					if asset.Name == filename {
+						return &asset
+					}
+				}
+				return nil
+			}
+		}(c.templateFilename())),
+	)
 	if err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	assets := gjson.Get(string(body), "assets")
-
-	if !assets.Exists() {
-		return errors.Detail{
-			Head:    "cannot fetch the list from GitHub Releases",
-			Summary: c.GetName(),
-			Details: []string{
-				gjson.Get(string(body), "message").String(),
-				string(body),
-			},
-		}
-	}
-
-	filename, err := c.templateFilename()
-	if err != nil {
-		return errors.Wrapf(err, "failed to template filename")
-	}
-
-	release := github.Release{
-		Name:     c.Release.Name,
-		Client:   httpClient,
-		Assets:   github.Assets{},
-		Filename: filename,
-	}
-
-	assets.ForEach(func(key, value gjson.Result) bool {
-		name := value.Get("name").String()
-		release.Assets = append(release.Assets, github.Asset{
-			Name: name,
-			Home: c.GetHome(),
-			Path: filepath.Join(c.GetHome(), name),
-			URL:  value.Get("browser_download_url").String(),
-		})
-		return true
-	})
-
-	if len(release.Assets) == 0 {
-		return errors.Wrapf(err, "%s: failed to get releases", release.Name)
 	}
 
 	asset, err := release.Download(ctx)
@@ -292,13 +239,13 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	return nil
 }
 
-func (c GitHub) templateFilename() (string, error) {
+func (c GitHub) templateFilename() string {
 	filename := c.Release.Asset.Filename
 	replacements := c.Release.Asset.Replacements
 
 	if filename == "" {
 		// no filename specified
-		return "", nil
+		return ""
 	}
 
 	log.Printf("[DEBUG] asset: templating filename from %q", filename)
@@ -314,13 +261,12 @@ func (c GitHub) templateFilename() (string, error) {
 	filename, err := templates.New(data).
 		Replace(replacements).
 		Apply(filename)
-
 	if err != nil {
-		return "", err
+		log.Printf("[WARN] asset: failed to template filename: %q", filename)
 	}
 
 	log.Printf("[DEBUG] asset: templated filename: -> %q", filename)
-	return filename, nil
+	return filename
 }
 
 // HasPluginBlock is

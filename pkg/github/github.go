@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -12,29 +13,28 @@ import (
 	"runtime"
 
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/pkg/logging"
+	"github.com/inconshreveable/go-update"
 	"github.com/mholt/archiver"
+	"github.com/schollz/progressbar/v3"
+	"github.com/tidwall/gjson"
 )
 
 // Release represents a GitHub release and its client
 // A difference from Release is whether a client or not
 type Release struct {
-	Client *http.Client
-
 	Name   string
 	Assets Assets
 
-	// Filename is used for specifying a filename directly in release assets.
-	// Normally it requires to filter release assets based on OS/Arch information.
-	// But by doing this field, don't need to filter assets.
-	Filename string
+	workdir string
+	verbose bool
+	filter  func(Assets) *Asset
 }
 
 // Asset represents GitHub release's asset.
 // Basically this means one archive file attached in a release
 type Asset struct {
 	Name string
-	Home string
-	Path string
 	URL  string
 }
 
@@ -63,7 +63,6 @@ func (as *Assets) filter(fn func(Asset) bool) *Assets {
 	return as
 }
 
-// getAssetKeys just returns list of asset.Name
 func getAssetKeys(assets []Asset) []string {
 	var names []string
 	for _, asset := range assets {
@@ -72,24 +71,127 @@ func getAssetKeys(assets []Asset) []string {
 	return names
 }
 
-func (r *Release) GetAsset() (Asset, error) {
+type Option func(r *Release)
+
+type FilterFunc func(assets Assets) *Asset
+
+func WithWorkdir(workdir string) Option {
+	return func(r *Release) {
+		r.workdir = workdir
+	}
+}
+
+func WithVerbose() Option {
+	return func(r *Release) {
+		r.verbose = true
+	}
+}
+
+func WithFilter(filter func(Assets) *Asset) Option {
+	return func(r *Release) {
+		r.filter = filter
+	}
+}
+
+func request(ctx context.Context, url string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		return nil, errors.New("GITHUB_TOKEN is missing")
+	}
+	req.Header.Set("Authorization", "token "+token)
+
+	httpClient := http.DefaultClient
+	httpClient.Transport = logging.NewTransport("GitHub", http.DefaultTransport)
+
+	return httpClient.Do(req.WithContext(ctx))
+}
+
+func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*Release, error) {
+	if owner == "" || repo == "" {
+		return nil, errors.New("owner and repo are required")
+	}
+
+	releaseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
+	switch tag {
+	case "latest", "":
+		releaseURL += "/latest"
+	default:
+		releaseURL += fmt.Sprintf("/tags/%s", tag)
+	}
+	log.Printf("[DEBUG] getting asset data from %s", releaseURL)
+
+	resp, err := request(ctx, releaseURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case 200, 301, 302:
+		// ok
+	default:
+		log.Printf("[ERROR] %s: got %d %s", releaseURL, resp.StatusCode, http.StatusText(resp.StatusCode))
+		return nil, fmt.Errorf("failed to request %s", releaseURL)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	assets := gjson.Get(string(body), "assets")
+
+	tmp, err := ioutil.TempDir("", repo)
+	if err != nil {
+		return nil, err
+	}
+
+	release := &Release{
+		Name:    repo,
+		Assets:  Assets{},
+		workdir: tmp,
+		verbose: false,
+		filter:  nil,
+	}
+
+	assets.ForEach(func(key, value gjson.Result) bool {
+		release.Assets = append(release.Assets, Asset{
+			Name: value.Get("name").String(),
+			URL:  value.Get("browser_download_url").String(),
+		})
+		return true
+	})
+
+	for _, o := range opts {
+		o(release)
+	}
+
+	return release, nil
+}
+
+func (r *Release) filterAssets() (Asset, error) {
 	log.Printf("[DEBUG] assets: %#v\n", getAssetKeys(r.Assets))
 
 	if len(r.Assets) == 0 {
-		return Asset{}, fmt.Errorf("%s: no assets found", r.Name)
+		return Asset{}, errors.New("no assets")
 	}
 
-	if r.Filename != "" {
-		log.Printf("[DEBUG] asset: found filename %q is specified in config", r.Filename)
-		for _, asset := range r.Assets {
-			if asset.Name == r.Filename {
-				log.Printf("[DEBUG] asset: filename %q is matched with assets", r.Filename)
-				return asset, nil
-			}
+	if r.filter != nil {
+		log.Printf("[DEBUG] asset: filterfunc: started running")
+		asset := r.filter(r.Assets)
+		if asset != nil {
+			log.Printf("[DEBUG] asset: filterfunc: matched in assets")
+			return *asset, nil
 		}
-		return Asset{}, fmt.Errorf("%s: no matched in assets", r.Filename)
+		log.Printf("[DEBUG] asset: filterfunc: not matched in assets")
+		return Asset{}, errors.New("could not find assets with given name")
 	}
 
+	log.Printf("[DEBUG] asset: %s: using default assets filter", r.Name)
 	assets := *r.Assets.
 		filter(func(asset Asset) bool {
 			expr := `.*\.sbom`
@@ -139,39 +241,48 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	asset, err := r.GetAsset()
+	asset, err := r.filterAssets()
 	if err != nil {
+		log.Printf("[ERROR] %s: could not find assets available on your system", r.Name)
 		return asset, err
 	}
 
 	log.Printf("[DEBUG] asset: %#v", asset)
 
-	req, err := http.NewRequest(http.MethodGet, asset.URL, nil)
-	if err != nil {
-		return asset, err
-	}
-
-	client := new(http.Client)
-	resp, err := client.Do(req.WithContext(ctx))
+	resp, err := request(ctx, asset.URL)
 	if err != nil {
 		return asset, err
 	}
 	defer resp.Body.Close()
 
-	os.MkdirAll(asset.Home, os.ModePerm)
-	file, err := os.Create(asset.Path)
+	os.MkdirAll(r.workdir, os.ModePerm)
+	archive := filepath.Join(r.workdir, asset.Name)
+
+	file, err := os.Create(archive)
 	if err != nil {
-		return asset, errors.Wrapf(err, "%s: failed to create file", asset.Path)
+		return asset, errors.Wrapf(err, "%s: failed to create file", archive)
 	}
 	defer file.Close()
-	_, err = io.Copy(file, resp.Body)
 
+	var w io.Writer
+	if r.verbose {
+		w = io.MultiWriter(file, progressbar.DefaultBytes(
+			resp.ContentLength,
+			"Downloading",
+		))
+	} else {
+		w = file
+	}
+
+	_, err = io.Copy(w, resp.Body)
 	return asset, err
 }
 
 // Unarchive is
 func (r *Release) Unarchive(asset Asset) error {
-	uaIface, err := archiver.ByExtension(asset.Path)
+	archive := filepath.Join(r.workdir, asset.Name)
+
+	uaIface, err := archiver.ByExtension(archive)
 	if err != nil {
 		// err: this will be an error of format unrecognized by filename
 		// but in this case, maybe not archived file: e.g. tigrawap/slit
@@ -187,10 +298,10 @@ func (r *Release) Unarchive(asset Asset) error {
 		//
 		// because this logic renames a binary of 'jq-1.6' to 'jq'
 		//
-		target := filepath.Join(asset.Home, r.Name)
+		target := filepath.Join(r.workdir, r.Name)
 		if _, err := os.Stat(target); err != nil {
-			log.Printf("[DEBUG] renamed from %s to %s", asset.Path, target)
-			os.Rename(asset.Path, target)
+			log.Printf("[DEBUG] renamed from %s to %s", archive, target)
+			os.Rename(archive, target)
 			os.Chmod(target, 0755)
 		}
 		return nil
@@ -230,12 +341,28 @@ func (r *Release) Unarchive(asset Asset) error {
 		return errors.New("cannot type assertion with archiver.Unarchiver")
 	}
 
-	if err := u.Unarchive(asset.Path, asset.Home); err != nil {
+	if err := u.Unarchive(archive, r.workdir); err != nil {
 		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
-	log.Printf("[DEBUG] removed archive file: %s", asset.Path)
-	os.Remove(asset.Path)
+	log.Printf("[DEBUG] removed archive file: %s", archive)
+	os.Remove(archive)
 
 	return nil
+}
+
+func (r *Release) Install(to string) error {
+	bin := filepath.Join(r.workdir, r.Name)
+	log.Printf("[DEBUG] release install: %#v", bin)
+
+	fp, err := os.Open(bin)
+	if err != nil {
+		return errors.Wrap(err, "failed to open file")
+	}
+	defer fp.Close()
+
+	log.Printf("[DEBUG] installing: from %s to %s", bin, to)
+	return update.Apply(fp, update.Options{
+		TargetPath: to,
+	})
 }
