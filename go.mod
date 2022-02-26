@@ -5,8 +5,6 @@ go 1.12
 require (
 	github.com/AlecAivazis/survey/v2 v2.0.2
 	github.com/MakeNowJust/heredoc v1.0.0
-	github.com/MakeNowJust/heredoc/v2 v2.0.1
-	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/creativeprojects/go-selfupdate v0.6.1
@@ -17,7 +15,6 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/goccy/go-yaml v1.9.5
 	github.com/google/go-cmp v0.5.6
-	github.com/google/go-github v17.0.0+incompatible
 	github.com/h2non/filetype v1.0.10
 	github.com/hashicorp/go-version v1.2.1
 	github.com/hashicorp/hcl/v2 v2.2.0
@@ -33,13 +30,12 @@ require (
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/russross/blackfriday v1.5.2
+	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cobra v1.3.0
 	github.com/tidwall/gjson v1.3.2
 	github.com/ulikunitz/xz v0.5.9 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
