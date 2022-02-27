@@ -124,7 +124,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 func (c Command) Installed(pkg Package) bool {
 	links, err := c.GetLink(pkg)
 	if err != nil {
-		log.Printf("[ERROR] %s: command.Installed(): cannot get link section", pkg.GetName())
+		log.Printf("[ERROR] %s: cannot get link: %v", pkg.GetName(), err)
 		return false
 	}
 
@@ -269,9 +269,8 @@ func (c Command) Unlink(pkg Package) error {
 // Init returns necessary things which should be loaded when executing commands
 func (c Command) Init(pkg Package) error {
 	if !pkg.Installed() {
-		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
-		fmt.Printf("## %s\n", msg)
-		return errors.New(msg)
+		fmt.Printf("## package %q is not installed\n", pkg.GetName())
+		return fmt.Errorf("%s: not installed", pkg.GetName())
 	}
 
 	shell := os.Getenv("AFX_SHELL")
