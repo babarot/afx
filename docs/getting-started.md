@@ -109,5 +109,5 @@ github:
 
 ```sh
 $ afx update
-✔ jq
+✔ stedolan/jq
 ```

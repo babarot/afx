@@ -347,6 +347,8 @@ In `if` field, you can write shell scripts[^1]. The exit code finally returned f
               2) git grep -l "${1}" | xargs -I% sd "${1}" "${2}" % ;;
             esac
           }
+        link:
+        - from: '**/sd'
     ```
 
 !!! hint "Shell used for an evaluation of `if`"
