@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
@@ -47,6 +48,9 @@ func (m metaCmd) newInitCmd() *cobra.Command {
 					// do not return err to continue to load even if failed
 					continue
 				}
+			}
+			for k, v := range m.main.Env {
+				fmt.Printf("export %s=%q\n", k, v)
 			}
 		},
 	}

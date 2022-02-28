@@ -58,9 +58,8 @@ func (p Plugin) GetSources(pkg Package) []string {
 // Init returns the file list which should be loaded as shell plugins
 func (p Plugin) Init(pkg Package) error {
 	if !pkg.Installed() {
-		msg := fmt.Sprintf("package %s is not installed, so skip to init", pkg.GetName())
-		fmt.Printf("## %s\n", msg)
-		return errors.New(msg)
+		fmt.Printf("## package %q is not installed\n", pkg.GetName())
+		return fmt.Errorf("%s: not installed", pkg.GetName())
 	}
 
 	shell := os.Getenv("AFX_SHELL")

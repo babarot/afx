@@ -23,31 +23,22 @@ type Config struct {
 	Local  []*Local  `yaml:"local,omitempty"`
 	HTTP   []*HTTP   `yaml:"http,omitempty"`
 
-	AppConfig *AppConfig `yaml:"config,omitempty"`
+	Main *Main `yaml:"main,omitempty"`
 }
 
-// AppConfig represents configurations of this application itself
-type AppConfig struct {
-	Shell  string `yaml:"shell"`
-	Filter Filter `yaml:"filter"`
+// Main represents configurations of this application itself
+type Main struct {
+	Shell     string            `yaml:"shell"`
+	FilterCmd string            `yaml:"filter_command"`
+	Env       map[string]string `yaml:"env"`
 }
 
-// Filter represents filter command. A filter command means command-line
-// fuzzy finder, e.g. fzf
-type Filter struct {
-	Command string            `yaml:"command"`
-	Args    []string          `yaml:"args"`
-	Env     map[string]string `yaml:"env"`
-}
-
-// DefaultAppConfig is default settings of AppConfig
+// DefaultMain is default settings of Main
 // Basically this will be overridden by user config if given
-var DefaultAppConfig AppConfig = AppConfig{
-	Shell: "bash",
-	Filter: Filter{
-		Command: "fzf",
-		Args:    []string{"--ansi", "--no-preview", "--height=50%", "--reverse"},
-	},
+var DefaultMain Main = Main{
+	Shell:     "bash",
+	FilterCmd: "fzf --ansi --no-preview --height=50% --reverse",
+	Env:       map[string]string{},
 }
 
 // Read reads yaml file based on given path

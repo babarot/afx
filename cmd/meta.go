@@ -19,14 +19,15 @@ import (
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/update"
 	"github.com/fatih/color"
+	"github.com/mattn/go-shellwords"
 )
 
 type metaCmd struct {
-	env       *env.Config
-	packages  []config.Package
-	appConfig *config.AppConfig
-	state     *state.State
-	configs   map[string]config.Config
+	env      *env.Config
+	packages []config.Package
+	main     *config.Main
+	state    *state.State
+	configs  map[string]config.Config
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -52,7 +53,7 @@ func (m *metaCmd) init() error {
 	}
 
 	var pkgs []config.Package
-	app := &config.DefaultAppConfig
+	app := &config.DefaultMain
 	m.configs = map[string]config.Config{}
 	for _, file := range files {
 		cfg, err := config.Read(file)
@@ -68,12 +69,12 @@ func (m *metaCmd) init() error {
 		// Append config to one struct
 		m.configs[file] = cfg
 
-		if cfg.AppConfig != nil {
-			app = cfg.AppConfig
+		if cfg.Main != nil {
+			app = cfg.Main
 		}
 	}
 
-	m.appConfig = app
+	m.main = app
 
 	if err := config.Validate(pkgs); err != nil {
 		return errors.Wrap(err, "failed to validate packages")
@@ -92,7 +93,7 @@ func (m *metaCmd) init() error {
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
 		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
-		"AFX_SHELL":        env.Variable{Default: m.appConfig.Shell},
+		"AFX_SHELL":        env.Variable{Default: m.main.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
 				When:    config.HasSudoInCommandBuildSteps(m.packages),
@@ -109,6 +110,11 @@ func (m *metaCmd) init() error {
 		},
 		"AFX_NO_UPDATE_NOTIFIER": env.Variable{},
 	})
+
+	for k, v := range m.main.Env {
+		log.Printf("[DEBUG] main: set env: %s=%s", k, v)
+		os.Setenv(k, v)
+	}
 
 	log.Printf("[DEBUG] mkdir %s\n", root)
 	os.MkdirAll(root, os.ModePerm)
@@ -161,15 +167,27 @@ func (m *metaCmd) printForUpdate() error {
 }
 
 func (m *metaCmd) prompt() (config.Package, error) {
+	if m.main.FilterCmd == "" {
+		return nil, errors.New("filter_command is not set")
+	}
+
 	var stdin, stdout bytes.Buffer
+
+	p := shellwords.NewParser()
+	p.ParseEnv = true
+	p.ParseBacktick = true
+
+	args, err := p.Parse(m.main.FilterCmd)
+	if err != nil {
+		return nil, errors.New("failed to parse filter command in main config")
+	}
 
 	cmd := shell.Shell{
 		Stdin:   &stdin,
 		Stdout:  &stdout,
 		Stderr:  os.Stderr,
-		Command: m.appConfig.Filter.Command,
-		Args:    m.appConfig.Filter.Args,
-		Env:     m.appConfig.Filter.Env,
+		Command: args[0],
+		Args:    args[1:],
 	}
 
 	for _, pkg := range m.packages {
@@ -279,8 +297,8 @@ func (m metaCmd) GetPackages(resources []state.Resource) []config.Package {
 func (m metaCmd) GetConfig() config.Config {
 	var all config.Config
 	for _, config := range m.configs {
-		if config.AppConfig != nil {
-			all.AppConfig = config.AppConfig
+		if config.Main != nil {
+			all.Main = config.Main
 		}
 		all.GitHub = append(all.GitHub, config.GitHub...)
 		all.Gist = append(all.Gist, config.Gist...)
