@@ -342,13 +342,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#initialize-your-commandsplugins" class="md-nav__link">
     Initialize your commands/plugins
   </a>
@@ -597,13 +590,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#initialize-your-commandsplugins" class="md-nav__link">
     Initialize your commands/plugins
   </a>
@@ -666,11 +652,6 @@
 └── http.yaml
 </code></pre></div>
 <h2 id="state-feature">State feature<a class="headerlink" href="#state-feature" title="Permanent link">#</a></h2>
-<figure>
-  <img src="../images/state.png"/>
-  <figcaption>Example of a state file.</figcaption>
-</figure>
-
 <p>afx have a state feature like <a href="https://www.terraform.io/">Terraform</a>. In afx, due to this state feature, what was written in the YAML files means always packages list of what a user desired to install. In short, adding a package declaration to YAML files is to install them to your system and also deleting a package declaration from YAML files is to uninstall from your system.</p>
 <div class="admonition hint">
 <p class="admonition-title">State in afx</p>
@@ -734,12 +715,12 @@
 <p class="admonition-title">Localtion of a state file</p>
 <p>Location of state file defaults to <code>~/.afx/state.json</code>. Currently afx does not provide the way to change this path and basically user should not touch this file because it's used internally by afx to keep equivalence between YAML files and its state file. It's likely to be happened unexpected install/uninstall by changing a state file.</p>
 </div>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
 <figure>
   <img src="../images/dir-map.png"/>
   <figcaption>Workflow to install packages.</figcaption>
 </figure>
 
+<p>The packages which need to be installed will be calculated from the state file. Then afx installs packages based on the demand of package declarations.</p>
 <h2 id="initialize-your-commandsplugins">Initialize your commands/plugins<a class="headerlink" href="#initialize-your-commandsplugins" title="Permanent link">#</a></h2>
 <p>After installed, basically you need to run <code>afx init</code> command and run <code>source</code> command with the output of that command in order to become able to use commands and plugins you installed.</p>
 <div class="highlight"><pre><span></span><code>$ <span class="nb">source</span> &lt;<span class="o">(</span>afx init<span class="o">)</span>
