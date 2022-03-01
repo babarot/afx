@@ -3,10 +3,11 @@ module github.com/b4b4r07/afx
 go 1.12
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.0.2
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
+	github.com/cli/cli/v2 v2.5.1
 	github.com/creativeprojects/go-selfupdate v0.6.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
@@ -14,9 +15,9 @@ require (
 	github.com/frankban/quicktest v1.4.1 // indirect
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/goccy/go-yaml v1.9.5
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/h2non/filetype v1.0.10
-	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/go-version v1.3.0
 	github.com/hashicorp/hcl/v2 v2.2.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
@@ -29,6 +30,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday v1.5.2
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cobra v1.3.0

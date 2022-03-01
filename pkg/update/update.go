@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/b4b4r07/afx/pkg/github"
 	"github.com/hashicorp/go-version"
 )
 
@@ -33,13 +33,13 @@ type StateEntry struct {
 }
 
 // CheckForUpdate checks whether this software has had a newer release on GitHub
-func CheckForUpdate(stateFilePath, repo, currentVersion string) (*ReleaseInfo, error) {
+func CheckForUpdate(client *github.Client, stateFilePath, repo, currentVersion string) (*ReleaseInfo, error) {
 	stateEntry, _ := getStateEntry(stateFilePath)
 	if stateEntry != nil && time.Since(stateEntry.CheckedForUpdateAt).Hours() < 24 {
 		return nil, nil
 	}
 
-	releaseInfo, err := getLatestReleaseInfo(repo)
+	releaseInfo, err := getLatestReleaseInfo(client, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -56,22 +56,14 @@ func CheckForUpdate(stateFilePath, repo, currentVersion string) (*ReleaseInfo, e
 	return nil, nil
 }
 
-func getLatestReleaseInfo(repo string) (*ReleaseInfo, error) {
+func getLatestReleaseInfo(client *github.Client, repo string) (*ReleaseInfo, error) {
 	var latestRelease ReleaseInfo
 
 	log.Printf("[DEBUG] call GitHub Release API to get release info")
-	res, err := http.Get(fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	api := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
+	err := client.REST("GET", api, nil, &latestRelease)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := json.Unmarshal(body, &latestRelease); err != nil {
 		return nil, err
 	}
 

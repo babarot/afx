@@ -14,6 +14,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
 	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/pkg/github"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/printers"
 	"github.com/b4b4r07/afx/pkg/state"
@@ -273,8 +274,9 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 	if !shouldCheckForUpdate() {
 		return nil, nil
 	}
+	client := github.NewClient()
 	stateFilePath := filepath.Join(os.Getenv("HOME"), ".afx", "version.json")
-	return update.CheckForUpdate(stateFilePath, Repository, Version)
+	return update.CheckForUpdate(client, stateFilePath, Repository, Version)
 }
 
 func (m metaCmd) GetPackage(resource state.Resource) config.Package {
