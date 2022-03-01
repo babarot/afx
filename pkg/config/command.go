@@ -167,9 +167,11 @@ func (c Command) build(pkg Package) error {
 	p.ParseBacktick = true
 	p.Dir = pkg.GetHome()
 
+	var errs errors.Errors
 	for _, step := range c.Build.Steps {
 		args, err := p.Parse(step)
 		if err != nil {
+			errs.Append(err)
 			continue
 		}
 		var stdin io.Reader = os.Stdin
@@ -192,10 +194,13 @@ func (c Command) build(pkg Package) error {
 		log.Printf("[INFO] cd %s\n", pkg.GetHome())
 		cmd.Dir = pkg.GetHome()
 		if err := cmd.Run(); err != nil {
-			return errors.New(stderr.String())
+			errs.Append(err)
+			if stderr.String() != "" {
+				errs.Append(errors.New(stderr.String()))
+			}
 		}
 	}
-	return nil
+	return errs.ErrorOrNil()
 }
 
 // Install is
