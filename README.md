@@ -5,7 +5,7 @@ AFX is a package manager for command-line tools and shell plugins. afx can allow
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/b4b4r07/afx?display_name=tag&sort=semver)][release] [![Website](https://img.shields.io/website?down_message=unavailable&up_message=here&url=https%3A%2F%2Fbabarot.me%2Fafx%2F)][website]
 
-[![Release](https://github.com/b4b4r07/afx/actions/workflows/release.yaml/badge.svg)](https://github.com/b4b4r07/afx/actions/workflows/release.yaml)
+[![Tests](https://github.com/b4b4r07/afx/actions/workflows/go.yaml/badge.svg)](https://github.com/b4b4r07/afx/actions/workflows/go.yaml) [![Release](https://github.com/b4b4r07/afx/actions/workflows/release.yaml/badge.svg)](https://github.com/b4b4r07/afx/actions/workflows/release.yaml)
 
 Full document is here: https://babarot.me/afx/
 
