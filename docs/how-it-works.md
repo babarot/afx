@@ -55,11 +55,6 @@ Keeping files in sub directories is also ok. afx tries to walk all directories a
 
 ## State feature
 
-<figure>
-  <img src="../images/state.png"/>
-  <figcaption>Example of a state file.</figcaption>
-</figure>
-
 afx have a state feature like [Terraform](https://www.terraform.io/). In afx, due to this state feature, what was written in the YAML files means always packages list of what a user desired to install. In short, adding a package declaration to YAML files is to install them to your system and also deleting a package declaration from YAML files is to uninstall from your system.
 
 !!! hint "State in afx"
@@ -130,12 +125,12 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 
     Location of state file defaults to `~/.afx/state.json`. Currently afx does not provide the way to change this path and basically user should not touch this file because it's used internally by afx to keep equivalence between YAML files and its state file. It's likely to be happened unexpected install/uninstall by changing a state file.
 
-## Installation
-
 <figure>
   <img src="../images/dir-map.png"/>
   <figcaption>Workflow to install packages.</figcaption>
 </figure>
+
+The packages which need to be installed will be calculated from the state file. Then afx installs packages based on the demand of package declarations.
 
 ## Initialize your commands/plugins
 

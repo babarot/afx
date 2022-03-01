@@ -111,3 +111,25 @@ github:
 $ afx update
 ✔ stedolan/jq
 ```
+
+## Configure shell completions
+
+You can also use shell completion with afx. To enable completion at starting a shell, you need to add below to your each shell "rc" files.
+
+=== "Bash"
+
+    ```console
+    $ source <(afx completion bash)
+    ```
+
+=== "Zsh"
+
+    ```console
+    $ source <(afx completion zsh)
+    ```
+
+=== "Fish"
+
+    ```console
+    $ afx completion fish | source
+    ```

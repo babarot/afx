@@ -16,7 +16,6 @@ var (
 		To load completions:
 
 		Bash:
-
 		  $ source <(afx completion bash)
 
 		  # To load completions for each session, execute once:
@@ -26,6 +25,7 @@ var (
 		  $ afx completion bash > /usr/local/etc/bash_completion.d/afx
 
 		Zsh:
+		  $ source <(afx completion zsh)
 
 		  # If shell completion is not already enabled in your environment,
 		  # you will need to enable it.  You can execute the following once:
@@ -38,7 +38,6 @@ var (
 		  # You will need to start a new shell for this setup to take effect.
 
 		Fish:
-
 		  $ afx completion fish | source
 
 		  # To load completions for each session, execute once:
