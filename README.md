@@ -3,11 +3,15 @@ AFX - Package manager for CLI
 
 AFX is a package manager for command-line tools and shell plugins. afx can allow us to manage almost all things available on GitHub, Gist and so on. Before, we needed to trawl web pages to download each package one by one. It's very annoying every time we set up new machine and also it's difficult to get how many commands/plugins we installed. So afx's motivation is coming from that and to manage them with YAML files (as a code).
 
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/b4b4r07/afx?display_name=tag&sort=semver)][release] [![Website](https://img.shields.io/website?down_message=unavailable&up_message=here&url=https%3A%2F%2Fbabarot.me%2Fafx%2F)][website]
+[![Tests][test-mark]][test-link] [![Release][release-mark]][release-link]
 
-[![Tests](https://github.com/b4b4r07/afx/actions/workflows/go.yaml/badge.svg)](https://github.com/b4b4r07/afx/actions/workflows/go.yaml) [![Release](https://github.com/b4b4r07/afx/actions/workflows/release.yaml/badge.svg)](https://github.com/b4b4r07/afx/actions/workflows/release.yaml)
+[test-mark]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml/badge.svg
+[test-link]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml
 
-Full document is here: https://babarot.me/afx/
+[release-mark]: https://github.com/b4b4r07/afx/actions/workflows/release.yaml/badge.svg
+[release-link]: https://github.com/b4b4r07/afx/actions/workflows/release.yaml
+
+Full document is here: [AFX](https://babarot.me/afx/)
 
 ## Features
 
