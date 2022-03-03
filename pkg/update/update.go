@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -62,7 +63,7 @@ func getLatestReleaseInfo(client *github.Client, repo string) (*ReleaseInfo, err
 	log.Printf("[DEBUG] call GitHub Release API to get release info")
 
 	api := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
-	err := client.REST("GET", api, nil, &latestRelease)
+	err := client.REST(http.MethodGet, api, nil, &latestRelease)
 	if err != nil {
 		return nil, err
 	}

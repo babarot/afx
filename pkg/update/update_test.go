@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"testing"
 
@@ -74,11 +75,11 @@ func TestCheckForUpdate(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.Name, func(t *testing.T) {
-			http := &httpmock.Registry{}
-			client := github.NewClient(github.ReplaceTripper(http))
+			mock := &httpmock.Registry{}
+			client := github.NewClient(github.ReplaceTripper(mock))
 
-			http.Register(
-				httpmock.REST("GET", "repos/OWNER/REPO/releases/latest"),
+			mock.Register(
+				httpmock.REST(http.MethodGet, "repos/OWNER/REPO/releases/latest"),
 				httpmock.StringResponse(fmt.Sprintf(`{
 					"tag_name": "%s",
 					"html_url": "%s"
@@ -90,10 +91,10 @@ func TestCheckForUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if len(http.Requests) != 1 {
-				t.Fatalf("expected 1 HTTP request, got %d", len(http.Requests))
+			if len(mock.Requests) != 1 {
+				t.Fatalf("expected 1 HTTP request, got %d", len(mock.Requests))
 			}
-			requestPath := http.Requests[0].URL.Path
+			requestPath := mock.Requests[0].URL.Path
 			if requestPath != "/repos/OWNER/REPO/releases/latest" {
 				t.Errorf("HTTP path: %q", requestPath)
 			}
