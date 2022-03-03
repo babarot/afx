@@ -70,9 +70,16 @@ func (e Resource) exists() bool {
 		return false
 	}
 	for _, path := range e.Paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+		if !exists(path) {
 			return false
 		}
+	}
+	return true
+}
+
+var exists = func(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false
 	}
 	return true
 }
