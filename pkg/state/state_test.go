@@ -11,12 +11,17 @@ import (
 
 func init() {
 	log.SetOutput(ioutil.Discard)
+
+	exists = func(path string) bool {
+		// always returns true in testing
+		return true
+	}
 }
 
 func TestOpen(t *testing.T) {
 	stubState(map[string]string{
-		"empty.yaml": "{}",
-		"open-test.yaml": `
+		"empty.json": "{}",
+		"state.json": `
 {
   "resources": {
     "github.com/b4b4r07/enhancd": {
@@ -39,13 +44,13 @@ func TestOpen(t *testing.T) {
 		state    *State
 	}{
 		"Empty": {
-			filename: "empty.yaml",
-			state:    &State{path: "empty.yaml"},
+			filename: "empty.json",
+			state:    &State{path: "empty.json"},
 		},
 		"Open": {
-			filename: "open-test.yaml",
+			filename: "state.json",
 			state: &State{
-				path:     "open-test.yaml",
+				path:     "state.json",
 				packages: nil,
 				Self: Self{
 					Resources: map[ID]Resource{
@@ -87,7 +92,13 @@ func TestOpen(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(state, tc.state, cmp.AllowUnexported(State{}), cmpopts.IgnoreUnexported(State{})); diff != "" {
+			want := tc.state
+			got := state
+			if diff := cmp.Diff(
+				want, got,
+				cmp.AllowUnexported(State{}),
+				cmpopts.IgnoreUnexported(State{}),
+			); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -96,7 +107,7 @@ func TestOpen(t *testing.T) {
 
 func TestList(t *testing.T) {
 	stubState(map[string]string{
-		"list-test.yaml": `
+		"state.json": `
 {
   "resources": {
     "github.com/b4b4r07/enhancd": {
@@ -119,7 +130,7 @@ func TestList(t *testing.T) {
 		resources []Resource
 	}{
 		"List": {
-			filename: "list-test.yaml",
+			filename: "state.json",
 			resources: []Resource{
 				{
 					ID:      "github.com/b4b4r07/enhancd",
@@ -146,7 +157,9 @@ func TestList(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(resources, tc.resources); diff != "" {
+			want := tc.resources
+			got := resources
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -175,9 +188,9 @@ func Test_listChanges(t *testing.T) {
 `})
 
 	testCases := map[string]struct {
-		filename string
-		pkgs     []Resourcer
-		want     []Resource
+		filename  string
+		pkgs      []Resourcer
+		resources []Resource
 	}{
 		"Found": {
 			filename: "state.json",
@@ -195,7 +208,7 @@ func Test_listChanges(t *testing.T) {
 					},
 				},
 			}),
-			want: []Resource{
+			resources: []Resource{
 				{
 					ID:      "github.com/release/stedolan/jq",
 					Name:    "stedolan/jq",
@@ -226,7 +239,7 @@ func Test_listChanges(t *testing.T) {
 					},
 				},
 			}),
-			want: nil,
+			resources: nil,
 		},
 	}
 
@@ -236,8 +249,9 @@ func Test_listChanges(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			want := tc.resources
 			got := state.Changes
-			if diff := cmp.Diff(got, tc.want); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -265,9 +279,9 @@ func Test_listNoChanges(t *testing.T) {
 `})
 
 	testCases := map[string]struct {
-		filename string
-		pkgs     []Resourcer
-		want     []Resource
+		filename  string
+		pkgs      []Resourcer
+		resources []Resource
 	}{
 		"Found": {
 			filename: "state.json",
@@ -284,7 +298,7 @@ func Test_listNoChanges(t *testing.T) {
 					},
 				},
 			}),
-			want: []Resource{
+			resources: []Resource{
 				{
 					ID:      "github.com/b4b4r07/enhancd",
 					Name:    "b4b4r07/enhancd",
@@ -314,7 +328,7 @@ func Test_listNoChanges(t *testing.T) {
 					},
 				},
 			}),
-			want: nil,
+			resources: nil,
 		},
 	}
 
@@ -324,8 +338,9 @@ func Test_listNoChanges(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			want := tc.resources
 			got := state.NoChanges
-			if diff := cmp.Diff(got, tc.want); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -338,9 +353,9 @@ func Test_listAdditions(t *testing.T) {
 	})
 
 	testCases := map[string]struct {
-		filename string
-		pkgs     []Resourcer
-		want     []Resource
+		filename  string
+		pkgs      []Resourcer
+		resources []Resource
 	}{
 		"Found": {
 			filename: "state.json",
@@ -357,7 +372,7 @@ func Test_listAdditions(t *testing.T) {
 					},
 				},
 			}),
-			want: []Resource{
+			resources: []Resource{
 				{
 					ID:      "github.com/b4b4r07/enhancd",
 					Name:    "b4b4r07/enhancd",
@@ -372,9 +387,9 @@ func Test_listAdditions(t *testing.T) {
 			},
 		},
 		"NotFound": {
-			filename: "state.json",
-			pkgs:     stubPackages([]Resource{}),
-			want:     nil,
+			filename:  "state.json",
+			pkgs:      stubPackages([]Resource{}),
+			resources: nil,
 		},
 	}
 
@@ -384,8 +399,9 @@ func Test_listAdditions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			want := tc.resources
 			got := state.Additions
-			if diff := cmp.Diff(got, tc.want); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -420,14 +436,14 @@ func Test_listDeletions(t *testing.T) {
 `})
 
 	testCases := map[string]struct {
-		filename string
-		pkgs     []Resourcer
-		want     []Resource
+		filename  string
+		pkgs      []Resourcer
+		resources []Resource
 	}{
 		"Found": {
 			filename: "state.json",
 			pkgs:     stubPackages([]Resource{}),
-			want: []Resource{
+			resources: []Resource{
 				{
 					ID:      "github.com/b4b4r07/enhancd",
 					Name:    "b4b4r07/enhancd",
@@ -457,7 +473,7 @@ func Test_listDeletions(t *testing.T) {
 					},
 				},
 			}),
-			want: []Resource{
+			resources: []Resource{
 				{
 					ID:      "github.com/b4b4r07/enhancd",
 					Name:    "b4b4r07/enhancd",
@@ -479,8 +495,9 @@ func Test_listDeletions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			want := tc.resources
 			got := state.Deletions
-			if diff := cmp.Diff(got, tc.want); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Compare value is mismatch (-want +got):\n%s", diff)
 			}
 		})
