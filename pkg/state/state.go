@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
+	"syscall"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -74,6 +77,50 @@ func (e Resource) exists() bool {
 	return true
 }
 
+var ReadStateFile = func(filename string) ([]byte, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, pathError(err)
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+var SaveStateFile = func(filename string) (io.Writer, error) {
+	return os.Create(filename)
+}
+
+func pathError(err error) error {
+	var pathError *os.PathError
+	if errors.As(err, &pathError) && errors.Is(pathError.Err, syscall.ENOTDIR) {
+		if p := findRegularFile(pathError.Path); p != "" {
+			return fmt.Errorf("remove or rename regular file `%s` (must be a directory)", p)
+		}
+
+	}
+	return err
+}
+
+func findRegularFile(p string) string {
+	for {
+		if s, err := os.Stat(p); err == nil && s.Mode().IsRegular() {
+			return p
+		}
+		newPath := filepath.Dir(p)
+		if newPath == p || newPath == "/" || newPath == "." {
+			break
+		}
+		p = newPath
+	}
+	return ""
+}
+
 func add(r Resource, s *State) {
 	log.Printf("[DEBUG] %s: added to state", r.Name)
 	s.Resources[r.ID] = r
@@ -105,7 +152,7 @@ func update(r Resource, s *State) {
 }
 
 func (s *State) save() error {
-	f, err := os.Create(s.path)
+	f, err := SaveStateFile(s.path)
 	if err != nil {
 		return err
 	}
@@ -125,10 +172,12 @@ func (s *State) listChanges() []Resource {
 	var resources []Resource
 	for _, resource := range s.Resources {
 		if resource.Version == "" {
+			log.Printf("[TRACE] skip; version of %s is not set", resource.Name)
 			continue
 		}
 		r, ok := s.packages[resource.ID]
 		if !ok {
+			log.Printf("[TRACE] skip; %s is not found in packages", resource.Name)
 			continue
 		}
 		if resource.Version != r.Version {
@@ -209,19 +258,13 @@ func Open(path string, resourcers []Resourcer) (*State, error) {
 		s.packages[resource.ID] = resource
 	}
 
-	_, err := os.Stat(path)
-	switch {
-	case errors.Is(err, os.ErrNotExist):
-		// just create empty state when state has not been created yet
-		s.Resources = map[ID]Resource{}
-	default:
-		content, err := ioutil.ReadFile(path)
-		if err != nil {
-			return &s, err
-		}
-		if err := json.Unmarshal(content, &s.Self); err != nil {
-			return &s, err
-		}
+	content, err := ReadStateFile(path)
+	if err != nil {
+		return &s, err
+	}
+
+	if err := json.Unmarshal(content, &s.Self); err != nil {
+		return &s, err
 	}
 
 	s.Additions = append(s.listAdditions(), s.listReadditions()...)
@@ -266,25 +309,19 @@ func (s *State) Update(resourcer Resourcer) {
 }
 
 func (s *State) List() ([]Resource, error) {
-	_, err := os.Stat(s.path)
-	switch {
-	case errors.Is(err, os.ErrNotExist):
+	content, err := ReadStateFile(s.path)
+	if err != nil {
 		return []Resource{}, err
-	default:
-		content, err := ioutil.ReadFile(s.path)
-		if err != nil {
-			return []Resource{}, err
-		}
-		var state Self
-		if err := json.Unmarshal(content, &state); err != nil {
-			return []Resource{}, err
-		}
-		var resources []Resource
-		for _, resource := range state.Resources {
-			resources = append(resources, resource)
-		}
-		return resources, nil
 	}
+	var state Self
+	if err := json.Unmarshal(content, &state); err != nil {
+		return []Resource{}, err
+	}
+	var resources []Resource
+	for _, resource := range state.Resources {
+		resources = append(resources, resource)
+	}
+	return resources, nil
 }
 
 func (s *State) New() error {
@@ -325,12 +362,20 @@ func (s *State) Refresh() error {
 	return nil
 }
 
-func Map(resources []Resource) map[string]Resource {
-	m := map[string]Resource{}
+func Map(resources []Resource) map[ID]Resource {
+	m := map[ID]Resource{}
 	for _, resource := range resources {
 		m[resource.Name] = resource
 	}
 	return m
+}
+
+func Slice(m map[ID]Resource) []Resource {
+	var resources []Resource
+	for _, resource := range m {
+		resources = append(resources, resource)
+	}
+	return resources
 }
 
 func (s *State) Get(name string) (Resource, error) {

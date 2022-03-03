@@ -236,8 +236,8 @@ func getResource(pkg Package) state.Resource {
 
 	return state.Resource{
 		ID:      id,
-		Home:    pkg.GetHome(),
 		Name:    pkg.GetName(),
+		Home:    pkg.GetHome(),
 		Type:    ty,
 		Version: version,
 		Paths:   paths,

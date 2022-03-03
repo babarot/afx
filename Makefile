@@ -25,3 +25,7 @@ all: build
 .PHONY: build
 build:
 	$(GO) install $(GOFLAGS) -ldflags '$(LDFLAGS)'
+
+.PHONY: test
+test:
+	$(GO) test -v ./...
