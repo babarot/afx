@@ -17,7 +17,6 @@ import (
 	"github.com/inconshreveable/go-update"
 	"github.com/mholt/archiver"
 	"github.com/schollz/progressbar/v3"
-	"github.com/tidwall/gjson"
 )
 
 // Release represents a GitHub release and its client
@@ -26,6 +25,7 @@ type Release struct {
 	Name   string
 	Assets Assets
 
+	client  *Client
 	workdir string
 	verbose bool
 	filter  func(Assets) *Asset
@@ -36,6 +36,17 @@ type Release struct {
 type Asset struct {
 	Name string
 	URL  string
+}
+
+// ReleaseResponse is a response of github release structure
+// TODO: This may be better to become same one strucure as above
+type ReleaseResponse struct {
+	Assets []AssetsResponse `json:"assets"`
+}
+
+type AssetsResponse struct {
+	Name               string `json:"name"`
+	BrowserDownloadURL string `json:"browser_download_url"`
 }
 
 type Assets []Asset
@@ -93,24 +104,6 @@ func WithFilter(filter func(Assets) *Asset) Option {
 	}
 }
 
-func request(ctx context.Context, url string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	token := os.Getenv("GITHUB_TOKEN")
-	if token == "" {
-		return nil, errors.New("GITHUB_TOKEN is missing")
-	}
-	req.Header.Set("Authorization", "token "+token)
-
-	httpClient := http.DefaultClient
-	httpClient.Transport = logging.NewTransport("GitHub", http.DefaultTransport)
-
-	return httpClient.Do(req.WithContext(ctx))
-}
-
 func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*Release, error) {
 	if owner == "" || repo == "" {
 		return nil, errors.New("owner and repo are required")
@@ -125,25 +118,22 @@ func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*
 	}
 	log.Printf("[DEBUG] getting asset data from %s", releaseURL)
 
-	resp, err := request(ctx, releaseURL)
+	var resp ReleaseResponse
+	client := NewClient(
+		ReplaceTripper(logging.NewTransport("GitHub", http.DefaultTransport)),
+	)
+	err := client.REST(http.MethodGet, releaseURL, nil, &resp)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	switch resp.StatusCode {
-	case 200, 301, 302:
-		// ok
-	default:
-		log.Printf("[ERROR] %s: got %d %s", releaseURL, resp.StatusCode, http.StatusText(resp.StatusCode))
-		return nil, fmt.Errorf("failed to request %s", releaseURL)
+	var assets []Asset
+	for _, asset := range resp.Assets {
+		assets = append(assets, Asset{
+			Name: asset.Name,
+			URL:  asset.BrowserDownloadURL,
+		})
 	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	assets := gjson.Get(string(body), "assets")
 
 	tmp, err := ioutil.TempDir("", repo)
 	if err != nil {
@@ -152,19 +142,12 @@ func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*
 
 	release := &Release{
 		Name:    repo,
-		Assets:  Assets{},
+		Assets:  assets,
+		client:  client,
 		workdir: tmp,
 		verbose: false,
 		filter:  nil,
 	}
-
-	assets.ForEach(func(key, value gjson.Result) bool {
-		release.Assets = append(release.Assets, Asset{
-			Name: value.Get("name").String(),
-			URL:  value.Get("browser_download_url").String(),
-		})
-		return true
-	})
 
 	for _, o := range opts {
 		o(release)
@@ -236,7 +219,7 @@ func (r *Release) filterAssets() (Asset, error) {
 	}
 }
 
-// Download is
+// Download downloads GitHub Release from given page
 func (r *Release) Download(ctx context.Context) (Asset, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -249,7 +232,13 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 
 	log.Printf("[DEBUG] asset: %#v", asset)
 
-	resp, err := request(ctx, asset.URL)
+	req, err := http.NewRequest(http.MethodGet, asset.URL, nil)
+	if err != nil {
+		return asset, err
+	}
+
+	httpClient := http.DefaultClient
+	resp, err := httpClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return asset, err
 	}
@@ -278,7 +267,7 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 	return asset, err
 }
 
-// Unarchive is
+// Unarchive extracts downloaded asset
 func (r *Release) Unarchive(asset Asset) error {
 	archive := filepath.Join(r.workdir, asset.Name)
 
@@ -351,6 +340,7 @@ func (r *Release) Unarchive(asset Asset) error {
 	return nil
 }
 
+// Install instals unarchived packages to given path
 func (r *Release) Install(to string) error {
 	bin := filepath.Join(r.workdir, r.Name)
 	log.Printf("[DEBUG] release install: %#v", bin)

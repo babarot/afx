@@ -34,7 +34,6 @@ require (
 	github.com/russross/blackfriday v1.5.2
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cobra v1.3.0
-	github.com/tidwall/gjson v1.3.2
 	github.com/ulikunitz/xz v0.5.9 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
