@@ -240,8 +240,13 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 }
 
 func (c GitHub) templateFilename() string {
-	filename := c.Release.Asset.Filename
-	replacements := c.Release.Asset.Replacements
+	release := c.Release
+	if release == nil {
+		return ""
+	}
+
+	filename := release.Asset.Filename
+	replacements := release.Asset.Replacements
 
 	if filename == "" {
 		// no filename specified
@@ -253,8 +258,8 @@ func (c GitHub) templateFilename() string {
 	data := data.New(
 		data.WithPackage(c),
 		data.WithRelease(data.Release{
-			Name: c.Release.Name,
-			Tag:  c.Release.Tag,
+			Name: release.Name,
+			Tag:  release.Tag,
 		}),
 	)
 

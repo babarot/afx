@@ -13,6 +13,7 @@ import (
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
+	"github.com/hashicorp/go-multierror"
 )
 
 // Config structure for file describing deployment. This includes the module source, inputs
@@ -135,17 +136,20 @@ func Sort(given []Package) ([]Package, error) {
 		table[pkg.GetName()] = pkg
 	}
 
-	var errs errors.Errors
+	var err error
 	for name, pkg := range table {
 		dependencies := pkg.GetDependsOn()
 		for _, dep := range pkg.GetDependsOn() {
 			if _, ok := table[dep]; !ok {
-				errs.Append(
-					fmt.Errorf("%q: not valid package name in depends-on: %s", dep, pkg.GetName()),
+				err = multierror.Append(err,
+					fmt.Errorf("%s: not valid package name in depends-on: %q", pkg.GetName(), dep),
 				)
 			}
 		}
 		graph = append(graph, dependency.NewNode(name, dependencies...))
+	}
+	if err != nil {
+		return pkgs, err
 	}
 
 	if dependency.Has(graph) {
@@ -161,7 +165,7 @@ func Sort(given []Package) ([]Package, error) {
 		pkgs = append(pkgs, table[node.Name])
 	}
 
-	return pkgs, errs.ErrorOrNil()
+	return pkgs, nil
 }
 
 // Validate validates if packages are not violated some rules
