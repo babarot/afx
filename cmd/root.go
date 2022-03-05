@@ -89,6 +89,10 @@ func Execute() error {
 	log.Printf("[INFO] Build tag/SHA: %s/%s", BuildTag, BuildSHA)
 	log.Printf("[INFO] CLI args: %#v", os.Args)
 
+	if logging.IsDebugOrHigher() {
+		diags.Verbose = true
+	}
+
 	meta := metaCmd{}
 	if err := meta.init(); err != nil {
 		return diags.Wrap(err, "failed to initialize afx")

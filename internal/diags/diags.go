@@ -27,6 +27,8 @@ type diagnostics []error
 
 type Error = diagnostics
 
+var Verbose bool = false
+
 func (ds diagnostics) Error() string {
 	if len(ds) == 0 {
 		return ""
@@ -35,9 +37,15 @@ func (ds diagnostics) Error() string {
 	err := &multierror.Error{
 		ErrorFormat: MultiErrorFormat(),
 	}
-	for _, d := range ds {
-		err = multierror.Append(err, d)
+
+	if Verbose {
+		for _, d := range ds {
+			err = multierror.Append(err, d)
+		}
+		return err.Error()
 	}
+
+	err = multierror.Append(err, ds[len(ds)-1])
 	return err.Error()
 }
 
