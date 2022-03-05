@@ -13,6 +13,11 @@ import (
 )
 
 func TestCheckForUpdate(t *testing.T) {
+	orig_GITHUB_TOKEN := os.Getenv("GITHUB_TOKEN")
+	t.Cleanup(func() {
+		os.Setenv("GITHUB_TOKEN", orig_GITHUB_TOKEN)
+	})
+
 	scenarios := []struct {
 		Name           string
 		CurrentVersion string
@@ -75,6 +80,7 @@ func TestCheckForUpdate(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.Name, func(t *testing.T) {
+			os.Setenv("GITHUB_TOKEN", "TOKEN")
 			mock := &httpmock.Registry{}
 			client := github.NewClient(github.ReplaceTripper(mock))
 

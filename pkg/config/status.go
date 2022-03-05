@@ -22,9 +22,10 @@ func NewProgress(pkgs []Package) Progress {
 	status := make(map[string]Status)
 	for _, pkg := range pkgs {
 		status[pkg.GetName()] = Status{
-			Name: pkg.GetName(),
-			Done: false,
-			Err:  false,
+			Name:    pkg.GetName(),
+			Done:    false,
+			Err:     false,
+			Message: "",
 		}
 	}
 	return Progress{Status: status}
@@ -41,9 +42,13 @@ func (p Progress) Print(completion chan Status) {
 		s := <-completion
 		fmt.Printf("\x1b[2K")
 		if s.Err {
-			fmt.Println(red("✖"), white(s.Name))
+			fmt.Println(red("✖"), white(s.Name), s.Message)
 		} else {
-			fmt.Println(green("✔"), white(s.Name))
+			if s.Hidden {
+				fmt.Println(green("✔"), s.Name, s.Message)
+			} else {
+				fmt.Println(green("✔"), white(s.Name), s.Message)
+			}
 		}
 		p.Status[s.Name] = s
 		count, repos := countRemaining(p.Status)
@@ -66,9 +71,11 @@ func (p Progress) Print(completion chan Status) {
 
 // Status is
 type Status struct {
-	Name string
-	Done bool
-	Err  bool
+	Name    string
+	Done    bool
+	Err     bool
+	Message string
+	Hidden  bool
 }
 
 func countRemaining(status map[string]Status) (int, []string) {

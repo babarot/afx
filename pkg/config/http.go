@@ -252,3 +252,8 @@ func (c HTTP) GetDependsOn() []string {
 func (c HTTP) GetResource() state.Resource {
 	return getResource(c)
 }
+
+func (c HTTP) Check(ctx context.Context, status chan<- Status) error {
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", Hidden: true}
+	return nil
+}

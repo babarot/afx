@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/b4b4r07/afx/pkg/errors"
 )
@@ -45,6 +46,13 @@ func (c Client) REST(method string, url string, body io.Reader, data interface{}
 		return err
 	}
 
+	// to avoid hitting rate limit
+	// https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting
+	token := os.Getenv("GITHUB_TOKEN")
+	if token != "" {
+		// currently optional
+		req.Header.Set("Authorization", "token "+token)
+	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := c.http.Do(req)

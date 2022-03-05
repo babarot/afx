@@ -226,6 +226,8 @@ func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 		do = "uninstall"
 	case updateCmd:
 		do = "update"
+	case checkCmd:
+		do = "check"
 	default:
 		return false, errors.New("unsupported command type")
 	}

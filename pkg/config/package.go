@@ -12,6 +12,7 @@ type Installer interface {
 	Install(context.Context, chan<- Status) error
 	Uninstall(context.Context) error
 	Installed() bool
+	Check(context.Context, chan<- Status) error
 }
 
 // Loader is an interface related to initialize a package
