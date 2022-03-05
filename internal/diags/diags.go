@@ -3,6 +3,7 @@ package diags
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -17,8 +18,9 @@ func (d diagnostic) Error() string {
 }
 
 func New(msg string) error {
-	// return diagnostics{diagnostic{msg: msg}}
-	return diagnostic{msg: msg}
+	return diagnostics{
+		diagnostic{msg: msg},
+	}
 }
 
 type diagnostics []error
@@ -26,9 +28,12 @@ type diagnostics []error
 type Error = diagnostics
 
 func (ds diagnostics) Error() string {
-	var err error
 	if len(ds) == 0 {
 		return ""
+	}
+
+	err := &multierror.Error{
+		ErrorFormat: MultiErrorFormat(),
 	}
 	for _, d := range ds {
 		err = multierror.Append(err, d)
@@ -75,20 +80,6 @@ func (ds *diagnostics) ErrorOrNil() error {
 		return nil
 	}
 	return ds
-
-	// var err *multierror.Error
-	// for _, d := range *ds {
-	// 	err = multierror.Append(err, d)
-	// }
-	// return err.ErrorOrNil()
-}
-
-func convert(err *multierror.Error) diagnostics {
-	var ds diagnostics
-	for _, e := range err.Errors {
-		ds = append(ds, e)
-	}
-	return ds
 }
 
 func Wrap(err error, msg string) error {
@@ -96,5 +87,62 @@ func Wrap(err error, msg string) error {
 }
 
 func Wrapf(err error, format, msg string) error {
-	return errors.Wrapf(err, format, msg)
+	// return errors.Wrapf(err, format, msg)
+	switch e := err.(type) {
+	case diagnostics:
+		e.Append(errors.Wrapf(err, format, msg))
+		return e
+	default:
+		return errors.Wrapf(err, format, msg)
+	}
+	// var ds diagnostics
+	// ds.Append(err, errors.Wrapf(err, format, msg))
+	// log.Printf("[DEBUG] ==================")
+	// for _, d := range ds {
+	// 	log.Printf("[DEBUG] %s", d)
+	// }
+	// return ds
+}
+
+// MultiErrorFormat provides a format for multierrors. This matches the default format, but if there
+// is only one error we will not expand to multiple lines.
+func MultiErrorFormat() multierror.ErrorFormatFunc {
+	return func(es []error) string {
+		format := func(text string) string {
+			var s string
+			lines := strings.Split(text, "\n")
+			switch len(lines) {
+			default:
+				s += lines[0]
+				for _, line := range lines[1:] {
+					if line == "" {
+						continue
+					}
+					s += fmt.Sprintf("\n\t  %s", line)
+				}
+			case 0:
+				s = es[0].Error()
+			}
+			return s
+		}
+
+		if len(es) == 1 {
+			if es[0] == nil {
+				return ""
+			}
+			return fmt.Sprintf("1 error occurred:\n\t* %s\n\n", format(es[0].Error()))
+		}
+
+		var points []string
+		for _, err := range es {
+			if err == nil {
+				continue
+			}
+			points = append(points, fmt.Sprintf("* %s", format(err.Error())))
+		}
+
+		return fmt.Sprintf(
+			"%d errors occurred:\n\t%s\n\n",
+			len(points), strings.Join(points, "\n\t"))
+	}
 }
