@@ -2,11 +2,10 @@ package github
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/b4b4r07/afx/pkg/errors"
 )
 
 // ClientOption represents an argument to NewClient

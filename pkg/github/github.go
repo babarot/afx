@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/inconshreveable/go-update"
 	"github.com/mholt/archiver"
@@ -106,7 +106,7 @@ func WithFilter(filter func(Assets) *Asset) Option {
 
 func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*Release, error) {
 	if owner == "" || repo == "" {
-		return nil, errors.New("owner and repo are required")
+		return nil, diags.New("owner and repo are required")
 	}
 
 	releaseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
@@ -160,7 +160,7 @@ func (r *Release) filterAssets() (Asset, error) {
 	log.Printf("[DEBUG] assets: %#v\n", getAssetKeys(r.Assets))
 
 	if len(r.Assets) == 0 {
-		return Asset{}, errors.New("no assets")
+		return Asset{}, diags.New("no assets")
 	}
 
 	if r.filter != nil {
@@ -171,7 +171,7 @@ func (r *Release) filterAssets() (Asset, error) {
 			return *asset, nil
 		}
 		log.Printf("[DEBUG] asset: filterfunc: not matched in assets")
-		return Asset{}, errors.New("could not find assets with given name")
+		return Asset{}, diags.New("could not find assets with given name")
 	}
 
 	log.Printf("[DEBUG] asset: %s: using default assets filter", r.Name)
@@ -209,7 +209,7 @@ func (r *Release) filterAssets() (Asset, error) {
 
 	switch len(assets) {
 	case 0:
-		return Asset{}, errors.New("asset not found after filtered")
+		return Asset{}, diags.New("asset not found after filtered")
 	case 1:
 		return assets[0], nil
 	default:
@@ -249,7 +249,7 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 
 	file, err := os.Create(archive)
 	if err != nil {
-		return asset, errors.Wrapf(err, "%s: failed to create file", archive)
+		return asset, diags.Wrapf(err, "%s: failed to create file", archive)
 	}
 	defer file.Close()
 
@@ -327,11 +327,11 @@ func (r *Release) Unarchive(asset Asset) error {
 
 	u, ok := uaIface.(archiver.Unarchiver)
 	if !ok {
-		return errors.New("cannot type assertion with archiver.Unarchiver")
+		return diags.New("cannot type assertion with archiver.Unarchiver")
 	}
 
 	if err := u.Unarchive(archive, r.workdir); err != nil {
-		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
+		return diags.Wrapf(err, "%s: failed to unarchive", r.Name)
 	}
 
 	log.Printf("[DEBUG] removed archive file: %s", archive)
@@ -347,7 +347,7 @@ func (r *Release) Install(to string) error {
 
 	fp, err := os.Open(bin)
 	if err != nil {
-		return errors.Wrap(err, "failed to open file")
+		return diags.Wrap(err, "failed to open file")
 	}
 	defer fp.Close()
 

@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/config"
 	"github.com/b4b4r07/afx/pkg/env"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/github"
 	"github.com/b4b4r07/afx/pkg/helpers/shell"
 	"github.com/b4b4r07/afx/pkg/printers"
@@ -50,7 +50,7 @@ func (m *metaCmd) init() error {
 
 	files, err := config.WalkDir(cfgRoot)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
+		return diags.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
 	var pkgs []config.Package
@@ -59,11 +59,11 @@ func (m *metaCmd) init() error {
 	for _, file := range files {
 		cfg, err := config.Read(file)
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to read config", file)
+			return diags.Wrapf(err, "%s: failed to read config", file)
 		}
 		parsed, err := cfg.Parse()
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to parse config", file)
+			return diags.Wrapf(err, "%s: failed to parse config", file)
 		}
 		pkgs = append(pkgs, parsed...)
 
@@ -78,12 +78,12 @@ func (m *metaCmd) init() error {
 	m.main = app
 
 	if err := config.Validate(pkgs); err != nil {
-		return errors.Wrap(err, "failed to validate packages")
+		return diags.Wrap(err, "failed to validate packages")
 	}
 
 	pkgs, err = config.Sort(pkgs)
 	if err != nil {
-		return errors.Wrap(err, "failed to resolve dependencies between packages")
+		return diags.Wrap(err, "failed to resolve dependencies between packages")
 	}
 
 	m.packages = pkgs
@@ -130,7 +130,7 @@ func (m *metaCmd) init() error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), resourcers)
 	if err != nil {
-		return errors.Wrap(err, "faield to open state file")
+		return diags.Wrap(err, "faield to open state file")
 	}
 	m.state = s
 
@@ -161,7 +161,7 @@ func printForUpdate(uriCh chan *update.ReleaseInfo) {
 
 func (m *metaCmd) printForUpdate() error {
 	if m.updateMessageChan == nil {
-		return errors.New("update message chan is not set")
+		return diags.New("update message chan is not set")
 	}
 	printForUpdate(m.updateMessageChan)
 	return nil
@@ -169,7 +169,7 @@ func (m *metaCmd) printForUpdate() error {
 
 func (m *metaCmd) prompt() (config.Package, error) {
 	if m.main.FilterCmd == "" {
-		return nil, errors.New("filter_command is not set")
+		return nil, diags.New("filter_command is not set")
 	}
 
 	var stdin, stdout bytes.Buffer
@@ -180,7 +180,7 @@ func (m *metaCmd) prompt() (config.Package, error) {
 
 	args, err := p.Parse(m.main.FilterCmd)
 	if err != nil {
-		return nil, errors.New("failed to parse filter command in main config")
+		return nil, diags.New("failed to parse filter command in main config")
 	}
 
 	cmd := shell.Shell{
@@ -214,7 +214,7 @@ func (m *metaCmd) prompt() (config.Package, error) {
 		}
 	}
 
-	return nil, errors.New("pkg not found")
+	return nil, diags.New("pkg not found")
 }
 
 func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
@@ -227,7 +227,7 @@ func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	case updateCmd:
 		do = "update"
 	default:
-		return false, errors.New("unsupported command type")
+		return false, diags.New("unsupported command type")
 	}
 
 	length := 3
@@ -251,7 +251,7 @@ func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	}
 
 	if err := survey.AskOne(&confirm, &yes); err != nil {
-		return false, errors.Wrap(err, "failed to get input from console")
+		return false, diags.Wrap(err, "failed to get input from console")
 	}
 	return yes, nil
 }

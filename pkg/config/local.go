@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/state"
 )
 
@@ -23,7 +23,7 @@ type Local struct {
 
 // Init is
 func (c Local) Init() error {
-	var errs errors.Errors
+	var errs diags.Error
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Init(c))
 	}

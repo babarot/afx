@@ -11,8 +11,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/data"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/b4b4r07/afx/pkg/templates"
 	"github.com/h2non/filetype"
@@ -39,7 +39,7 @@ type Templates struct {
 
 // Init is
 func (c HTTP) Init() error {
-	var errs errors.Errors
+	var errs diags.Error
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Init(c))
 	}
@@ -86,7 +86,7 @@ func (c HTTP) call(ctx context.Context) error {
 	}
 
 	if err := unarchive(dest); err != nil {
-		return errors.Wrapf(err, "failed to unarchive: %s", dest)
+		return diags.Wrapf(err, "failed to unarchive: %s", dest)
 	}
 
 	return nil
@@ -117,12 +117,12 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 	defer cancel()
 
 	if err := c.call(ctx); err != nil {
-		err = errors.Wrapf(err, "%s: failed to make HTTP request", c.Name)
+		err = diags.Wrapf(err, "%s: failed to make HTTP request", c.Name)
 		status <- Status{Name: c.GetName(), Done: true, Err: true}
 		return err
 	}
 
-	var errs errors.Errors
+	var errs diags.Error
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Install(c))
 	}
@@ -143,7 +143,7 @@ func unarchive(f string) error {
 	switch {
 	case filetype.IsArchive(buf):
 		if err := archiver.Unarchive(f, filepath.Dir(f)); err != nil {
-			return errors.Wrapf(err, "%s: failed to unarhive", f)
+			return diags.Wrapf(err, "%s: failed to unarhive", f)
 		}
 	default:
 		log.Printf("[DEBUG] %s: no need to unarchive", f)
@@ -203,34 +203,30 @@ func (c HTTP) GetCommandBlock() Command {
 
 // Uninstall is
 func (c HTTP) Uninstall(ctx context.Context) error {
-	var errs errors.Errors
+	var errs diags.Error
 
-	delete := func(f string, errs *errors.Errors) {
+	delete := func(f string) error {
 		err := os.RemoveAll(f)
 		if err != nil {
-			errs.Append(err)
-			return
+			return err
 		}
-		log.Printf("[INFO] Delete %s", f)
+		log.Printf("[INFO] Delete %s\n", f)
+		return nil
 	}
 
 	if c.HasCommandBlock() {
-		links, err := c.Command.GetLink(c)
-		if err != nil {
-			// no problem to handle error even if this links returns no value
-			// because base dir itself will be deleted below
-		}
+		links, _ := c.Command.GetLink(c)
 		for _, link := range links {
-			delete(link.From, &errs)
-			delete(link.To, &errs)
+			errs.Append(delete(link.From))
+			errs.Append(delete(link.To))
 		}
 	}
 
 	if c.HasPluginBlock() {
+		// TODO
 	}
 
-	delete(c.GetHome(), &errs)
-
+	errs.Append(delete(c.GetHome()))
 	return errs.ErrorOrNil()
 }
 

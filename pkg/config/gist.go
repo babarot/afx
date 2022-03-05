@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/state"
 	git "gopkg.in/src-d/go-git.v4"
 )
@@ -28,7 +28,7 @@ type Gist struct {
 
 // Init is
 func (c Gist) Init() error {
-	var errs errors.Errors
+	var errs diags.Error
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Init(c))
 	}
@@ -63,10 +63,10 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 	})
 	if err != nil {
 		status <- Status{Name: c.GetName(), Done: true, Err: true}
-		return errors.Wrapf(err, "%s: failed to clone gist repo", c.Name)
+		return diags.Wrapf(err, "%s: failed to clone gist repo", c.Name)
 	}
 
-	var errs errors.Errors
+	var errs diags.Error
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Install(c))
 	}
@@ -129,25 +129,22 @@ func (c Gist) GetCommandBlock() Command {
 
 // Uninstall is
 func (c Gist) Uninstall(ctx context.Context) error {
-	var errs errors.Errors
+	var errs diags.Error
 
-	delete := func(f string, errs *errors.Errors) {
+	delete := func(f string) error {
 		err := os.RemoveAll(f)
 		if err != nil {
-			errs.Append(err)
-			return
+			return err
 		}
 		log.Printf("[INFO] Delete %s\n", f)
+		return nil
 	}
 
 	if c.HasCommandBlock() {
-		links, err := c.Command.GetLink(c)
-		if err != nil {
-			return errors.Wrapf(err, "%s: failed to get command.link", c.Name)
-		}
+		links, _ := c.Command.GetLink(c)
 		for _, link := range links {
-			delete(link.From, &errs)
-			delete(link.To, &errs)
+			errs.Append(delete(link.From))
+			errs.Append(delete(link.To))
 		}
 	}
 
@@ -155,8 +152,7 @@ func (c Gist) Uninstall(ctx context.Context) error {
 		// TODO
 	}
 
-	delete(c.GetHome(), &errs)
-
+	errs.Append(delete(c.GetHome()))
 	return errs.ErrorOrNil()
 }
 

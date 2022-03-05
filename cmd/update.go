@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
@@ -123,7 +123,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 			case results <- updateResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: cancelled updating", pkg.GetName())
+				return diags.Wrapf(ctx.Err(), "%s: cancelled updating", pkg.GetName())
 			}
 		})
 	}
@@ -133,7 +133,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 		close(results)
 	}()
 
-	var exit errors.Errors
+	var exit diags.Error
 	for result := range results {
 		exit.Append(result.Error)
 	}

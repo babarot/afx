@@ -1,12 +1,11 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/b4b4r07/afx/pkg/errors"
 )
 
 // const errors

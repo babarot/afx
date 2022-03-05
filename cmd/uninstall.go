@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
@@ -80,10 +80,10 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(resources []state.Resource) error {
-	var errs errors.Errors
+	var errs diags.Error
 
 	delete := func(paths ...string) error {
-		var errs errors.Errors
+		var errs diags.Error
 		for _, path := range paths {
 			errs.Append(os.RemoveAll(path))
 		}

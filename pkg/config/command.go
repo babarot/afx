@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
@@ -51,7 +51,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	if err := yaml.Unmarshal(b, &tmp); err != nil {
-		return errors.Wrap(err, "failed to unmarshal YAML")
+		return diags.Wrap(err, "failed to unmarshal YAML")
 	}
 
 	l.From = tmp.From
@@ -93,7 +93,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		file := filepath.Join(pkg.GetHome(), link.From)
 		matches, err := zglob.Glob(file)
 		if err != nil {
-			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
+			return links, diags.Wrapf(err, "%s: failed to get links", pkg.GetName())
 		}
 
 		log.Printf("[TRACE] Run zglob.Glob() to search files: %s", file)
@@ -109,7 +109,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 			return links, fmt.Errorf("%s: %d files matched: %#v", pkg.GetName(), len(matches), matches)
 		default:
 			log.Printf("[ERROR] matched files: %#v", matches)
-			return links, errors.New("too many files are matched in file glob")
+			return links, diags.New("too many files are matched in file glob")
 		}
 		links = append(links, Link{
 			From: src,
@@ -167,7 +167,7 @@ func (c Command) build(pkg Package) error {
 	p.ParseBacktick = true
 	p.Dir = pkg.GetHome()
 
-	var errs errors.Errors
+	var errs diags.Error
 	for _, step := range c.Build.Steps {
 		args, err := p.Parse(step)
 		if err != nil {
@@ -196,7 +196,7 @@ func (c Command) build(pkg Package) error {
 		if err := cmd.Run(); err != nil {
 			errs.Append(err)
 			if stderr.String() != "" {
-				errs.Append(errors.New(stderr.String()))
+				errs.Append(diags.New(stderr.String()))
 			}
 		}
 	}
@@ -208,20 +208,20 @@ func (c Command) Install(pkg Package) error {
 	if c.buildRequired() {
 		err := c.build(pkg)
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to build", pkg.GetName())
+			return diags.Wrapf(err, "%s: failed to build", pkg.GetName())
 		}
 	}
 
 	links, err := c.GetLink(pkg)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+		return diags.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
 	}
 
 	if len(links) == 0 {
 		return fmt.Errorf("%s: failed to install command due to no links specified", pkg.GetName())
 	}
 
-	var errs errors.Errors
+	var errs diags.Error
 	for _, link := range links {
 		// Create base dir if not exists when creating symlink
 		pdir := filepath.Dir(link.To)
@@ -260,10 +260,10 @@ func (c Command) Install(pkg Package) error {
 func (c Command) Unlink(pkg Package) error {
 	links, err := c.GetLink(pkg)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+		return diags.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
 	}
 
-	var errs errors.Errors
+	var errs diags.Error
 	for _, link := range links {
 		log.Printf("[DEBUG] %s: unlinked %s", pkg.GetName(), link.To)
 		errs.Append(os.Remove(link.To))

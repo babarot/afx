@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/spf13/cobra"
@@ -119,6 +119,8 @@ func (c *installCmd) run(pkgs []config.Package) error {
 			case nil:
 				c.state.Add(pkg)
 			default:
+				log.Printf("[ERROR] %T", err)
+				log.Printf("[ERROR] %s: failed to install: %+v", pkg.GetName(), err)
 				log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())
 				pkg.Uninstall(ctx)
 			}
@@ -126,7 +128,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 			case results <- installResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: cancelled installation", pkg.GetName())
+				return diags.Wrapf(ctx.Err(), "%s: cancelled installation", pkg.GetName())
 			}
 		})
 	}
@@ -136,7 +138,7 @@ func (c *installCmd) run(pkgs []config.Package) error {
 		close(results)
 	}()
 
-	var exit errors.Errors
+	var exit diags.Error
 	for result := range results {
 		exit.Append(result.Error)
 	}

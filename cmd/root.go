@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/logging"
 	"github.com/b4b4r07/afx/pkg/update"
@@ -80,7 +80,7 @@ func newRootCmd(m metaCmd) *cobra.Command {
 func Execute() error {
 	logWriter, err := logging.LogOutput()
 	if err != nil {
-		return errors.Wrap(err, "%s: failed to set logger")
+		return diags.Wrap(err, "%s: failed to set logger")
 	}
 	log.SetOutput(logWriter)
 
@@ -91,7 +91,7 @@ func Execute() error {
 
 	meta := metaCmd{}
 	if err := meta.init(); err != nil {
-		return errors.Wrap(err, "failed to initialize afx")
+		return diags.Wrap(err, "failed to initialize afx")
 	}
 
 	defer log.Printf("[INFO] root command execution finished")

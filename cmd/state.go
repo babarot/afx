@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/fatih/color"
@@ -88,7 +88,7 @@ func (c stateCmd) newStateRefreshCmd() *cobra.Command {
 				return c.state.New()
 			}
 			if err := c.state.Refresh(); err != nil {
-				return errors.Wrap(err, "failed to refresh state")
+				return diags.Wrap(err, "failed to refresh state")
 			}
 			fmt.Println(color.WhiteString("Successfully refreshed"))
 			return nil
@@ -114,7 +114,7 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 			case 0:
 				rs, err := c.state.List()
 				if err != nil {
-					return errors.Wrap(err, "failed to list state items")
+					return diags.Wrap(err, "failed to list state items")
 				}
 				var items []string
 				for _, r := range rs {
@@ -125,18 +125,18 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 					Message: "Choose a package:",
 					Options: items,
 				}, &selected); err != nil {
-					return errors.Wrap(err, "failed to get input from console")
+					return diags.Wrap(err, "failed to get input from console")
 				}
 				resource, err := c.state.Get(selected)
 				if err != nil {
-					return errors.Wrapf(err, "%s: failed to get state file", selected)
+					return diags.Wrapf(err, "%s: failed to get state file", selected)
 				}
 				resources = append(resources, resource)
 			default:
 				for _, arg := range cmd.Flags().Args() {
 					resource, err := c.state.Get(arg)
 					if err != nil {
-						return errors.Wrapf(err, "%s: failed to get state file", arg)
+						return diags.Wrapf(err, "%s: failed to get state file", arg)
 					}
 					resources = append(resources, resource)
 				}

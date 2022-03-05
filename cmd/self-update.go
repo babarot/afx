@@ -8,7 +8,7 @@ import (
 	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/github"
 	"github.com/b4b4r07/afx/pkg/helpers/templates"
 	"github.com/creativeprojects/go-selfupdate"
@@ -83,12 +83,12 @@ func (c *selfUpdateCmd) run(args []string) error {
 			fmt.Sprintf("This version (%s/%s) is compiled from source code.",
 				Version, runtime.Version()),
 		)
-		return errors.New("failed to run self-update")
+		return diags.New("failed to run self-update")
 	}
 
 	latest, found, err := selfupdate.DetectLatest(Repository)
 	if err != nil {
-		return errors.Wrap(err, "error occurred while detecting version")
+		return diags.Wrap(err, "error occurred while detecting version")
 	}
 
 	if !found {
@@ -106,7 +106,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 		Message: fmt.Sprintf("Do you update to %s? (current version: %s)",
 			latest.Version(), Version),
 	}, &yes); err != nil {
-		return errors.Wrap(err, "cannot get answer from console")
+		return diags.Wrap(err, "cannot get answer from console")
 	}
 	if !yes {
 		return nil
@@ -131,7 +131,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 
 	exe, err := os.Executable()
 	if err != nil {
-		return errors.New("could not locate executable path")
+		return diags.New("could not locate executable path")
 	}
 
 	if err := release.Install(exe); err != nil {

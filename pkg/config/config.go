@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/b4b4r07/afx/internal/diags"
 	"github.com/b4b4r07/afx/pkg/dependency"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
@@ -97,7 +97,7 @@ func (c Config) Parse() ([]Package, error) {
 func visitYAML(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to visit", path)
+			return diags.Wrapf(err, "%s: failed to visit", path)
 		}
 		switch filepath.Ext(path) {
 		case ".yaml", ".yml":
@@ -158,7 +158,7 @@ func Sort(given []Package) ([]Package, error) {
 
 	resolved, err := dependency.Resolve(graph)
 	if err != nil {
-		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
+		return pkgs, diags.Wrap(err, "failed to resolve dependency graph")
 	}
 
 	for _, node := range resolved {
