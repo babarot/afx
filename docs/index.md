@@ -9,9 +9,11 @@ $ afx help
 Package manager for CLI
 
 Usage:
+  afx [flags]
   afx [command]
 
 Available Commands:
+  check       Check new updates on each package
   completion  Generate completion script
   help        Help about any command
   init        Initialize installed packages
