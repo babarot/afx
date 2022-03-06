@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/b4b4r07/afx/pkg/dependency"
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
@@ -55,6 +56,8 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
+	validate.RegisterValidation("git-tag", validateGitTag)
+
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
@@ -300,4 +303,27 @@ func (c Config) Contains(args ...string) Config {
 		}
 	}
 	return part
+}
+
+func validateGitTag(fl validator.FieldLevel) bool {
+	// some packages are not following semver
+	return true
+
+	allowed := []string{
+		"latest", "stable", "nightly",
+	}
+
+	field := fl.Field().String()
+	for _, v := range allowed {
+		if v == field {
+			return true
+		}
+	}
+
+	_, err := semver.NewVersion(field)
+	if err == nil {
+		return true
+	}
+
+	return false
 }

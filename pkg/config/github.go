@@ -46,7 +46,7 @@ type GitHubOption struct {
 // GitHubRelease represents a GitHub release structure
 type GitHubRelease struct {
 	Name string `yaml:"name" validate:"required"`
-	Tag  string `yaml:"tag"`
+	Tag  string `yaml:"tag" validate:"git-tag"`
 
 	Asset GitHubReleaseAsset `yaml:"asset"`
 }
