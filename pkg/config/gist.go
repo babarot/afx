@@ -179,6 +179,6 @@ func (c Gist) GetResource() state.Resource {
 }
 
 func (c Gist) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", Hidden: true}
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", NoColor: true}
 	return nil
 }

@@ -12,12 +12,18 @@ import (
 	"golang.org/x/term"
 )
 
-// Progress is
 type Progress struct {
 	Status map[string]Status
 }
 
-// NewProgress is
+type Status struct {
+	Name    string
+	Done    bool
+	Err     bool
+	Message string
+	NoColor bool
+}
+
 func NewProgress(pkgs []Package) Progress {
 	status := make(map[string]Status)
 	for _, pkg := range pkgs {
@@ -31,7 +37,6 @@ func NewProgress(pkgs []Package) Progress {
 	return Progress{Status: status}
 }
 
-// Print is
 func (p Progress) Print(completion chan Status) {
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
@@ -41,24 +46,28 @@ func (p Progress) Print(completion chan Status) {
 	for {
 		s := <-completion
 		fmt.Printf("\x1b[2K")
-		if s.Err {
-			fmt.Println(red("✖"), white(s.Name), s.Message)
-		} else {
-			if s.Hidden {
-				fmt.Println(green("✔"), s.Name, s.Message)
-			} else {
-				fmt.Println(green("✔"), white(s.Name), s.Message)
-			}
+
+		name := white(s.Name)
+		if s.NoColor {
+			name = s.Name
 		}
+
+		sign := green("✔")
+		if s.Err {
+			sign = red("✖")
+		}
+
+		fmt.Println(sign, name, s.Message)
+
 		p.Status[s.Name] = s
 		count, repos := countRemaining(p.Status)
-
 		if count == len(p.Status) {
 			break
 		}
 
 		_, width := getTerminalSize()
 		width = int(math.Min(float64(width), 100))
+
 		finalOutput := strconv.Itoa(len(p.Status)-count) + "| " + strings.Join(repos, ", ")
 		if width < 5 {
 			finalOutput = ""
@@ -67,15 +76,6 @@ func (p Progress) Print(completion chan Status) {
 		}
 		fadedOutput.Printf(finalOutput + "\r")
 	}
-}
-
-// Status is
-type Status struct {
-	Name    string
-	Done    bool
-	Err     bool
-	Message string
-	Hidden  bool
 }
 
 func countRemaining(status map[string]Status) (int, []string) {

@@ -369,7 +369,7 @@ func (c GitHub) Check(ctx context.Context, status chan<- Status) error {
 	switch {
 	case c.Release == nil:
 		// TODO: Check git commit
-		status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(github)", Hidden: true}
+		status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(github)", NoColor: true}
 		return nil
 	case c.Release != nil:
 		report, err := c.checkUpdates(ctx)

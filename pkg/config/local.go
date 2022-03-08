@@ -93,6 +93,6 @@ func (c Local) GetResource() state.Resource {
 }
 
 func (c Local) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(local)", Hidden: true}
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(local)", NoColor: true}
 	return nil
 }

@@ -254,6 +254,6 @@ func (c HTTP) GetResource() state.Resource {
 }
 
 func (c HTTP) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", Hidden: true}
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", NoColor: true}
 	return nil
 }
