@@ -25,9 +25,18 @@ type Plugin struct {
 func (p *Plugin) UnmarshalYAML(b []byte) error {
 	type alias Plugin
 
+	// Unlike UnmarshalJSON, all of fields in struct should be listed here...
+	// http://choly.ca/post/go-json-marshalling/
+	// https://go.dev/play/p/rozEOsAYHPe // JSON works but replacing json with yaml then not working
+	// https://stackoverflow.com/questions/48674624/unmarshal-a-yaml-to-a-struct-with-unexpected-fields-in-go
+	// https://go.dev/play/p/XZg7tEPGXna // other YAML case
 	tmp := struct {
 		*alias
-		Sources []string `yaml:"sources"`
+		Sources        []string          `yaml:"sources" validate:"required"`
+		Env            map[string]string `yaml:"env"`
+		Snippet        string            `yaml:"snippet"`
+		SnippetPrepare string            `yaml:"snippet-prepare"`
+		If             string            `yaml:"if"`
 	}{
 		alias: (*alias)(p),
 	}
@@ -40,7 +49,12 @@ func (p *Plugin) UnmarshalYAML(b []byte) error {
 	for _, source := range tmp.Sources {
 		sources = append(sources, expandTilda(os.ExpandEnv(source)))
 	}
+
 	p.Sources = sources
+	p.Env = tmp.Env
+	p.Snippet = tmp.Snippet
+	p.SnippetPrepare = tmp.SnippetPrepare
+	p.If = tmp.If
 
 	return nil
 }
