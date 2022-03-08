@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-zglob"
 )
 
@@ -21,15 +22,32 @@ type Plugin struct {
 	If             string            `yaml:"if"`
 }
 
+func (p *Plugin) UnmarshalYAML(b []byte) error {
+	type alias Plugin
+
+	tmp := struct {
+		*alias
+		Sources []string `yaml:"sources"`
+	}{
+		alias: (*alias)(p),
+	}
+
+	if err := yaml.Unmarshal(b, &tmp); err != nil {
+		return err
+	}
+
+	var sources []string
+	for _, source := range tmp.Sources {
+		sources = append(sources, expandTilda(os.ExpandEnv(source)))
+	}
+	p.Sources = sources
+
+	return nil
+}
+
 // Installed returns true ...
 func (p Plugin) Installed(pkg Package) bool {
-	for _, source := range p.Sources {
-		matches := glob(filepath.Join(pkg.GetHome(), source))
-		if len(matches) == 0 {
-			return false
-		}
-	}
-	return true
+	return len(p.GetSources(pkg)) > 0
 }
 
 // Install is
