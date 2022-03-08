@@ -45,12 +45,12 @@ func (p *Plugin) UnmarshalYAML(b []byte) error {
 	return nil
 }
 
-// Installed returns true ...
+// Installed returns true if sources exist at least one or more
 func (p Plugin) Installed(pkg Package) bool {
 	return len(p.GetSources(pkg)) > 0
 }
 
-// Install is
+// Install runs nothing on plugin installation
 func (p Plugin) Install(pkg Package) error {
 	return nil
 }
@@ -100,12 +100,7 @@ func (p Plugin) Init(pkg Package) error {
 		fmt.Printf("%s\n", s)
 	}
 
-	sources := p.GetSources(pkg)
-	if len(sources) == 0 {
-		return fmt.Errorf("%s: failed to get sources", pkg.GetName())
-	}
-
-	for _, src := range sources {
+	for _, src := range p.GetSources(pkg) {
 		fmt.Printf("source %s\n", src)
 	}
 
