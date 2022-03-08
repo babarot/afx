@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-zglob"
 )
 
@@ -21,18 +22,49 @@ type Plugin struct {
 	If             string            `yaml:"if"`
 }
 
-// Installed returns true ...
-func (p Plugin) Installed(pkg Package) bool {
-	for _, source := range p.Sources {
-		matches := glob(filepath.Join(pkg.GetHome(), source))
-		if len(matches) == 0 {
-			return false
-		}
+func (p *Plugin) UnmarshalYAML(b []byte) error {
+	type alias Plugin
+
+	// Unlike UnmarshalJSON, all of fields in struct should be listed here...
+	// http://choly.ca/post/go-json-marshalling/
+	// https://go.dev/play/p/rozEOsAYHPe // JSON works but replacing json with yaml then not working
+	// https://stackoverflow.com/questions/48674624/unmarshal-a-yaml-to-a-struct-with-unexpected-fields-in-go
+	// https://go.dev/play/p/XZg7tEPGXna // other YAML case
+	tmp := struct {
+		*alias
+		Sources        []string          `yaml:"sources" validate:"required"`
+		Env            map[string]string `yaml:"env"`
+		Snippet        string            `yaml:"snippet"`
+		SnippetPrepare string            `yaml:"snippet-prepare"`
+		If             string            `yaml:"if"`
+	}{
+		alias: (*alias)(p),
 	}
-	return true
+
+	if err := yaml.Unmarshal(b, &tmp); err != nil {
+		return err
+	}
+
+	var sources []string
+	for _, source := range tmp.Sources {
+		sources = append(sources, expandTilda(os.ExpandEnv(source)))
+	}
+
+	p.Sources = sources
+	p.Env = tmp.Env
+	p.Snippet = tmp.Snippet
+	p.SnippetPrepare = tmp.SnippetPrepare
+	p.If = tmp.If
+
+	return nil
 }
 
-// Install is
+// Installed returns true if sources exist at least one or more
+func (p Plugin) Installed(pkg Package) bool {
+	return len(p.GetSources(pkg)) > 0
+}
+
+// Install runs nothing on plugin installation
 func (p Plugin) Install(pkg Package) error {
 	return nil
 }
@@ -82,12 +114,7 @@ func (p Plugin) Init(pkg Package) error {
 		fmt.Printf("%s\n", s)
 	}
 
-	sources := p.GetSources(pkg)
-	if len(sources) == 0 {
-		return fmt.Errorf("%s: failed to get sources", pkg.GetName())
-	}
-
-	for _, src := range sources {
+	for _, src := range p.GetSources(pkg) {
 		fmt.Printf("source %s\n", src)
 	}
 
