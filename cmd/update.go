@@ -59,7 +59,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 			for _, arg := range args {
 				resource, ok := state.Map(resources)[arg]
 				if !ok {
-					continue
+					return fmt.Errorf("%s: no such package in config", arg)
 				}
 				tmp = append(tmp, resource)
 			}

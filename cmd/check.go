@@ -59,7 +59,7 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 			for _, arg := range args {
 				resource, ok := state.Map(resources)[arg]
 				if !ok {
-					continue
+					return fmt.Errorf("%s: not installed yet", arg)
 				}
 				tmp = append(tmp, resource)
 			}

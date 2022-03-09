@@ -55,7 +55,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 			for _, arg := range args {
 				resource, ok := state.Map(resources)[arg]
 				if !ok {
-					continue
+					return fmt.Errorf("%s: no such package to be uninstalled", arg)
 				}
 				tmp = append(tmp, resource)
 			}
