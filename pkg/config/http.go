@@ -75,6 +75,8 @@ func (c HTTP) call(ctx context.Context) error {
 
 	os.MkdirAll(c.GetHome(), os.ModePerm)
 	dest := filepath.Join(c.GetHome(), filepath.Base(c.URL))
+
+	log.Printf("[DEBUG] http: %s: copying %q to %q", c.GetName(), c.URL, dest)
 	file, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -100,17 +102,6 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 		return nil
 	default:
 		// Go installing step!
-	}
-
-	url, err := templates.New(data.New(data.WithPackage(c))).
-		Replace(c.Templates.Replacements).
-		Apply(c.URL)
-	if err != nil {
-		return err
-	}
-	if url != c.URL {
-		log.Printf("[DEBUG] %s: templating url %s", c.GetName(), url)
-		c.URL = url
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -251,4 +242,19 @@ func (c HTTP) GetDependsOn() []string {
 
 func (c HTTP) GetResource() state.Resource {
 	return getResource(c)
+}
+
+func (c *HTTP) ParseURL() {
+	templated, err := templates.New(data.New(data.WithPackage(c))).
+		Replace(c.Templates.Replacements).
+		Apply(c.URL)
+	if err != nil {
+		log.Printf("[ERROR] %s: failed to parse URL", c.GetName())
+		return
+	}
+	if templated != c.URL {
+		log.Printf("[TRACE] %s: templating URL %q to %q", c.GetName(), c.URL, templated)
+		c.URL = templated
+	}
+	return
 }

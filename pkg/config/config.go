@@ -81,6 +81,7 @@ func parse(cfg Config) []Package {
 		pkgs = append(pkgs, pkg)
 	}
 	for _, pkg := range cfg.HTTP {
+		pkg.ParseURL()
 		pkgs = append(pkgs, pkg)
 	}
 
