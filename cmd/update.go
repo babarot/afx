@@ -118,6 +118,9 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 			switch err {
 			case nil:
 				c.state.Update(pkg)
+			default:
+				log.Printf("[DEBUG] uninstall %q because updating failed", pkg.GetName())
+				pkg.Uninstall(ctx)
 			}
 			select {
 			case results <- updateResult{Package: pkg, Error: err}:
