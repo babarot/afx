@@ -5,8 +5,8 @@ go 1.12
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/MakeNowJust/heredoc v1.0.0
+	github.com/Masterminds/semver v1.5.0
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
-	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/cli/cli/v2 v2.5.1
 	github.com/creativeprojects/go-selfupdate v0.6.1
 	github.com/deckarep/golang-set v1.8.0
@@ -19,7 +19,7 @@ require (
 	github.com/h2non/filetype v1.0.10
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.3.0
-	github.com/hashicorp/hcl/v2 v2.2.0
+	github.com/hashicorp/hcl/v2 v2.11.1
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
@@ -28,7 +28,6 @@ require (
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mattn/go-zglob v0.0.1
 	github.com/mholt/archiver v3.1.1+incompatible
-	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.2.6+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect

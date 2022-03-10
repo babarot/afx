@@ -258,3 +258,8 @@ func (c *HTTP) ParseURL() {
 	}
 	return
 }
+
+func (c HTTP) Check(ctx context.Context, status chan<- Status) error {
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", NoColor: true}
+	return nil
+}

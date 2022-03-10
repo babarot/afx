@@ -91,3 +91,8 @@ func (c Local) GetDependsOn() []string {
 func (c Local) GetResource() state.Resource {
 	return getResource(c)
 }
+
+func (c Local) Check(ctx context.Context, status chan<- Status) error {
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(local)", NoColor: true}
+	return nil
+}

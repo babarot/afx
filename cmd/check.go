@@ -15,43 +15,43 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type updateCmd struct {
+type checkCmd struct {
 	metaCmd
 }
 
 var (
-	// updateLong is long description of fmt command
-	updateLong = templates.LongDesc(``)
+	// checkLong is long description of fmt command
+	checkLong = templates.LongDesc(``)
 
-	// updateExample is examples for fmt command
-	updateExample = templates.Examples(`
-		afx update [args...]
+	// checkExample is examples for fmt command
+	checkExample = templates.Examples(`
+		afx check [args...]
 
-		By default, it tries to update packages only if something are
-		changed in config file.
-		If any args are given, it tries to update only them.
+		By default, it tries to check packages if new version is
+		available or not.
+		If any args are given, it tries to check only them.
 	`)
 )
 
-// newUpdateCmd creates a new fmt command
-func (m metaCmd) newUpdateCmd() *cobra.Command {
-	c := &updateCmd{metaCmd: m}
+// newCheckCmd creates a new fmt command
+func (m metaCmd) newCheckCmd() *cobra.Command {
+	c := &checkCmd{metaCmd: m}
 
-	updateCmd := &cobra.Command{
-		Use:                   "update",
-		Short:                 "Update installed package if version etc is changed",
-		Long:                  updateLong,
-		Example:               updateExample,
-		Aliases:               []string{"u"},
+	checkCmd := &cobra.Command{
+		Use:                   "check",
+		Short:                 "Check new updates on each package",
+		Long:                  checkLong,
+		Example:               checkExample,
+		Aliases:               []string{"c"},
 		DisableFlagsInUseLine: true,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		Args:                  cobra.MinimumNArgs(0),
-		ValidArgs:             state.Keys(m.state.Changes),
+		ValidArgs:             state.Keys(m.state.NoChanges),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resources := m.state.Changes
+			resources := m.state.NoChanges
 			if len(resources) == 0 {
-				fmt.Println("No packages to update")
+				fmt.Println("No packages to check")
 				return nil
 			}
 
@@ -59,7 +59,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 			for _, arg := range args {
 				resource, ok := state.Map(resources)[arg]
 				if !ok {
-					return fmt.Errorf("%s: no such package in config", arg)
+					return fmt.Errorf("%s: not installed yet", arg)
 				}
 				tmp = append(tmp, resource)
 			}
@@ -75,8 +75,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 
 			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
-				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
-				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
+				"GITHUB_TOKEN": config.HasGitHubReleaseBlock(pkgs),
 			})
 
 			return c.run(pkgs)
@@ -86,44 +85,40 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 		},
 	}
 
-	return updateCmd
+	return checkCmd
 }
 
-type updateResult struct {
+type checkResult struct {
 	Package config.Package
 	Error   error
 }
 
-func (c *updateCmd) run(pkgs []config.Package) error {
+func (c *checkCmd) run(pkgs []config.Package) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	progress := config.NewProgress(pkgs)
 	completion := make(chan config.Status)
 	limit := make(chan struct{}, 16)
-	results := make(chan updateResult)
+	results := make(chan checkResult)
 
 	go func() {
 		progress.Print(completion)
 	}()
 
-	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
+	log.Printf("[DEBUG] (check): start to run each pkg.Check()")
 	eg := errgroup.Group{}
 	for _, pkg := range pkgs {
 		pkg := pkg
 		eg.Go(func() error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
-			err := pkg.Install(ctx, completion)
-			switch err {
-			case nil:
-				c.state.Update(pkg)
-			}
+			err := pkg.Check(ctx, completion)
 			select {
-			case results <- updateResult{Package: pkg, Error: err}:
+			case results <- checkResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: cancelled updating", pkg.GetName())
+				return errors.Wrapf(ctx.Err(), "%s: cancelled checking", pkg.GetName())
 			}
 		})
 	}
@@ -138,7 +133,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 		exit.Append(result.Error)
 	}
 	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to update: %s", err)
+		log.Printf("[ERROR] failed to check: %s", err)
 		exit.Append(err)
 	}
 

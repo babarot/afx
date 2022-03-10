@@ -68,6 +68,7 @@ func newRootCmd(m metaCmd) *cobra.Command {
 		m.newInstallCmd(),
 		m.newUninstallCmd(),
 		m.newUpdateCmd(),
+		m.newCheckCmd(),
 		m.newSelfUpdateCmd(),
 		m.newShowCmd(),
 		m.newCompletionCmd(),

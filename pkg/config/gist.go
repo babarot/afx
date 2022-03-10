@@ -177,3 +177,8 @@ func (c Gist) GetDependsOn() []string {
 func (c Gist) GetResource() state.Resource {
 	return getResource(c)
 }
+
+func (c Gist) Check(ctx context.Context, status chan<- Status) error {
+	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", NoColor: true}
+	return nil
+}

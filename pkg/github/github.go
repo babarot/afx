@@ -23,6 +23,7 @@ import (
 // A difference from Release is whether a client or not
 type Release struct {
 	Name   string
+	Tag    string
 	Assets Assets
 
 	client  *Client
@@ -41,7 +42,8 @@ type Asset struct {
 // ReleaseResponse is a response of github release structure
 // TODO: This may be better to become same one strucure as above
 type ReleaseResponse struct {
-	Assets []AssetsResponse `json:"assets"`
+	TagName string           `json:"tag_name"`
+	Assets  []AssetsResponse `json:"assets"`
 }
 
 type AssetsResponse struct {
@@ -142,6 +144,7 @@ func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*
 
 	release := &Release{
 		Name:    repo,
+		Tag:     resp.TagName,
 		Assets:  assets,
 		client:  client,
 		workdir: tmp,

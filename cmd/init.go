@@ -44,7 +44,7 @@ func (m metaCmd) newInitCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, pkg := range m.packages {
 				if err := pkg.Init(); err != nil {
-					log.Printf("[ERROR] %s: failed to init pacakge: %v\n", pkg.GetName(), err)
+					log.Printf("[ERROR] %s: failed to init package: %v\n", pkg.GetName(), err)
 					// do not return err to continue to load even if failed
 					continue
 				}
