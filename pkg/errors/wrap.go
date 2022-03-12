@@ -4,9 +4,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-func New(message string) error {
+func New(messages ...string) error {
 	var e Errors
-	e.Append(errors.New(message))
+	for _, message := range messages {
+		e.Append(errors.New(message))
+	}
 	return e.ErrorOrNil()
 }
 
