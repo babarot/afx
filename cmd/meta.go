@@ -54,9 +54,18 @@ func (m *metaCmd) init() error {
 	}
 
 	var pkgs []config.Package
-	app := &config.DefaultMain
 	m.configs = map[string]config.Config{}
+
+	cfg, err := config.Read(filepath.Join(cfgRoot, "main.yaml"))
+	if err != nil {
+		log.Printf("[INFO] main.yaml is not set")
+	}
+	m.main = cfg.Main
+
 	for _, file := range files {
+		if !m.main.Loadable(file) {
+			continue
+		}
 		cfg, err := config.Read(file)
 		if err != nil {
 			return errors.Wrapf(err, "%s: failed to read config", file)
@@ -66,16 +75,8 @@ func (m *metaCmd) init() error {
 			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		pkgs = append(pkgs, parsed...)
-
-		// Append config to one struct
 		m.configs[file] = cfg
-
-		if cfg.Main != nil {
-			app = cfg.Main
-		}
 	}
-
-	m.main = app
 
 	if err := config.Validate(pkgs); err != nil {
 		return errors.Wrap(err, "failed to validate packages")

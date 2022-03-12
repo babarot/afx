@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/dependency"
@@ -32,6 +33,34 @@ type Main struct {
 	Shell     string            `yaml:"shell"`
 	FilterCmd string            `yaml:"filter_command"`
 	Env       map[string]string `yaml:"env"`
+	Params    []Param           `yaml:"params"`
+}
+
+type Param struct {
+	OS    string
+	Files []string
+}
+
+func (m Main) Loadable(path string) bool {
+	file := filepath.Base(path)
+	for _, param := range m.Params {
+		if param.OS != runtime.GOOS {
+			continue
+		}
+		if !contains(param.Files, file) {
+			return false
+		}
+	}
+	return true
+}
+
+func contains(sl []string, e string) bool {
+	for _, s := range sl {
+		if s == e {
+			return true
+		}
+	}
+	return false
 }
 
 // DefaultMain is default settings of Main
