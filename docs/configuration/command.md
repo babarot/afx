@@ -88,7 +88,7 @@ string | `$AFX_COMMAND_PATH/(command-name)`
 
     This example shows you to link all contents in current working directory to `~/.tmux/plugins/tpm` directory. You can use outside directory of afx in `link.to` field, but in that case you need to specify full path. 
 
-    Using tilda `~` is also ok to specify `$HOME`.
+    Using tilde `~` is also ok to specify `$HOME`.
 
 === "Case 3"
 

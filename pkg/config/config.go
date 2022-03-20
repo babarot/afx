@@ -231,7 +231,9 @@ func getResource(pkg Package) state.Resource {
 		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
 	case Local:
 		ty = "Local"
-		id = fmt.Sprintf("local/%s", pkg.Directory)
+		// do not expand env
+		dir := expandTilde(pkg.Directory)
+		id = fmt.Sprintf("local/%s", strings.Replace(dir, os.Getenv("HOME"), "HOME", -1))
 	case HTTP:
 		ty = "HTTP"
 		id = pkg.URL

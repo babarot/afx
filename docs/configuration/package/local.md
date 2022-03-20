@@ -42,7 +42,7 @@ Type | Default
 ---|---
 string | (required)
 
-Specify a directory path that files you want to load are put. Allow to use `~` (tilda) and environment variables (e.g. `$HOME`) here. Of course, specifying full path is also acceptable.
+Specify a directory path that files you want to load are put. Allow to use `~` (tilde) and environment variables (e.g. `$HOME`) here. Of course, specifying full path is also acceptable.
 
 ### depends-on
 

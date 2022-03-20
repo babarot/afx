@@ -47,7 +47,7 @@ func (p *Plugin) UnmarshalYAML(b []byte) error {
 
 	var sources []string
 	for _, source := range tmp.Sources {
-		sources = append(sources, expandTilda(os.ExpandEnv(source)))
+		sources = append(sources, expandTilde(os.ExpandEnv(source)))
 	}
 
 	p.Sources = sources
@@ -122,7 +122,7 @@ func (p Plugin) Init(pkg Package) error {
 		switch k {
 		case "PATH":
 			// avoid overwriting PATH
-			v = fmt.Sprintf("$PATH:%s", expandTilda(v))
+			v = fmt.Sprintf("$PATH:%s", expandTilde(v))
 		default:
 			// through
 		}

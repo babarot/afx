@@ -81,7 +81,7 @@ func (c Local) GetName() string {
 
 // GetHome returns a path
 func (c Local) GetHome() string {
-	return expandTilda(os.ExpandEnv(c.Directory))
+	return expandTilde(os.ExpandEnv(c.Directory))
 }
 
 func (c Local) GetDependsOn() []string {

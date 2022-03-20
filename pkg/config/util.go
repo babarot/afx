@@ -43,7 +43,7 @@ func check(list []bool) bool {
 	return true
 }
 
-func expandTilda(path string) string {
+func expandTilde(path string) string {
 	if !strings.HasPrefix(path, "~") {
 		return path
 	}

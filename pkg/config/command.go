@@ -55,7 +55,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	l.From = tmp.From
-	l.To = expandTilda(os.ExpandEnv(tmp.To))
+	l.To = expandTilde(os.ExpandEnv(tmp.To))
 
 	return nil
 }
@@ -299,7 +299,7 @@ func (c Command) Init(pkg Package) error {
 		switch k {
 		case "PATH":
 			// avoid overwriting PATH
-			v = fmt.Sprintf("$PATH:%s", expandTilda(v))
+			v = fmt.Sprintf("$PATH:%s", expandTilde(v))
 		default:
 			// through
 		}
