@@ -95,3 +95,4 @@ nav:
   - Command: configuration/command.md
   - Plugin:  configuration/plugin.md
 - Links: links.md
+- FAQ: faq.md
