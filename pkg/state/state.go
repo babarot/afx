@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"syscall"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -87,7 +86,8 @@ var exists = func(path string) bool {
 var ReadStateFile = func(filename string) ([]byte, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, pathError(err)
+		// return empty json contents if state.json does not exist
+		return []byte(`{}`), nil
 	}
 	defer f.Close()
 
@@ -101,17 +101,6 @@ var ReadStateFile = func(filename string) ([]byte, error) {
 
 var SaveStateFile = func(filename string) (io.Writer, error) {
 	return os.Create(filename)
-}
-
-func pathError(err error) error {
-	var pathError *os.PathError
-	if errors.As(err, &pathError) && errors.Is(pathError.Err, syscall.ENOTDIR) {
-		if p := findRegularFile(pathError.Path); p != "" {
-			return fmt.Errorf("remove or rename regular file `%s` (must be a directory)", p)
-		}
-
-	}
-	return err
 }
 
 func findRegularFile(p string) string {
