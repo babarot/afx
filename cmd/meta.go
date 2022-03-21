@@ -130,7 +130,7 @@ func (m *metaCmd) init() error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), resourcers)
 	if err != nil {
-		return errors.Wrap(err, "faield to open state file")
+		return errors.Wrap(err, "failed to open state file")
 	}
 	m.state = s
 
