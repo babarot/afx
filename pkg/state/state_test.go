@@ -45,7 +45,7 @@ func TestOpen(t *testing.T) {
 	}{
 		"Empty": {
 			filename: "empty.json",
-			state:    &State{path: "empty.json"},
+			state:    &State{Self: Self{Resources: map[string]Resource{}}, path: "empty.json"},
 		},
 		"Open": {
 			filename: "state.json",
