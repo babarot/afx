@@ -87,7 +87,7 @@ var ReadStateFile = func(filename string) ([]byte, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		// return empty json contents if state.json does not exist
-		return []byte(`{}`), nil
+		return []byte(`{"resources":{}}`), nil
 	}
 	defer f.Close()
 
@@ -244,6 +244,7 @@ func Keys(resources []Resource) []string {
 
 func Open(path string, resourcers []Resourcer) (*State, error) {
 	s := State{
+		Self:     Self{Resources: map[ID]Resource{}},
 		path:     path,
 		packages: map[ID]Resource{},
 		mu:       sync.RWMutex{},
