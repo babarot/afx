@@ -108,29 +108,33 @@ func visitYAML(files *[]string) filepath.WalkFunc {
 	}
 }
 
-func resolveSymlink(path string) (string, error) {
+func resolvePath(path string) (string, bool, error) {
 	fi, err := os.Lstat(path)
 	if err != nil {
-		return path, err
+		return path, false, err
 	}
+
+	isDir := fi.IsDir()
+
+	if filepath.IsAbs(path) {
+		return path, isDir, nil
+	}
+
 	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
-		return os.Readlink(path)
+		path, err = os.Readlink(path)
 	}
-	return path, nil
+
+	return path, isDir, err
 }
 
 // WalkDir walks given directory path and returns full-path of all yaml files
 func WalkDir(path string) ([]string, error) {
 	var files []string
-	path, err := resolveSymlink(path)
+	path, isDir, err := resolvePath(path)
 	if err != nil {
 		return files, err
 	}
-	fi, err := os.Stat(path)
-	if err != nil {
-		return files, err
-	}
-	if fi.IsDir() {
+	if isDir {
 		return files, filepath.Walk(path, visitYAML(&files))
 	}
 	switch filepath.Ext(path) {
