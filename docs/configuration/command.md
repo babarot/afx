@@ -263,7 +263,7 @@ list | `[]`
 
 ### build.env
 
-Type | Required
+Type | Default
 ---|---
 map | `{}`
 
@@ -288,9 +288,33 @@ map | `{}`
 
     In this case, VERSION is specified to change version used in build steps.
 
+### build.directory
+
+Type | Default
+---|---
+string | (each package home)
+
+`build.directory` can be specified a path of working directory to build a package.
+
+=== "Case 1"
+
+    ```yaml hl_lines="7"
+    http:
+    - name: nkf
+      description: Netword Kanji Filter
+      url: https://free.nchc.org.tw/osdn//nkf/70406/nkf-2.1.5.tar.gz
+      command:
+        build:
+          directory: nkf-2.1.5
+          steps:
+            - make
+        link:
+          - from: '*/nkf'
+    ```
+
 ### snippet
 
-Type | Required
+Type | Default
 ---|---
 string | `""`
 
@@ -316,7 +340,7 @@ string | `""`
 
 ### if
 
-Type | Required
+Type | Default
 ---|---
 string | `""`
 

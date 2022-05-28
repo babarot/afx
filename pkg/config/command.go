@@ -29,8 +29,9 @@ type Command struct {
 
 // Build is
 type Build struct {
-	Steps []string          `yaml:"steps" validate:"required"`
-	Env   map[string]string `yaml:"env"`
+	Steps     []string          `yaml:"steps" validate:"required"`
+	Env       map[string]string `yaml:"env"`
+	Directory string            `yaml:"directory"`
 }
 
 // Link is
@@ -162,10 +163,15 @@ func (c Command) buildRequired() bool {
 }
 
 func (c Command) build(pkg Package) error {
+	wd, _ := os.Getwd()
+	log.Printf("[DEBUG] Current working directory: %s", wd)
+
+	dir := filepath.Join(pkg.GetHome(), c.Build.Directory)
+
 	p := shellwords.NewParser()
 	p.ParseEnv = true
 	p.ParseBacktick = true
-	p.Dir = pkg.GetHome()
+	p.Dir = dir
 
 	var errs errors.Errors
 	for _, step := range c.Build.Steps {
@@ -191,8 +197,8 @@ func (c Command) build(pkg Package) error {
 		cmd.Stdout = &stdout
 		cmd.Stdout = os.Stdout // TODO: remove
 		cmd.Stderr = &stderr
-		log.Printf("[INFO] cd %s\n", pkg.GetHome())
-		cmd.Dir = pkg.GetHome()
+		log.Printf("[DEBUG] change dir to: %s\n", dir)
+		cmd.Dir = dir
 		if err := cmd.Run(); err != nil {
 			errs.Append(err)
 			if stderr.String() != "" {
