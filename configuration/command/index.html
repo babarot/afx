@@ -483,6 +483,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#builddirectory" class="md-nav__link">
+    build.directory
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#snippet" class="md-nav__link">
     snippet
   </a>
@@ -632,6 +639,13 @@
           <li class="md-nav__item">
   <a href="#buildenv" class="md-nav__link">
     build.env
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#builddirectory" class="md-nav__link">
+    build.directory
   </a>
   
 </li>
@@ -963,7 +977,7 @@
 <thead>
 <tr>
 <th>Type</th>
-<th>Required</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
@@ -994,12 +1008,46 @@
 </div>
 </div>
 </div>
+<h3 id="builddirectory">build.directory<a class="headerlink" href="#builddirectory" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>string</td>
+<td>(each package home)</td>
+</tr>
+</tbody>
+</table>
+<p><code>build.directory</code> can be specified a path of working directory to build a package.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:1"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Case 1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nt">http</span><span class="p">:</span><span class="w"></span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nkf</span><span class="w"></span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Netword Kanji Filter</span><span class="w"></span>
+<span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://free.nchc.org.tw/osdn//nkf/70406/nkf-2.1.5.tar.gz</span><span class="w"></span>
+<span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"></span>
+<span class="hll"><span class="w">      </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nkf-2.1.5</span><span class="w"></span>
+</span><span class="w">      </span><span class="nt">steps</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">make</span><span class="w"></span>
+<span class="w">    </span><span class="nt">link</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">from</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;*/nkf&#39;</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
 <h3 id="snippet">snippet<a class="headerlink" href="#snippet" title="Permanent link">#</a></h3>
 <table>
 <thead>
 <tr>
 <th>Type</th>
-<th>Required</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
@@ -1010,7 +1058,7 @@
 </tbody>
 </table>
 <p><code>snippet</code> allows you to specify the command which are runned when starting new shell.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="7:1"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Case 1</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:1"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Case 1</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><span class="filename">Login message if tpm is installed</span><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>
@@ -1034,7 +1082,7 @@
 <thead>
 <tr>
 <th>Type</th>
-<th>Required</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
@@ -1046,7 +1094,7 @@
 </table>
 <p><code>if</code> allows you to specify the condition to load packages. If it returns true, then the command will be linked. But if it returns false, the command will not be linked.</p>
 <p>In <code>if</code> field, you can write shell scripts<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. The exit code finally returned from that shell script is used to determine whether it links command or not.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="8:1"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Case 1</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:1"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Case 1</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><span class="filename">link commands if git is installed</span><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>

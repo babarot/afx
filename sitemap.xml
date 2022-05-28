@@ -2,57 +2,57 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://babarot.me/afx/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/faq/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/getting-started/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/how-it-works/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/links/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/command/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/plugin/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/package/gist/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/package/github/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/package/http/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://babarot.me/afx/configuration/package/local/</loc>
-         <lastmod>2022-03-20</lastmod>
+         <lastmod>2022-05-28</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
