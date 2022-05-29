@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 
 	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/logging"
@@ -327,14 +328,30 @@ func (r *Release) Unarchive(asset Asset) error {
 		*archiver.Xz:
 		// nothing to customise
 	}
+	log.Printf("[DEBUG] uaIface: %#v (%T)", uaIface, uaIface)
+
+	var done bool
 
 	u, ok := uaIface.(archiver.Unarchiver)
-	if !ok {
-		return errors.New("cannot type assertion with archiver.Unarchiver")
+	if ok {
+		if err := u.Unarchive(archive, r.workdir); err != nil {
+			return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
+		}
+		done = true
 	}
 
-	if err := u.Unarchive(archive, r.workdir); err != nil {
-		return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
+	d, ok := uaIface.(archiver.Decompressor)
+	if ok {
+		fc := archiver.FileCompressor{Decompressor: d}
+		name := strings.TrimSuffix(asset.Name, filepath.Ext(asset.Name))
+		if err := fc.DecompressFile(archive, filepath.Join(r.workdir, name)); err != nil {
+			return errors.Wrapf(err, "%s: failed to decompress", r.Name)
+		}
+		done = true
+	}
+
+	if !done {
+		return errors.New("archiver cannot unarchive/decompress file")
 	}
 
 	log.Printf("[DEBUG] removed archive file: %s", archive)
