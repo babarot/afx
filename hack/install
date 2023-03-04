@@ -7,11 +7,11 @@ afx_tmp_dir=${TMPDIR:-/tmp}/afx-${afx_version}
 main() {
   # Try to download binary executable
   local arch="$(uname -sm)"
-  local binary_available=true
+  local notfound=false
   local tarball
 
   if [[ -x ${afx_bin_dir}/afx ]]; then
-    echo "already exists: ${afx_bin_dir}/afx"
+    echo "already installed: ${afx_bin_dir}/afx"
     return 0
   fi
 
@@ -20,11 +20,11 @@ main() {
     "Darwin x86_64")  tarball="afx_darwin_x86_64.tar.gz" ;;
     "Linux aarch64")  tarball="afx_linux_arm64.tar.gz"   ;;
     "Linux *64")      tarball="afx_linux_x86_64.tar.gz"  ;;
-    *)                binary_available=false             ;;
+    *)                notfound=true                      ;;
   esac
 
-  if ! { download ${tarball} && install -v -m 0755 ${afx_tmp_dir}/afx ${afx_bin_dir}/afx; } || ! ${binary_available}; then
-    echo "Tarball suitable for your system is not found. So trying to make afx from Go!"
+  if ! { download ${tarball} && install -v -m 0755 ${afx_tmp_dir}/afx ${afx_bin_dir}/afx; } || ${notfound}; then
+    echo "afx available on your system is not found. So trying to make afx from Go!"
     if command -v go >/dev/null; then
       try_go
     else
@@ -33,7 +33,8 @@ main() {
     fi
   fi
 
-  afx --version
+  command -v afx &>/dev/null && afx --version
+
   echo 'For more information, see: https://github.com/b4b4r07/afx'
 }
 
@@ -62,7 +63,9 @@ try_wget() {
 download() {
   local tarball="${1}"
   local url
+
   if [[ -z ${tarball} ]]; then
+    # when not found what to download
     return 1
   fi
 
@@ -95,22 +98,23 @@ download() {
 }
 
 try_go() {
-  local need_cp=false
+  local do_cp=false
   local path="github.com/b4b4r07/afx"
   local cmd="${path}/cmd"
 
   echo -n "Building binary (go get -u ${path}) ... "
   if [[ -z ${GOPATH} ]]; then
-    need_cp=true
+    do_cp=true
     export GOPATH="${TMPDIR:-/tmp}/afx-gopath"
-    mkdir -p "$GOPATH"
+    mkdir -p "${GOPATH}"
   fi
 
-  if go install -ldflags "-s -w -X ${cmd}.Version=${afx_version} -X ${cmd}.BuildTag=go-install" ${path}; then
+  local ts=$(date "+%Y-%m-%d")
+  if go install -ldflags "-s -w -X ${cmd}.Version=${afx_version} -X ${cmd}.BuildTag=built-by-go -X ${cmd}.BuildSHA=${ts}" ${path}; then
     echo "OK"
-    ${need_cp} && cp -v ${GOPATH}/bin/afx ${afx_bin_dir}/afx
+    ${do_cp} && cp -v ${GOPATH}/bin/afx ${afx_bin_dir}/afx
   else
-    echo "Failed to build binary. Installation failed."
+    echo "Failed to build binary. Installation failed." >&2
     return 1
   fi
 }
