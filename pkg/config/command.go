@@ -167,6 +167,7 @@ func (c Command) build(pkg Package) error {
 	log.Printf("[DEBUG] Current working directory: %s", wd)
 
 	dir := filepath.Join(pkg.GetHome(), c.Build.Directory)
+	log.Printf("[DEBUG] Change working directory to %s", dir)
 
 	p := shellwords.NewParser()
 	p.ParseEnv = true

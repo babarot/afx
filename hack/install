@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+afx_bin_dir=${AFX_BIN_DIR:-~/bin}
+afx_version=${AFX_VERSION:-latest}
+afx_tmp_dir=${TMPDIR:-/tmp}/afx-${afx_version}
+
+main() {
+  # Try to download binary executable
+  local arch="$(uname -sm)"
+  local binary_available=true
+  local tarball
+
+  if [[ -x ${afx_bin_dir}/afx ]]; then
+    echo "already exists: ${afx_bin_dir}/afx"
+    return 0
+  fi
+
+  case "${arch}" in
+    "Darwin arm64")   tarball="afx_darwin_arm64.tar.gz"  ;;
+    "Darwin x86_64")  tarball="afx_darwin_x86_64.tar.gz" ;;
+    "Linux aarch64")  tarball="afx_linux_arm64.tar.gz"   ;;
+    "Linux *64")      tarball="afx_linux_x86_64.tar.gz"  ;;
+    *)                binary_available=false             ;;
+  esac
+
+  if ! { download ${tarball} && install -v -m 0755 ${afx_tmp_dir}/afx ${afx_bin_dir}/afx; } || ! ${binary_available}; then
+    echo "Tarball suitable for your system is not found. So trying to make afx from Go!"
+    if command -v go >/dev/null; then
+      try_go
+    else
+      echo "go executable not found. Installation failed." >&2
+      return 1
+    fi
+  fi
+
+  afx --version
+  echo 'For more information, see: https://github.com/b4b4r07/afx'
+}
+
+try_curl() {
+  local file=${1}
+  command -v curl > /dev/null &&
+  if [[ ${file} =~ tar.gz$ ]]; then
+    curl -fL ${file} | tar -xzf - -C ${afx_tmp_dir}
+  else
+    local tmp=${afx_tmp_dir}/afx.zip
+    curl -fLo "${tmp}" ${file} && unzip -o "${tmp}" && rm -f "${tmp}"
+  fi
+}
+
+try_wget() {
+  local file=${1}
+  command -v wget > /dev/null &&
+  if [[ ${file} =~ tar.gz$ ]]; then
+    wget -O - ${file} | tar -xzf - -C ${afx_tmp_dir}
+  else
+    local tmp=${afx_tmp_dir}/afx.zip
+    wget -O "${tmp}" ${file} && unzip -o "${tmp}" && rm -f "${tmp}"
+  fi
+}
+
+download() {
+  local tarball="${1}"
+  local url
+  if [[ -z ${tarball} ]]; then
+    return 1
+  fi
+
+  mkdir -p ${afx_bin_dir} || {
+    echo "Failed to create directory" >&2
+    return 1
+  }
+
+  mkdir -p ${afx_tmp_dir} || {
+    echo "Failed to create directory" >&2
+    return 1
+  }
+
+  if [[ ${afx_version} == latest ]]; then
+    url="https://github.com/b4b4r07/afx/releases/latest/download/${tarball}"
+  else
+    url="https://github.com/b4b4r07/afx/releases/download/${afx_version}/${tarball}"
+  fi
+
+  echo "Downloading afx ..."
+  if ! (try_curl ${url} || try_wget ${url}); then
+    echo "Failed to download with curl and wget" >&2
+    return 1
+  fi
+
+  if [[ ! -f ${afx_tmp_dir}/afx ]]; then
+    echo "Failed to download ${tarball}" >&2
+    return 1
+  fi
+}
+
+try_go() {
+  local need_cp=false
+  local path="github.com/b4b4r07/afx"
+  local cmd="${path}/cmd"
+
+  echo -n "Building binary (go get -u ${path}) ... "
+  if [[ -z ${GOPATH} ]]; then
+    need_cp=true
+    export GOPATH="${TMPDIR:-/tmp}/afx-gopath"
+    mkdir -p "$GOPATH"
+  fi
+
+  if go install -ldflags "-s -w -X ${cmd}.Version=${afx_version} -X ${cmd}.BuildTag=go-install" ${path}; then
+    echo "OK"
+    ${need_cp} && cp -v ${GOPATH}/bin/afx ${afx_bin_dir}/afx
+  else
+    echo "Failed to build binary. Installation failed."
+    return 1
+  fi
+}
+
+main ${@}
