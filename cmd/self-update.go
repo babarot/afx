@@ -86,7 +86,10 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return errors.New("failed to run self-update")
 	}
 
-	latest, found, err := selfupdate.DetectLatest(Repository)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	latest, found, err := selfupdate.DetectLatest(ctx, selfupdate.ParseSlug(Repository))
 	if err != nil {
 		return errors.Wrap(err, "error occurred while detecting version")
 	}
@@ -111,9 +114,6 @@ func (c *selfUpdateCmd) run(args []string) error {
 	if !yes {
 		return nil
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
 
 	release, err := github.NewRelease(ctx, "b4b4r07", "afx", "v"+latest.Version(), github.WithVerbose())
 	if err != nil {

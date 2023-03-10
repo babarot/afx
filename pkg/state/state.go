@@ -252,6 +252,10 @@ func Open(path string, resourcers []Resourcer) (*State, error) {
 
 	for _, resourcer := range resourcers {
 		resource := resourcer.GetResource()
+		if resource.Type == "Local" {
+			// local package should not manage in state
+			continue
+		}
 		s.packages[resource.ID] = resource
 	}
 
