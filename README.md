@@ -134,6 +134,12 @@ Download the binary from [GitHub Release][release] and drop it in your `$PATH`.
 - [Darwin / Mac][release]
 - [Linux][release]
 
+Or, bash installer has been provided so you can install afx by running this one command at your own risk ([detail](./hack/README.md)).
+
+```bash
+curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | bash
+```
+
 [release]: https://github.com/b4b4r07/afx/releases/latest
 [website]: https://babarot.me/afx/
 
