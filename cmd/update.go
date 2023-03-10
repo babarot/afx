@@ -114,6 +114,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 		eg.Go(func() error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
+			os.RemoveAll(pkg.GetHome()) // delete before updating
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
