@@ -11,15 +11,13 @@ require (
 	github.com/deckarep/golang-set v1.8.0
 	github.com/fatih/color v1.14.1
 	github.com/go-playground/validator/v10 v10.11.2
-	github.com/goccy/go-yaml v1.10.0
+	github.com/goccy/go-yaml v1.9.8
 	github.com/google/go-cmp v0.5.9
 	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
-	github.com/k0kubun/pp v3.0.1+incompatible
-	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 	github.com/mattn/go-isatty v0.0.17
 	github.com/mattn/go-shellwords v1.0.12
@@ -51,7 +49,6 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect

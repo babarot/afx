@@ -6,10 +6,33 @@ You can install the pre-compiled binary (in several different ways), compile fro
 
 Below you can find the steps for each of them.
 
+### bash script
+
+bash installer has been provided so you can install afx by running this one command at your own risk.
+
+=== "Latest"
+
+    ```bash
+    curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | bash
+    ```
+
+=== "Version"
+
+    ```bash
+    curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | AFX_VERSION=v0.1.24 bash
+    ```
+
+env | description | default
+---|---|---
+`AFX_VERSION` | afx version, available versions are on [releases](https://github.com/b4b4r07/afx/releases) | `latest`
+`AFX_BIN_DIR` | Path to install | `~/bin`
+
 ### go install
 
-```sh
-$ go install github.com/b4b4r07/afx@latest
+For Go developers.
+
+```bash
+go install github.com/b4b4r07/afx@latest
 ```
 
 ### manually
