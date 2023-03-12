@@ -13,9 +13,10 @@ AFX is a package manager for command-line tools and shell plugins. afx can allow
 
 Full document is here: [AFX](https://babarot.me/afx/)
 
-<img src="https://vhs.charm.sh/vhs-577hHga4xJRSvZFshv47y3.gif" width="">
+<img src="https://user-images.githubusercontent.com/4442708/224565945-2c09b729-82b7-4829-9cbc-e247b401b689.gif">
 
 <!--
+<img src="https://vhs.charm.sh/vhs-577hHga4xJRSvZFshv47y3.gif" width="">
 <img src="https://vhs.charm.sh/vhs-46LPru8ovWFCQV6DnyKwGm.gif" width="">
 <img src="https://vhs.charm.sh/vhs-6tz3U4NZyh9LBzmTlT98c9.gif" width="">
 -->
