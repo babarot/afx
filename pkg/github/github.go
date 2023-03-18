@@ -376,3 +376,19 @@ func (r *Release) Install(to string) error {
 		TargetPath: to,
 	})
 }
+
+func HasRelease(httpClient *http.Client, owner, repo string) (bool, error) {
+	// https://github.com/cli/cli/blob/9596fd5368cdbd30d08555266890a2312e22eba9/pkg/cmd/extension/http.go#L110
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode < 299, nil
+}

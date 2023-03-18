@@ -29,3 +29,5 @@ Flags:
 
 Use "afx [command] --help" for more information about a command.
 ```
+
+![](https://user-images.githubusercontent.com/4442708/224565945-2c09b729-82b7-4829-9cbc-e247b401b689.gif)

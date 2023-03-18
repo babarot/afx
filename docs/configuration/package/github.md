@@ -87,6 +87,28 @@ number | `0` (all commits)
 
 Limit fetching to the specified number of commits from the tip of each remote branch history. If fetching to a shallow repository, specify 1 or more number, deepen or shorten the history to the specified number of commits.
 
+### as
+
+Type | Default
+---|---
+string | `""`
+
+Available arguments:
+
+- gh-extension
+
+=== "gh-extension"
+
+    Install a package as [gh extension](https://github.blog/2023-01-13-new-github-cli-extension-tools/). Officially gh extensions can be installed with `gh extension install owern/repo` command ([guide](https://cli.github.com/manual/gh_extension_install)) but it's difficult to manage what we downloaded as code. In afx, by handling them as the same as other packages, it allows us to codenize them.
+
+    ```yaml
+    - name: dlvhdr/gh-dash
+      description: A beautiful CLI dashboard for GitHub
+      owner: dlvhdr
+      repo: gh-dash
+      as: gh-extension
+    ```
+
 ### release.name
 
 Type | Default

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -22,16 +23,19 @@ import (
 	"github.com/fatih/color"
 )
 
+const GHExtension = "gh-extension"
+
 // GitHub represents GitHub repository
 type GitHub struct {
 	Name string `yaml:"name" validate:"required"`
 
-	Owner       string `yaml:"owner" validate:"required"`
-	Repo        string `yaml:"repo" validate:"required"`
+	Owner       string `yaml:"owner"       validate:"required"`
+	Repo        string `yaml:"repo"        validate:"required"`
 	Description string `yaml:"description"`
 
 	Branch string        `yaml:"branch"`
 	Option *GitHubOption `yaml:"with"`
+	As     string        `yaml:"as" validate:"excluded_with=Release"`
 
 	Release *GitHubRelease `yaml:"release"`
 
@@ -167,6 +171,20 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		}
 	}
 
+	switch c.As {
+	case GHExtension:
+		// https://github.com/cli/cli/tree/trunk/pkg/cmd/extension
+		ok, _ := github.HasRelease(http.DefaultClient, c.Owner, c.Repo)
+		if ok {
+			err := c.InstallFromRelease(ctx)
+			if err != nil {
+				err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+				status <- Status{Name: c.GetName(), Done: true, Err: true}
+				return err
+			}
+		}
+	}
+
 	var errs errors.Errors
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Install(c))
@@ -202,13 +220,20 @@ func (c GitHub) Installed() bool {
 	return check(list)
 }
 
+func (c GitHub) GetReleaseTag() string {
+	if c.Release != nil {
+		return c.Release.Tag
+	}
+	return "latest"
+}
+
 // InstallFromRelease runs install from GitHub release, from not repository
 func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	release, err := github.NewRelease(
-		ctx, c.Owner, c.Repo, c.Release.Tag,
+		ctx, c.Owner, c.Repo, c.GetReleaseTag(),
 		github.WithWorkdir(c.GetHome()),
 		github.WithFilter(func(filename string) github.FilterFunc {
 			if filename == "" {
@@ -343,6 +368,10 @@ func (c GitHub) GetName() string {
 
 // GetHome returns a path
 func (c GitHub) GetHome() string {
+	switch c.As {
+	case GHExtension:
+		return filepath.Join(os.Getenv("HOME"), ".local", "share", "gh", "extensions", c.Repo)
+	}
 	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
 }
 
