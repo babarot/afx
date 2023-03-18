@@ -248,6 +248,7 @@ func (c GitHub) InstallFromRelease(ctx context.Context, owner, repo, tag string)
 
 	release, err := github.NewRelease(
 		ctx, owner, repo, tag,
+		github.WithOverwrite(),
 		github.WithWorkdir(c.GetHome()),
 		github.WithFilter(func(filename string) github.FilterFunc {
 			if filename == "" {

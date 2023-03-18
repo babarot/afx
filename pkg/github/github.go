@@ -27,10 +27,11 @@ type Release struct {
 	Tag    string
 	Assets Assets
 
-	client  *Client
-	workdir string
-	verbose bool
-	filter  func(Assets) *Asset
+	client    *Client
+	workdir   string
+	verbose   bool
+	overwrite bool
+	filter    func(Assets) *Asset
 }
 
 // Asset represents GitHub release's asset.
@@ -88,6 +89,12 @@ func getAssetKeys(assets []Asset) []string {
 type Option func(r *Release)
 
 type FilterFunc func(assets Assets) *Asset
+
+func WithOverwrite() Option {
+	return func(r *Release) {
+		r.overwrite = true
+	}
+}
 
 func WithWorkdir(workdir string) Option {
 	return func(r *Release) {
@@ -292,11 +299,17 @@ func (r *Release) Unarchive(asset Asset) error {
 		// because this logic renames a binary of 'jq-1.6' to 'jq'
 		//
 		target := filepath.Join(r.workdir, r.Name)
-		if _, err := os.Stat(target); err != nil {
-			log.Printf("[DEBUG] renamed from %s to %s", archive, target)
-			os.Rename(archive, target)
-			os.Chmod(target, 0755)
+		if _, err := os.Stat(target); err == nil {
+			if r.overwrite {
+				log.Printf("[WARN] %s: already exist. but overwrite", target)
+			} else {
+				log.Printf("[WARN] %s: already exist. so skip to unarchive", target)
+				return nil
+			}
 		}
+		log.Printf("[DEBUG] renamed from %s to %s", archive, target)
+		os.Rename(archive, target)
+		os.Chmod(target, 0755)
 		return nil
 	}
 
