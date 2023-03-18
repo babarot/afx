@@ -51,40 +51,8 @@ type GitHubAs struct {
 
 type GHExtension struct {
 	Name     string `yaml:"name" validate:"required,startswith=gh-"`
+	Tag      string `yaml:"tag"`
 	RenameTo string `yaml:"rename-to" validate:"gh-extension,excludesall=/"`
-}
-
-func (gh GHExtension) GetHome() string {
-	base := filepath.Join(os.Getenv("HOME"), ".local", "share", "gh", "extensions")
-	var ext string
-	if gh.RenameTo == "" {
-		ext = filepath.Join(base, gh.Name)
-	} else {
-		ext = filepath.Join(base, gh.RenameTo)
-	}
-	return ext
-}
-
-func (gh GHExtension) Install(home string) error {
-	ghHome := gh.GetHome()
-	// ensure to create the parent dir of each gh extension's path
-	os.MkdirAll(filepath.Dir(ghHome), os.ModePerm)
-
-	// make alias
-	if gh.RenameTo != "" {
-		if err := os.Symlink(
-			filepath.Join(home, gh.Name),
-			filepath.Join(home, gh.RenameTo),
-		); err != nil {
-			return fmt.Errorf("%w: failed to symlink as alise", err)
-		}
-	}
-
-	// install
-	if err := os.Symlink(home, ghHome); err != nil {
-		return fmt.Errorf("%w: failed to symlink as install", err)
-	}
-	return nil
 }
 
 type GitHubOption struct {
@@ -205,7 +173,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 			return err
 		}
 	case c.Release != nil:
-		err := c.InstallFromRelease(ctx)
+		err := c.InstallFromRelease(ctx, c.Owner, c.Repo, c.GetReleaseTag())
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
 			status <- Status{Name: c.GetName(), Done: true, Err: true}
@@ -216,16 +184,16 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 	var errs errors.Errors
 
 	if c.IsGHExtension() {
+		gh := c.As.GHExtension
 		available, _ := github.HasRelease(http.DefaultClient, c.Owner, c.Repo)
 		if available {
-			err := c.InstallFromRelease(ctx)
+			err := c.InstallFromRelease(ctx, c.Owner, c.Repo, gh.GetTag())
 			if err != nil {
 				err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
 				status <- Status{Name: c.GetName(), Done: true, Err: true}
 				return err
 			}
 		}
-		gh := c.As.GHExtension
 		errs.Append(
 			gh.Install(c.GetHome()),
 		)
@@ -273,12 +241,13 @@ func (c GitHub) GetReleaseTag() string {
 }
 
 // InstallFromRelease runs install from GitHub release, from not repository
-func (c GitHub) InstallFromRelease(ctx context.Context) error {
+func (c GitHub) InstallFromRelease(ctx context.Context, owner, repo, tag string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	log.Printf("[DEBUG] install from release: %s/%s (%s)", owner, repo, tag)
 
 	release, err := github.NewRelease(
-		ctx, c.Owner, c.Repo, c.GetReleaseTag(),
+		ctx, owner, repo, tag,
 		github.WithWorkdir(c.GetHome()),
 		github.WithFilter(func(filename string) github.FilterFunc {
 			if filename == "" {
@@ -501,10 +470,50 @@ func (c GitHub) checkUpdates(ctx context.Context) (report, error) {
 	}
 }
 
+func ValidateGHExtension(fl validator.FieldLevel) bool {
+	return fl.Field().String() == "" || strings.HasPrefix(fl.Field().String(), "gh-")
+}
+
 func (c GitHub) IsGHExtension() bool {
 	return c.As != nil && c.As.GHExtension != nil && c.As.GHExtension.Name != ""
 }
 
-func ValidateGHExtension(fl validator.FieldLevel) bool {
-	return fl.Field().String() == "" || strings.HasPrefix(fl.Field().String(), "gh-")
+func (gh GHExtension) GetHome() string {
+	base := filepath.Join(os.Getenv("HOME"), ".local", "share", "gh", "extensions")
+	var ext string
+	if gh.RenameTo == "" {
+		ext = filepath.Join(base, gh.Name)
+	} else {
+		ext = filepath.Join(base, gh.RenameTo)
+	}
+	return ext
+}
+
+func (gh GHExtension) GetTag() string {
+	if gh.Tag != "" {
+		return gh.Tag
+	}
+	return "latest"
+}
+
+func (gh GHExtension) Install(home string) error {
+	ghHome := gh.GetHome()
+	// ensure to create the parent dir of each gh extension's path
+	os.MkdirAll(filepath.Dir(ghHome), os.ModePerm)
+
+	// make alias
+	if gh.RenameTo != "" {
+		if err := os.Symlink(
+			filepath.Join(home, gh.Name),
+			filepath.Join(home, gh.RenameTo),
+		); err != nil {
+			return fmt.Errorf("%w: failed to symlink as alise", err)
+		}
+	}
+
+	// install
+	if err := os.Symlink(home, ghHome); err != nil {
+		return fmt.Errorf("%w: failed to symlink as install", err)
+	}
+	return nil
 }
