@@ -390,10 +390,16 @@ func (r *Release) Install(to string) error {
 	})
 }
 
-func HasRelease(httpClient *http.Client, owner, repo string) (bool, error) {
+func HasRelease(httpClient *http.Client, owner, repo, tag string) (bool, error) {
 	// https://github.com/cli/cli/blob/9596fd5368cdbd30d08555266890a2312e22eba9/pkg/cmd/extension/http.go#L110
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", owner, repo)
-	req, err := http.NewRequest("GET", url, nil)
+	releaseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases", owner, repo)
+	switch tag {
+	case "latest", "":
+		releaseURL += "/latest"
+	default:
+		releaseURL += fmt.Sprintf("/tags/%s", tag)
+	}
+	req, err := http.NewRequest("GET", releaseURL, nil)
 	if err != nil {
 		return false, err
 	}

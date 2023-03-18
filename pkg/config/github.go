@@ -13,6 +13,7 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Masterminds/semver"
 	"github.com/b4b4r07/afx/pkg/data"
@@ -173,7 +174,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 			return err
 		}
 	case c.Release != nil:
-		err := c.InstallFromRelease(ctx, c.Owner, c.Repo, c.GetReleaseTag())
+		err := c.InstallFromRelease(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
 			status <- Status{Name: c.GetName(), Done: true, Err: true}
@@ -185,18 +186,12 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 
 	if c.IsGHExtension() {
 		gh := c.As.GHExtension
-		available, _ := github.HasRelease(http.DefaultClient, c.Owner, c.Repo)
-		if available {
-			err := c.InstallFromRelease(ctx, c.Owner, c.Repo, gh.GetTag())
-			if err != nil {
-				err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
-				status <- Status{Name: c.GetName(), Done: true, Err: true}
-				return err
-			}
+		err := gh.Install(ctx, c.Owner, c.Repo, gh.GetTag())
+		if err != nil {
+			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+			status <- Status{Name: c.GetName(), Done: true, Err: true}
+			return err
 		}
-		errs.Append(
-			gh.Install(c.GetHome()),
-		)
 	}
 
 	if c.HasPluginBlock() {
@@ -241,14 +236,15 @@ func (c GitHub) GetReleaseTag() string {
 }
 
 // InstallFromRelease runs install from GitHub release, from not repository
-func (c GitHub) InstallFromRelease(ctx context.Context, owner, repo, tag string) error {
+func (c GitHub) InstallFromRelease(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	owner, repo, tag := c.Owner, c.Repo, c.GetReleaseTag()
 	log.Printf("[DEBUG] install from release: %s/%s (%s)", owner, repo, tag)
 
 	release, err := github.NewRelease(
 		ctx, owner, repo, tag,
-		github.WithOverwrite(),
 		github.WithWorkdir(c.GetHome()),
 		github.WithFilter(func(filename string) github.FilterFunc {
 			if filename == "" {
@@ -376,6 +372,9 @@ func (c GitHub) GetName() string {
 
 // GetHome returns a path
 func (c GitHub) GetHome() string {
+	if c.IsGHExtension() {
+		return c.As.GHExtension.GetHome()
+	}
 	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
 }
 
@@ -479,6 +478,15 @@ func (c GitHub) IsGHExtension() bool {
 	return c.As != nil && c.As.GHExtension != nil && c.As.GHExtension.Name != ""
 }
 
+type ghManifest struct {
+	Owner    string `yaml:"owner"`
+	Name     string `yaml:"name"`
+	Host     string `yaml:"host"`
+	Tag      string `yaml:"tag"`
+	IsPinned bool   `yaml:"ispinned"`
+	Path     string `yaml:"path"`
+}
+
 func (gh GHExtension) GetHome() string {
 	base := filepath.Join(os.Getenv("HOME"), ".local", "share", "gh", "extensions")
 	var ext string
@@ -497,24 +505,88 @@ func (gh GHExtension) GetTag() string {
 	return "latest"
 }
 
-func (gh GHExtension) Install(home string) error {
+func (gh GHExtension) Install(ctx context.Context, owner, repo, tag string) error {
+	available, _ := github.HasRelease(http.DefaultClient, owner, repo, tag)
+	if available {
+		err := gh.InstallFromRelease(ctx, owner, repo, tag)
+		if err != nil {
+			return fmt.Errorf("%w: %s: failed to get gh extension", err, gh.Name)
+		}
+	}
+
 	ghHome := gh.GetHome()
 	// ensure to create the parent dir of each gh extension's path
-	os.MkdirAll(filepath.Dir(ghHome), os.ModePerm)
+	_ = os.MkdirAll(filepath.Dir(ghHome), os.ModePerm)
 
 	// make alias
 	if gh.RenameTo != "" {
 		if err := os.Symlink(
-			filepath.Join(home, gh.Name),
-			filepath.Join(home, gh.RenameTo),
+			filepath.Join(ghHome, gh.Name),
+			filepath.Join(ghHome, gh.RenameTo),
 		); err != nil {
 			return fmt.Errorf("%w: failed to symlink as alise", err)
 		}
 	}
 
-	// install
-	if err := os.Symlink(home, ghHome); err != nil {
-		return fmt.Errorf("%w: failed to symlink as install", err)
+	if gh.GetTag() == "latest" {
+		// in case of not making manifest yaml
+		return nil
+	}
+
+	return gh.makeManifest(owner)
+}
+
+func (gh GHExtension) InstallFromRelease(ctx context.Context, owner, repo, tag string) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	log.Printf("[DEBUG] install from release: %s/%s (%s)", owner, repo, tag)
+	release, err := github.NewRelease(
+		ctx, owner, repo, tag,
+		github.WithOverwrite(),
+		github.WithWorkdir(gh.GetHome()),
+	)
+	if err != nil {
+		return err
+	}
+
+	asset, err := release.Download(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to download", release.Name)
+	}
+
+	if err := release.Unarchive(asset); err != nil {
+		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
+	}
+
+	return nil
+}
+
+func (gh GHExtension) makeManifest(owner string) error {
+	// https://github.com/cli/cli/blob/c9a2d85793c4cef026d5bb941b3ac4121c81ae10/pkg/cmd/extension/manager.go#L424-L451
+	manifest := ghManifest{
+		Name:     gh.Name,
+		Owner:    owner,
+		Host:     "github.com",
+		Path:     gh.GetHome(),
+		Tag:      gh.GetTag(),
+		IsPinned: false,
+	}
+	bs, err := yaml.Marshal(manifest)
+	if err != nil {
+		return fmt.Errorf("failed to serialize manifest: %w", err)
+	}
+
+	manifestPath := filepath.Join(gh.GetHome(), "manifest.yml")
+	f, err := os.OpenFile(manifestPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to open manifest for writing: %w", err)
+	}
+	defer f.Close()
+
+	_, err = f.Write(bs)
+	if err != nil {
+		return fmt.Errorf("failed write manifest file: %w", err)
 	}
 	return nil
 }

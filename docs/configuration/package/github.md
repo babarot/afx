@@ -102,6 +102,7 @@ Change the installation behavior of the packages based on specified package type
     Key | Type | Default
     ---|---|---
     name | string | (required)
+    tag | string | `latest`
     rename-to | string | `""`
 
     ```yaml
@@ -112,6 +113,7 @@ Change the installation behavior of the packages based on specified package type
       as:
         gh-extension:
           name: gh-markdown-preview
+          tag: v1.4.0
           rename-to: gh-md    # markdown-preview is long so rename it to shorten.
     ```
 
