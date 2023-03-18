@@ -23,8 +23,6 @@ import (
 	"github.com/fatih/color"
 )
 
-const GHExtension = "gh-extension"
-
 // GitHub represents GitHub repository
 type GitHub struct {
 	Name string `yaml:"name" validate:"required"`
@@ -35,14 +33,23 @@ type GitHub struct {
 
 	Branch string        `yaml:"branch"`
 	Option *GitHubOption `yaml:"with"`
-	As     string        `yaml:"as" validate:"excluded_with=Release"`
 
 	Release *GitHubRelease `yaml:"release"`
 
-	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command" validate:"required_with=Release"` // TODO: (not required Release)
+	Plugin  *Plugin   `yaml:"plugin"`
+	Command *Command  `yaml:"command" validate:"required_with=Release"` // TODO: (not required Release)
+	As      *GitHubAs `yaml:"as"`
 
 	DependsOn []string `yaml:"depends-on"`
+}
+
+type GitHubAs struct {
+	GHExtension *GHExtension `yaml:"gh-extension"`
+}
+
+type GHExtension struct {
+	Name     string `yaml:"name" validate:"required"`
+	RenameTo string `yaml:"rename-to" validate:"startswith=gh-,excludesall=/"`
 }
 
 type GitHubOption struct {
@@ -171,8 +178,8 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		}
 	}
 
-	switch c.As {
-	case GHExtension:
+	var errs errors.Errors
+	if c.IsGHExtension() {
 		// https://github.com/cli/cli/tree/trunk/pkg/cmd/extension
 		ok, _ := github.HasRelease(http.DefaultClient, c.Owner, c.Repo)
 		if ok {
@@ -183,9 +190,21 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 				return err
 			}
 		}
+		if gh := c.As.GHExtension; gh.RenameTo != "" {
+			dir := filepath.Join(filepath.Dir(c.GetHome()), gh.RenameTo)
+			errs.Append(
+				os.Symlink(
+					c.GetHome(),
+					dir,
+				))
+			errs.Append(
+				os.Symlink(
+					filepath.Join(dir, gh.Name),
+					filepath.Join(dir, gh.RenameTo),
+				))
+		}
 	}
 
-	var errs errors.Errors
 	if c.HasPluginBlock() {
 		errs.Append(c.Plugin.Install(c))
 	}
@@ -368,8 +387,7 @@ func (c GitHub) GetName() string {
 
 // GetHome returns a path
 func (c GitHub) GetHome() string {
-	switch c.As {
-	case GHExtension:
+	if c.IsGHExtension() {
 		return filepath.Join(os.Getenv("HOME"), ".local", "share", "gh", "extensions", c.Repo)
 	}
 	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
@@ -465,4 +483,8 @@ func (c GitHub) checkUpdates(ctx context.Context) (report, error) {
 	default:
 		return report{}, errors.New("invalid version comparison")
 	}
+}
+
+func (c GitHub) IsGHExtension() bool {
+	return c.As != nil && c.As.GHExtension != nil
 }
