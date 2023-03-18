@@ -54,6 +54,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
+	validate.RegisterValidation("gh-extension", ValidateGHExtension)
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
@@ -243,6 +244,11 @@ func getResource(pkg Package) state.Resource {
 		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
 		if pkg.HasReleaseBlock() {
 			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
+		}
+		if pkg.IsGHExtension() {
+			ty = "GitHub (gh extension)"
+			gh := pkg.As.GHExtension
+			paths = append(paths, gh.GetHome())
 		}
 	case Gist:
 		ty = "Gist"
