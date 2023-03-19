@@ -87,7 +87,7 @@ func (c HTTP) call(ctx context.Context) error {
 		return err
 	}
 
-	if err := unarchive(dest); err != nil {
+	if err := unarchiveV2(dest); err != nil {
 		return errors.Wrapf(err, "failed to unarchive: %s", dest)
 	}
 
@@ -123,6 +123,15 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 
 	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
+}
+
+func unarchiveV2(path string) error {
+	_, err := archiver.ByExtension(path)
+	if err != nil {
+		log.Printf("[DEBUG] unarchiveV2: no need to unarchive. finished with nil")
+		return nil
+	}
+	return archiver.Unarchive(path, filepath.Dir(path))
 }
 
 func unarchive(f string) error {
