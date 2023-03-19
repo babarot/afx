@@ -87,6 +87,36 @@ number | `0` (all commits)
 
 Limit fetching to the specified number of commits from the tip of each remote branch history. If fetching to a shallow repository, specify 1 or more number, deepen or shorten the history to the specified number of commits.
 
+### as
+
+Key | Type | Default
+---|---|---
+gh-extension | Object | `null`
+
+Change the installation behavior of the packages based on specified package type. In current afx, all packages are based on where it's hosted e.g. `github`. Almost all cases are not problem on that but some package types (such as "brew" or "gh extension") will be able to do more easily if there is a dedicated parameters to install the packages. In this `as` section, it expands more this installation method. Some of package types (especially "brew") will be coming soon in near future.
+
+=== "gh-extension"
+
+    Install a package as [gh extension](https://github.blog/2023-01-13-new-github-cli-extension-tools/). Officially gh extensions can be installed with `gh extension install owern/repo` command ([guide](https://cli.github.com/manual/gh_extension_install)) but it's difficult to manage what we downloaded as code. In afx, by handling them as the same as other packages, it allows us to codenize them.
+
+    Key | Type | Default
+    ---|---|---
+    name | string | (required)
+    tag | string | `latest`
+    rename-to | string | `""`
+
+    ```yaml
+    - name: yusukebe/gh-markdown-preview
+      description: GitHub CLI extension to preview Markdown looks like GitHub.
+      owner: yusukebe
+      repo: gh-markdown-preview
+      as:
+        gh-extension:
+          name: gh-markdown-preview
+          tag: v1.4.0
+          rename-to: gh-md    # markdown-preview is long so rename it to shorten.
+    ```
+
 ### release.name
 
 Type | Default

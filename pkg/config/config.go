@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/afx/pkg/dependency"
-	"github.com/b4b4r07/afx/pkg/errors"
 	"github.com/b4b4r07/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
@@ -55,6 +54,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
+	validate.RegisterValidation("gh-extension", ValidateGHExtension)
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
@@ -98,7 +98,7 @@ func (c Config) Parse() ([]Package, error) {
 func visitYAML(files *[]string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to visit", path)
+			return fmt.Errorf("%w: %s: failed to visit", err, path)
 		}
 		switch filepath.Ext(path) {
 		case ".yaml", ".yml":
@@ -178,7 +178,7 @@ func Sort(given []Package) ([]Package, error) {
 
 	resolved, err := dependency.Resolve(graph)
 	if err != nil {
-		return pkgs, errors.Wrap(err, "failed to resolve dependency graph")
+		return pkgs, fmt.Errorf("%w: failed to resolve dependency graph", err)
 	}
 
 	for _, node := range resolved {
@@ -244,6 +244,11 @@ func getResource(pkg Package) state.Resource {
 		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
 		if pkg.HasReleaseBlock() {
 			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
+		}
+		if pkg.IsGHExtension() {
+			ty = "GitHub (gh extension)"
+			gh := pkg.As.GHExtension
+			paths = append(paths, gh.GetHome())
 		}
 	case Gist:
 		ty = "Gist"

@@ -25,6 +25,7 @@ Full document is here: [AFX](https://babarot.me/afx/)
 
 - Allows to manage various packages types:
   - GitHub / GitHub Release / Gist / HTTP (web) / Local
+  - [gh extensions](https://github.com/topics/gh-extension)
 - Manages as CLI commands, shell plugins or both
 - Easy to install/update/uninstall
 - Easy to configure with YAML
