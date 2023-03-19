@@ -422,6 +422,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#as" class="md-nav__link">
+    as
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#releasename" class="md-nav__link">
     release.name
   </a>
@@ -674,6 +681,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#as" class="md-nav__link">
+    as
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#releasename" class="md-nav__link">
     release.name
   </a>
@@ -878,6 +892,67 @@
 </tbody>
 </table>
 <p>Limit fetching to the specified number of commits from the tip of each remote branch history. If fetching to a shallow repository, specify 1 or more number, deepen or shorten the history to the specified number of commits.</p>
+<h3 id="as">as<a class="headerlink" href="#as" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gh-extension</td>
+<td>Object</td>
+<td><code>null</code></td>
+</tr>
+</tbody>
+</table>
+<p>Change the installation behavior of the packages based on specified package type. In current afx, all packages are based on where it's hosted e.g. <code>github</code>. Almost all cases are not problem on that but some package types (such as "brew" or "gh extension") will be able to do more easily if there is a dedicated parameters to install the packages. In this <code>as</code> section, it expands more this installation method. Some of package types (especially "brew") will be coming soon in near future.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">gh-extension</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Install a package as <a href="https://github.blog/2023-01-13-new-github-cli-extension-tools/">gh extension</a>. Officially gh extensions can be installed with <code>gh extension install owern/repo</code> command (<a href="https://cli.github.com/manual/gh_extension_install">guide</a>) but it's difficult to manage what we downloaded as code. In afx, by handling them as the same as other packages, it allows us to codenize them.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>(required)</td>
+</tr>
+<tr>
+<td>tag</td>
+<td>string</td>
+<td><code>latest</code></td>
+</tr>
+<tr>
+<td>rename-to</td>
+<td>string</td>
+<td><code>""</code></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yusukebe/gh-markdown-preview</span><span class="w"></span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GitHub CLI extension to preview Markdown looks like GitHub.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">owner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yusukebe</span><span class="w"></span>
+<span class="w">  </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gh-markdown-preview</span><span class="w"></span>
+<span class="w">  </span><span class="nt">as</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">gh-extension</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gh-markdown-preview</span><span class="w"></span>
+<span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1.4.0</span><span class="w"></span>
+<span class="w">      </span><span class="nt">rename-to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gh-md</span><span class="w">    </span><span class="c1"># markdown-preview is long so rename it to shorten.</span><span class="w"></span>
+</code></pre></div>
+</div>
+</div>
+</div>
 <h3 id="releasename">release.name<a class="headerlink" href="#releasename" title="Permanent link">#</a></h3>
 <table>
 <thead>
@@ -935,7 +1010,7 @@
 <li>a filename has "steve-jobs" instead of "mac" or "darwin": <code>some-package-v1.0.0-steve-jobs-amd64.tar.gz</code></li>
 </ul>
 </div>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Case 1</label><label for="__tabbed_2_2">Case 2</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Case 1</label><label for="__tabbed_3_2">Case 2</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><span class="filename">Specify asset filename directly</span><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>
@@ -1062,7 +1137,7 @@
 </tr>
 </tbody>
 </table>
-<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Case 1</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Case 1</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="nt">github</span><span class="p">:</span><span class="w"></span>
@@ -1111,7 +1186,7 @@ to:
 <p>Explicitly specifying a dependency is helpful when a package relies on some other package's behavior. Concretely it's good for handling the order of loading files listed on <code>plugin.sources</code> when running <code>afx init</code>.</p>
 <p>Let's say you want to manage <code>pkg-a</code> and <code>pkg-b</code> with afx. Also let's say <code>pkg-a</code> needs to be loaded after <code>pkg-b</code> (This means <code>pkg-a</code> depends on <code>pkg-b</code>).</p>
 <p>In this case you can specify dependencies:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Case 1</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:1"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Case 1</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="nt">local</span><span class="p">:</span><span class="w"></span>
