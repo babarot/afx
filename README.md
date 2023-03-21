@@ -3,7 +3,10 @@ AFX - Package manager for CLI
 
 AFX is a package manager for command-line tools and shell plugins. afx can allow us to manage almost all things available on GitHub, Gist and so on. Before, we needed to trawl web pages to download each package one by one. It's very annoying every time we set up new machine and also it's difficult to get how many commands/plugins we installed. So afx's motivation is coming from that and to manage them with YAML files (as a code).
 
-[![Tests][test-mark]][test-link] [![Release][release-mark]][release-link]
+[![][afx-mark]][afx-link] [![][test-mark]][test-link] [![][release-mark]][release-link]
+
+[afx-mark]: https://img.shields.io/github/v/release/b4b4r07/afx?color=EF2D5E&display_name=release&label=AFX&logo=alchemy&logoColor=EF2D5E&sort=semver
+[afx-link]: https://github.com/b4b4r07/afx/releases
 
 [test-mark]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml/badge.svg
 [test-link]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml
@@ -38,14 +41,16 @@ Full document is here: [AFX](https://babarot.me/afx/)
   - etc...
 - Works on bash, zsh and fish
 
-## Quick Start
+## Quick Start [<sup>plus!</sup>](https://babarot.me/afx/getting-started/)
 
-Details are here: [Getting Started - AFX](https://babarot.me/afx/getting-started/)
+- [1. Install packages](#1-install-packages)
+- [2. Load packages](#2-load-packages)
+- [3. Update packages](#3-update-packages)
+- [4. Uninstall packages](#4-uninstall-packages)
 
 ### 1. Install packages
 
 Write YAML file with name as you like in `~/.config/afx/`. Let's say you write this code and then put it into `github.yaml`. After than you can install packages with `install` command.
-
 ```diff
 + github:
 + - name: stedolan/jq
@@ -130,8 +135,9 @@ $ afx uninstall
 
 For zsh user, you can enable shell completion for afx:
 
-```console
-$ source <(afx completion zsh)
+```bash
+# .zshrc
+source <(afx completion zsh)
 ```
 
 bash and fish users are also available.

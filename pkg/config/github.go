@@ -53,7 +53,7 @@ type GitHubAs struct {
 type GHExtension struct {
 	Name     string `yaml:"name" validate:"required,startswith=gh-"`
 	Tag      string `yaml:"tag"`
-	RenameTo string `yaml:"rename-to" validate:"gh-extension,excludesall=/"`
+	RenameTo string `yaml:"rename-to" validate:"startswith-gh-if-not-empty,excludesall=/"`
 }
 
 type GitHubOption struct {

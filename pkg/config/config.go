@@ -54,7 +54,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
-	validate.RegisterValidation("gh-extension", ValidateGHExtension)
+	validate.RegisterValidation("startswith-gh-if-not-empty", ValidateGHExtension)
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),
