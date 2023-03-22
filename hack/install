@@ -6,7 +6,7 @@ afx_tmp_dir=${TMPDIR:-/tmp}/afx-${afx_version}
 
 main() {
   # Try to download binary executable
-  local arch="$(uname -sm)"
+  local arch
   local notfound=false
   local tarball
 
@@ -15,6 +15,7 @@ main() {
     return 0
   fi
 
+  arch="$(uname -sm)"
   case "${arch}" in
     "Darwin arm64")   tarball="afx_darwin_arm64.tar.gz"  ;;
     "Darwin x86_64")  tarball="afx_darwin_x86_64.tar.gz" ;;
@@ -23,7 +24,7 @@ main() {
     *)                notfound=true                      ;;
   esac
 
-  if ! { download ${tarball} && install -v -m 0755 ${afx_tmp_dir}/afx ${afx_bin_dir}/afx; } || ${notfound}; then
+  if ! { download ${tarball} && install -v -m 0755 "${afx_tmp_dir}/afx ${afx_bin_dir}/afx"; } || ${notfound}; then
     echo "afx available on your system is not found. So trying to make afx from Go!"
     if command -v go >/dev/null; then
       try_go
@@ -42,10 +43,10 @@ try_curl() {
   local file=${1}
   command -v curl > /dev/null &&
   if [[ ${file} =~ tar.gz$ ]]; then
-    curl -fL ${file} | tar -xzf - -C ${afx_tmp_dir}
+    curl --progress-bar -fL "${file}" | tar -xzf - -C "${afx_tmp_dir}"
   else
     local tmp=${afx_tmp_dir}/afx.zip
-    curl -fLo "${tmp}" ${file} && unzip -o "${tmp}" && rm -f "${tmp}"
+    curl --progress-bar -fLo "${tmp}" "${file}" && unzip -o "${tmp}" && rm -f "${tmp}"
   fi
 }
 
@@ -53,10 +54,10 @@ try_wget() {
   local file=${1}
   command -v wget > /dev/null &&
   if [[ ${file} =~ tar.gz$ ]]; then
-    wget -O - ${file} | tar -xzf - -C ${afx_tmp_dir}
+    wget -O - "${file}" | tar -xzf - -C "${afx_tmp_dir}"
   else
     local tmp=${afx_tmp_dir}/afx.zip
-    wget -O "${tmp}" ${file} && unzip -o "${tmp}" && rm -f "${tmp}"
+    wget -O "${tmp}" "${file}" && unzip -o "${tmp}" && rm -f "${tmp}"
   fi
 }
 
@@ -69,12 +70,12 @@ download() {
     return 1
   fi
 
-  mkdir -p ${afx_bin_dir} || {
+  mkdir -p "${afx_bin_dir}" || {
     echo "Failed to create directory" >&2
     return 1
   }
 
-  mkdir -p ${afx_tmp_dir} || {
+  mkdir -p "${afx_tmp_dir}" || {
     echo "Failed to create directory" >&2
     return 1
   }
@@ -86,7 +87,7 @@ download() {
   fi
 
   echo "Downloading afx ..."
-  if ! (try_curl ${url} || try_wget ${url}); then
+  if ! (try_curl "${url}" || try_wget "${url}"); then
     echo "Failed to download with curl and wget" >&2
     return 1
   fi
@@ -109,14 +110,16 @@ try_go() {
     mkdir -p "${GOPATH}"
   fi
 
-  local ts=$(date "+%Y-%m-%d")
+  local ts
+  ts=$(date "+%Y-%m-%d")
+
   if go install -ldflags "-s -w -X ${cmd}.Version=${afx_version} -X ${cmd}.BuildTag=built-by-go -X ${cmd}.BuildSHA=${ts}" ${path}; then
     echo "OK"
-    ${do_cp} && cp -v ${GOPATH}/bin/afx ${afx_bin_dir}/afx
+    ${do_cp} && cp -v "${GOPATH}/bin/afx" "${afx_bin_dir}/afx"
   else
     echo "Failed to build binary. Installation failed." >&2
     return 1
   fi
 }
 
-main ${@}
+main "${@}"
