@@ -20,11 +20,11 @@ main() {
     "Darwin arm64")   tarball="afx_darwin_arm64.tar.gz"  ;;
     "Darwin x86_64")  tarball="afx_darwin_x86_64.tar.gz" ;;
     "Linux aarch64")  tarball="afx_linux_arm64.tar.gz"   ;;
-    "Linux *64")      tarball="afx_linux_x86_64.tar.gz"  ;;
+    "Linux "*64)      tarball="afx_linux_x86_64.tar.gz"  ;;
     *)                notfound=true                      ;;
   esac
 
-  if ! { download ${tarball} && install -v -m 0755 "${afx_tmp_dir}/afx ${afx_bin_dir}/afx"; } || ${notfound}; then
+  if ! { download ${tarball} && install -v -m 0755 "${afx_tmp_dir}/afx" "${afx_bin_dir}/afx"; } || ${notfound}; then
     echo "afx available on your system is not found. So trying to make afx from Go!"
     if command -v go >/dev/null; then
       try_go
