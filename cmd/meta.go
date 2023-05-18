@@ -48,10 +48,10 @@ func (m *metaCmd) init() error {
 	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, "cache.json")
 
-    err := config.CreateDirIfNotExist(cfgRoot)
-    if err != nil {
-        return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
-    }
+	err := config.CreateDirIfNotExist(cfgRoot)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
+	}
 	files, err := config.WalkDir(cfgRoot)
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)

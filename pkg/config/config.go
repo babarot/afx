@@ -113,8 +113,8 @@ func CreateDirIfNotExist(path string) error {
 	if os.IsNotExist(err) {
 		return os.MkdirAll(path, 0755)
 	} else if err != nil {
-        return err
-    }
+		return err
+	}
 	return nil
 }
 
