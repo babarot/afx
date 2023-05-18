@@ -108,6 +108,16 @@ func visitYAML(files *[]string) filepath.WalkFunc {
 	}
 }
 
+func CreateDirIfNotExist(path string) error {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return os.MkdirAll(path, 0755)
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
 func resolvePath(path string) (string, bool, error) {
 	fi, err := os.Lstat(path)
 	if err != nil {
