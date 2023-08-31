@@ -8,9 +8,9 @@ import (
 	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/github"
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/github"
+	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -115,7 +115,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 		return nil
 	}
 
-	release, err := github.NewRelease(ctx, "b4b4r07", "afx", "v"+latest.Version(), github.WithVerbose())
+	release, err := github.NewRelease(ctx, "babarot", "afx", "v"+latest.Version(), github.WithVerbose())
 	if err != nil {
 		return err
 	}

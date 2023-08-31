@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/spf13/cobra"
 )
 

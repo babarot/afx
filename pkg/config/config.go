@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/dependency"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/dependency"
+	"github.com/babarot/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-multierror"

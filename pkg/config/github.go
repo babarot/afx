@@ -16,12 +16,12 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Masterminds/semver"
-	"github.com/b4b4r07/afx/pkg/data"
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/github"
-	"github.com/b4b4r07/afx/pkg/logging"
-	"github.com/b4b4r07/afx/pkg/state"
-	"github.com/b4b4r07/afx/pkg/templates"
+	"github.com/babarot/afx/pkg/data"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/github"
+	"github.com/babarot/afx/pkg/logging"
+	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/pkg/templates"
 	"github.com/fatih/color"
 	"github.com/go-playground/validator/v10"
 )

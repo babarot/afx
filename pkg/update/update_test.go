@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/b4b4r07/afx/pkg/github"
+	"github.com/babarot/afx/pkg/github"
 	"github.com/cli/cli/v2/pkg/httpmock"
 )
 

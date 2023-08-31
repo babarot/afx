@@ -5,14 +5,14 @@ AFX is a package manager for command-line tools and shell plugins. afx can allow
 
 [![][afx-mark]][afx-link] [![][test-mark]][test-link] [![][release-mark]][release-link]
 
-[afx-mark]: https://img.shields.io/github/v/release/b4b4r07/afx?color=EF2D5E&display_name=release&label=AFX&logo=alchemy&logoColor=EF2D5E&sort=semver
-[afx-link]: https://github.com/b4b4r07/afx/releases
+[afx-mark]: https://img.shields.io/github/v/release/babarot/afx?color=EF2D5E&display_name=release&label=AFX&logo=alchemy&logoColor=EF2D5E&sort=semver
+[afx-link]: https://github.com/babarot/afx/releases
 
-[test-mark]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml/badge.svg
-[test-link]: https://github.com/b4b4r07/afx/actions/workflows/go.yaml
+[test-mark]: https://github.com/babarot/afx/actions/workflows/go.yaml/badge.svg
+[test-link]: https://github.com/babarot/afx/actions/workflows/go.yaml
 
-[release-mark]: https://github.com/b4b4r07/afx/actions/workflows/release.yaml/badge.svg
-[release-link]: https://github.com/b4b4r07/afx/actions/workflows/release.yaml
+[release-mark]: https://github.com/babarot/afx/actions/workflows/release.yaml/badge.svg
+[release-link]: https://github.com/babarot/afx/actions/workflows/release.yaml
 
 Full document is here: [AFX](https://babarot.me/afx/)
 
@@ -152,10 +152,10 @@ Download the binary from [GitHub Release][release] and drop it in your `$PATH`.
 Or, bash installer has been provided so you can install afx by running this one command at your own risk ([detail](./hack/README.md)).
 
 ```bash
-curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | bash
+curl -sL https://raw.githubusercontent.com/babarot/afx/HEAD/hack/install | bash
 ```
 
-[release]: https://github.com/b4b4r07/afx/releases/latest
+[release]: https://github.com/babarot/afx/releases/latest
 [website]: https://babarot.me/afx/
 
 ## License

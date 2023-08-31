@@ -7,11 +7,11 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/b4b4r07/afx/pkg/config"
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/logging"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/config"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/logging"
+	"github.com/babarot/afx/pkg/state"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )

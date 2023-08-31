@@ -13,18 +13,18 @@ bash installer has been provided so you can install afx by running this one comm
 === "Latest"
 
     ```bash
-    curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | bash
+    curl -sL https://raw.githubusercontent.com/babarot/afx/HEAD/hack/install | bash
     ```
 
 === "Version"
 
     ```bash
-    curl -sL https://raw.githubusercontent.com/b4b4r07/afx/HEAD/hack/install | AFX_VERSION=v0.1.24 bash
+    curl -sL https://raw.githubusercontent.com/babarot/afx/HEAD/hack/install | AFX_VERSION=v0.1.24 bash
     ```
 
 env | description | default
 ---|---|---
-`AFX_VERSION` | afx version, available versions are on [releases](https://github.com/b4b4r07/afx/releases) | `latest`
+`AFX_VERSION` | afx version, available versions are on [releases](https://github.com/babarot/afx/releases) | `latest`
 `AFX_BIN_DIR` | Path to install | `~/bin`
 
 ### go install
@@ -32,14 +32,14 @@ env | description | default
 For Go developers.
 
 ```bash
-go install github.com/b4b4r07/afx@latest
+go install github.com/babarot/afx@latest
 ```
 
 ### manually
 
 Download the pre-compiled binaries from the [OSS releases page][releases] and copy them to the desired location.
 
-[releases]: https://github.com/b4b4r07/afx/releases
+[releases]: https://github.com/babarot/afx/releases
 
 ## Write YAML
 
@@ -58,9 +58,9 @@ github:
     link:
     - from: '*jq*'
       to: jq
-- name: b4b4r07/enhancd
+- name: babarot/enhancd
   description: A next-generation cd command with your interactive filter
-  owner: b4b4r07
+  owner: babarot
   repo: enhancd
   plugin:
     env:
@@ -95,7 +95,7 @@ $ source <(afx init)
 
 ```sh
 $ afx init
-source /Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh
+source /Users/babarot/.afx/github.com/babarot/enhancd/init.sh
 export ENHANCD_FILTER="fzf --height 25% --reverse --ansi:fzy"
 ```
 

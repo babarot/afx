@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/b4b4r07/afx/cmd"
+	"github.com/babarot/afx/cmd"
 )
 
 func main() {
