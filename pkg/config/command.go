@@ -61,7 +61,6 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	return nil
 }
 
-// GetLink is
 func (c Command) GetLink(pkg Package) ([]Link, error) {
 	var links []Link
 
@@ -92,6 +91,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 			continue
 		}
 		file := filepath.Join(pkg.GetHome(), link.From)
+		// zglob can search file path even if file path doesn't includ asterisk at all.
 		matches, err := zglob.Glob(file)
 		if err != nil {
 			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())

@@ -31,7 +31,7 @@ func isExecutable(path string) error {
 	return nil
 }
 
-func check(list []bool) bool {
+func allTrue(list []bool) bool {
 	if len(list) == 0 {
 		return false
 	}

@@ -172,7 +172,7 @@ func (c HTTP) Installed() bool {
 		list = append(list, err == nil)
 	}
 
-	return check(list)
+	return allTrue(list)
 }
 
 // HasPluginBlock is

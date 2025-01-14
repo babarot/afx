@@ -225,7 +225,7 @@ func (c GitHub) Installed() bool {
 		list = append(list, err == nil)
 	}
 
-	return check(list)
+	return allTrue(list)
 }
 
 func (c GitHub) GetReleaseTag() string {
