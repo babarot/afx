@@ -124,14 +124,21 @@ func resolvePath(path string) (string, bool, error) {
 		return path, false, err
 	}
 
+	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		path, err = os.Readlink(path)
+		if err != nil {
+			return path, false, err
+		}
+		fi, err = os.Lstat(path)
+		if err != nil {
+			return path, false, err
+		}
+	}
+
 	isDir := fi.IsDir()
 
 	if filepath.IsAbs(path) {
 		return path, isDir, nil
-	}
-
-	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
-		path, err = os.Readlink(path)
 	}
 
 	return path, isDir, err
