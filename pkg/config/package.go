@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/state"
 	"github.com/mattn/go-shellwords"
 )
 

@@ -16,9 +16,9 @@ list | (required)
 
     ```yaml hl_lines="9 10" title="Simple case, just register to init.sh as load scripts"
     github:
-    - name: b4b4r07/enhancd
+    - name: babarot/enhancd
       description: A next-generation cd command with your interactive filter
-      owner: b4b4r07
+      owner: babarot
       repo: enhancd
       plugin:
         env:
@@ -31,9 +31,9 @@ list | (required)
 
     ```yaml hl_lines="10 11" title="Using wildcards to register multiple files"
     github:
-    - name: b4b4r07/zsh-prompt-minimal
+    - name: babarot/zsh-prompt-minimal
       description: Super super super minimal prompt for zsh
-      owner: b4b4r07
+      owner: babarot
       repo: zsh-prompt-minimal
       plugin:
         env:
@@ -74,9 +74,9 @@ map | `{}`
 
     ```yaml hl_lines="7 8 9"
     github:
-    - name: b4b4r07/zsh-prompt-minimal
+    - name: babarot/zsh-prompt-minimal
       description: Super super super minimal prompt for zsh
-      owner: b4b4r07
+      owner: babarot
       repo: zsh-prompt-minimal
       plugin:
         env:
@@ -98,9 +98,9 @@ string | `""`
 
     ```yaml hl_lines="11 12 13" title="Login message if tpm is installed"
     github:
-    - name: b4b4r07/enhancd
+    - name: babarot/enhancd
       description: A next-generation cd command with your interactive filter
-      owner: b4b4r07
+      owner: babarot
       repo: enhancd
       plugin:
         env:
@@ -109,7 +109,7 @@ string | `""`
         - init.sh
         snippet: |
           echo "enhancd is enabled, cd command is overrided by enhancd"
-          echo "see github.com/b4b4r07/enhancd"
+          echo "see github.com/babarot/enhancd"
     ```
 
 ### snippet-prepare (beta)
@@ -124,7 +124,7 @@ string | `""`
 2. Load `sources`
 3. Run `snippet`
 
-This option comes from https://github.com/b4b4r07/afx/issues/6.
+This option comes from https://github.com/babarot/afx/issues/6.
 
 === "Case 1"
 

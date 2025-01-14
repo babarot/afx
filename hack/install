@@ -36,7 +36,7 @@ main() {
 
   command -v afx &>/dev/null && afx --version
 
-  echo 'For more information, see: https://github.com/b4b4r07/afx'
+  echo 'For more information, see: https://github.com/babarot/afx'
 }
 
 try_curl() {
@@ -81,9 +81,9 @@ download() {
   }
 
   if [[ ${afx_version} == latest ]]; then
-    url="https://github.com/b4b4r07/afx/releases/latest/download/${tarball}"
+    url="https://github.com/babarot/afx/releases/latest/download/${tarball}"
   else
-    url="https://github.com/b4b4r07/afx/releases/download/${afx_version}/${tarball}"
+    url="https://github.com/babarot/afx/releases/download/${afx_version}/${tarball}"
   fi
 
   echo "Downloading afx ..."
@@ -100,7 +100,7 @@ download() {
 
 try_go() {
   local do_cp=false
-  local path="github.com/b4b4r07/afx"
+  local path="github.com/babarot/afx"
   local cmd="${path}/cmd"
 
   echo -n "Building binary (go get -u ${path}) ... "

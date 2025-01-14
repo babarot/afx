@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/errors"
 	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"

@@ -3,8 +3,8 @@
 site_name: AFX
 site_url: https://babarot.me/afx/
 site_description: Package manager for CLI
-repo_name: b4b4r07/afx
-repo_url: https://github.com/b4b4r07/afx
+repo_name: babarot/afx
+repo_url: https://github.com/babarot/afx
 edit_uri:
 copyright: Copyright &copy; 2022 babarot
 
@@ -58,7 +58,7 @@ markdown_extensions:
     repo_url_shortener: true
     repo_url_shorthand: true
     social_url_shorthand: true
-    user: b4b4r07
+    user: babarot
     repo: afx
 - pymdownx.mark
 - pymdownx.smartsymbols
@@ -76,11 +76,11 @@ extra:
   - icon: fontawesome/solid/blog
     link: https://tellme.tokyo
   - icon: fontawesome/brands/github
-    link: https://github.com/b4b4r07
+    link: https://github.com/babarot
   - icon: fontawesome/brands/twitter
-    link: https://twitter.com/b4b4r07
+    link: https://twitter.com/babarot
   - icon: fontawesome/brands/docker
-    link: https://hub.docker.com/u/b4b4r07
+    link: https://hub.docker.com/u/babarot
 
 nav:
 - Home: index.md

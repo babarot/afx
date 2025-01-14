@@ -6,14 +6,14 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/logging"
-	"github.com/b4b4r07/afx/pkg/update"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/logging"
+	"github.com/babarot/afx/pkg/update"
 	"github.com/spf13/cobra"
 )
 
-var Repository string = "b4b4r07/afx"
+var Repository string = "babarot/afx"
 
 var (
 	rootLong = templates.LongDesc(`Package manager for CLI`)

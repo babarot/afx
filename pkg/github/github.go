@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/logging"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/logging"
 	"github.com/inconshreveable/go-update"
 	"github.com/mholt/archiver"
 	"github.com/schollz/progressbar/v3"

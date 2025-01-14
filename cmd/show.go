@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/printers"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/printers"
+	"github.com/babarot/afx/pkg/state"
 	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 )

@@ -65,9 +65,9 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 
     ```diff
       github:
-      - name: b4b4r07/enhancd
+      - name: babarot/enhancd
         description: A next-generation cd command with your interactive filter
-        owner: b4b4r07
+        owner: babarot
         repo: enhancd
         plugin:
           env:
@@ -95,9 +95,9 @@ afx have a state feature like [Terraform](https://www.terraform.io/). In afx, du
 
     ```diff
       github:
-      - name: b4b4r07/enhancd
+      - name: babarot/enhancd
         description: A next-generation cd command with your interactive filter
-        owner: b4b4r07
+        owner: babarot
         repo: enhancd
         plugin:
           env:
@@ -144,13 +144,13 @@ This is just an example of `afx init`. Running `source` command with this output
 
 ```bash
 $ afx init
-source /Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh
+source /Users/babarot/.afx/github.com/babarot/enhancd/init.sh
 export ENHANCD_FILTER="fzf --height 25% --reverse --ansi:fzy"
 source /Users/babarot/.afx/github.com/zdharma-continuum/history-search-multi-word/history-search-multi-word.plugin.zsh
-source /Users/babarot/.afx/github.com/b4b4r07/zsh-vimode-visual/zsh-vimode-visual.zsh
+source /Users/babarot/.afx/github.com/babarot/zsh-vimode-visual/zsh-vimode-visual.zsh
 alias diff="colordiff -u"
 source /Users/babarot/.afx/github.com/zdharma-continuum/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
-source /Users/babarot/.afx/github.com/b4b4r07/zsh-prompt-minimal/minimal.zsh-theme
+source /Users/babarot/.afx/github.com/babarot/zsh-prompt-minimal/minimal.zsh-theme
 export PROMPT_PATH_STYLE="minimal"
 export PROMPT_USE_VIM_MODE="true"
 ## package shlide is not installed, so skip to init

@@ -24,15 +24,15 @@ func TestOpen(t *testing.T) {
 		"state.json": `
 {
   "resources": {
-    "github.com/b4b4r07/enhancd": {
-      "id": "github.com/b4b4r07/enhancd",
-      "name": "b4b4r07/enhancd",
-      "home": "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+    "github.com/babarot/enhancd": {
+      "id": "github.com/babarot/enhancd",
+      "name": "babarot/enhancd",
+      "home": "/Users/babarot/.afx/github.com/babarot/enhancd",
       "type": "GitHub",
       "version": "",
       "paths": [
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh"
+        "/Users/babarot/.afx/github.com/babarot/enhancd",
+        "/Users/babarot/.afx/github.com/babarot/enhancd/init.sh"
       ]
     }
   }
@@ -54,15 +54,15 @@ func TestOpen(t *testing.T) {
 				packages: nil,
 				Self: Self{
 					Resources: map[ID]Resource{
-						"github.com/b4b4r07/enhancd": {
-							ID:      "github.com/b4b4r07/enhancd",
-							Name:    "b4b4r07/enhancd",
-							Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+						"github.com/babarot/enhancd": {
+							ID:      "github.com/babarot/enhancd",
+							Name:    "babarot/enhancd",
+							Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 							Type:    "GitHub",
 							Version: "",
 							Paths: []string{
-								"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-								"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+								"/Users/babarot/.afx/github.com/babarot/enhancd",
+								"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 							},
 						},
 					},
@@ -70,14 +70,14 @@ func TestOpen(t *testing.T) {
 				Additions: nil,
 				Deletions: []Resource{
 					{
-						ID:      "github.com/b4b4r07/enhancd",
-						Name:    "b4b4r07/enhancd",
-						Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+						ID:      "github.com/babarot/enhancd",
+						Name:    "babarot/enhancd",
+						Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 						Type:    "GitHub",
 						Version: "",
 						Paths: []string{
-							"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-							"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+							"/Users/babarot/.afx/github.com/babarot/enhancd",
+							"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 						},
 					},
 				},
@@ -110,15 +110,15 @@ func TestList(t *testing.T) {
 		"state.json": `
 {
   "resources": {
-    "github.com/b4b4r07/enhancd": {
-      "id": "github.com/b4b4r07/enhancd",
-      "name": "b4b4r07/enhancd",
-      "home": "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+    "github.com/babarot/enhancd": {
+      "id": "github.com/babarot/enhancd",
+      "name": "babarot/enhancd",
+      "home": "/Users/babarot/.afx/github.com/babarot/enhancd",
       "type": "GitHub",
       "version": "",
       "paths": [
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh"
+        "/Users/babarot/.afx/github.com/babarot/enhancd",
+        "/Users/babarot/.afx/github.com/babarot/enhancd/init.sh"
       ]
     }
   }
@@ -133,14 +133,14 @@ func TestList(t *testing.T) {
 			filename: "state.json",
 			resources: []Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			},
@@ -263,15 +263,15 @@ func Test_listNoChanges(t *testing.T) {
 		"state.json": `
 {
   "resources": {
-    "github.com/b4b4r07/enhancd": {
-      "id": "github.com/b4b4r07/enhancd",
-      "name": "b4b4r07/enhancd",
-      "home": "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+    "github.com/babarot/enhancd": {
+      "id": "github.com/babarot/enhancd",
+      "name": "babarot/enhancd",
+      "home": "/Users/babarot/.afx/github.com/babarot/enhancd",
       "type": "GitHub",
       "version": "",
       "paths": [
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh"
+        "/Users/babarot/.afx/github.com/babarot/enhancd",
+        "/Users/babarot/.afx/github.com/babarot/enhancd/init.sh"
       ]
     }
   }
@@ -287,27 +287,27 @@ func Test_listNoChanges(t *testing.T) {
 			filename: "state.json",
 			pkgs: stubPackages([]Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			}),
 			resources: []Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			},
@@ -361,27 +361,27 @@ func Test_listAdditions(t *testing.T) {
 			filename: "state.json",
 			pkgs: stubPackages([]Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			}),
 			resources: []Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			},
@@ -420,15 +420,15 @@ func Test_listDeletions(t *testing.T) {
 		"state.json": `
 {
   "resources": {
-    "github.com/b4b4r07/enhancd": {
-      "id": "github.com/b4b4r07/enhancd",
-      "name": "b4b4r07/enhancd",
-      "home": "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+    "github.com/babarot/enhancd": {
+      "id": "github.com/babarot/enhancd",
+      "name": "babarot/enhancd",
+      "home": "/Users/babarot/.afx/github.com/babarot/enhancd",
       "type": "GitHub",
       "version": "",
       "paths": [
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-        "/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh"
+        "/Users/babarot/.afx/github.com/babarot/enhancd",
+        "/Users/babarot/.afx/github.com/babarot/enhancd/init.sh"
       ]
     }
   }
@@ -445,14 +445,14 @@ func Test_listDeletions(t *testing.T) {
 			pkgs:     stubPackages([]Resource{}),
 			resources: []Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			},
@@ -475,14 +475,14 @@ func Test_listDeletions(t *testing.T) {
 			}),
 			resources: []Resource{
 				{
-					ID:      "github.com/b4b4r07/enhancd",
-					Name:    "b4b4r07/enhancd",
-					Home:    "/Users/babarot/.afx/github.com/b4b4r07/enhancd",
+					ID:      "github.com/babarot/enhancd",
+					Name:    "babarot/enhancd",
+					Home:    "/Users/babarot/.afx/github.com/babarot/enhancd",
 					Type:    "GitHub",
 					Version: "",
 					Paths: []string{
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd",
-						"/Users/babarot/.afx/github.com/b4b4r07/enhancd/init.sh",
+						"/Users/babarot/.afx/github.com/babarot/enhancd",
+						"/Users/babarot/.afx/github.com/babarot/enhancd/init.sh",
 					},
 				},
 			},

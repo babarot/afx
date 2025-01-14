@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/helpers/templates"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/state"
 	"github.com/spf13/cobra"
 )
 

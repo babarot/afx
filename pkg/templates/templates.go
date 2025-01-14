@@ -7,7 +7,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/b4b4r07/afx/pkg/data"
+	"github.com/babarot/afx/pkg/data"
 )
 
 // Template holds data that can be applied to a template string.

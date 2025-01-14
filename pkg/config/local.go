@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/state"
 )
 
 // Local represents

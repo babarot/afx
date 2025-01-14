@@ -6,7 +6,7 @@ Gist type allows you to manage [Gist](https://gist.github.com/) pages as a plugi
 gist:
 - name: context-scripts
   description: Get current GCP/Kubernetes context which you are on.
-  owner: b4b4r07
+  owner: babarot
   id: bb820b99fdba605ea4bd4fb29046ce58
   command:
     link:

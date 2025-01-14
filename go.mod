@@ -1,4 +1,4 @@
-module github.com/b4b4r07/afx
+module github.com/babarot/afx
 
 go 1.23
 

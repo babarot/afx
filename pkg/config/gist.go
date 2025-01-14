@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/b4b4r07/afx/pkg/errors"
-	"github.com/b4b4r07/afx/pkg/state"
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/state"
 	git "gopkg.in/src-d/go-git.v4"
 )
 

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/b4b4r07/afx/pkg/github"
+	"github.com/babarot/afx/pkg/github"
 	"github.com/hashicorp/go-version"
 )
 
