@@ -74,7 +74,7 @@ func (p Progress) Print(completion chan Status) {
 		} else if len(finalOutput) > width {
 			finalOutput = finalOutput[:width-4] + "..."
 		}
-		fadedOutput.Printf(finalOutput + "\r")
+		fadedOutput.Printf("%s\r", finalOutput)
 	}
 }
 

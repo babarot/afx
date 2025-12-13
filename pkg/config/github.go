@@ -103,12 +103,13 @@ func (c GitHub) Clone(ctx context.Context) error {
 	case os.IsNotExist(err):
 		r, err = git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
 			URL:      fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo),
+			Auth:     getGitAuth(),
 			Tags:     git.NoTags,
 			Depth:    opt.Depth,
 			Progress: writer,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to clone repository", c.GetName())
+			return wrapAuthError(errors.Wrapf(err, "%s: failed to clone repository", c.GetName()), c.GetName())
 		}
 	default:
 		r, err = git.PlainOpen(c.GetHome())
@@ -126,6 +127,7 @@ func (c GitHub) Clone(ctx context.Context) error {
 		var err error
 		err = r.FetchContext(ctx, &git.FetchOptions{
 			RemoteName: "origin",
+			Auth:       getGitAuth(),
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("+%s:%s",
 					plumbing.NewBranchReferenceName(c.Branch),

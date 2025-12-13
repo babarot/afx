@@ -59,11 +59,12 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 
 	_, err := git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
 		URL:  fmt.Sprintf("https://gist.github.com/%s/%s", c.Owner, c.ID),
+		Auth: getGitAuth(),
 		Tags: git.NoTags,
 	})
 	if err != nil {
 		status <- Status{Name: c.GetName(), Done: true, Err: true}
-		return errors.Wrapf(err, "%s: failed to clone gist repo", c.Name)
+		return wrapAuthError(errors.Wrapf(err, "%s: failed to clone gist repo", c.Name), c.Name)
 	}
 
 	var errs errors.Errors
