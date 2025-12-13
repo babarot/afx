@@ -1,0 +1,10 @@
+area/docs:
+  - changed-files:
+    - any-glob-to-any-file: 'docs/**'
+
+changelog/skip:
+  - all:
+    - changed-files:
+      - all-globs-to-all-files:
+        - '!**/*.go'
+        - '!docs/**'

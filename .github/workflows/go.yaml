@@ -1,5 +1,17 @@
 name: Tests
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/go.yaml'
+  pull_request:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/go.yaml'
 jobs:
   build:
     strategy:
