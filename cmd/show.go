@@ -158,12 +158,12 @@ func (c *showCmd) run(args []string) error {
 		return items[i].Name < items[j].Name
 	})
 
-	fmt.Fprintf(w, strings.Join(headers, "\t")+"\n")
+	fmt.Fprintf(w, "%s\n", strings.Join(headers, "\t"))
 	for _, item := range items {
 		fields := []string{
 			item.Name, item.Type, item.Status,
 		}
-		fmt.Fprintf(w, strings.Join(fields, "\t")+"\n")
+		fmt.Fprintf(w, "%s\n", strings.Join(fields, "\t"))
 	}
 
 	return w.Flush()

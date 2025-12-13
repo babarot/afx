@@ -87,7 +87,7 @@ func (s *Spinner) Stop() bool {
 	if x := atomic.SwapUint64(&s.active, 0); x > 0 {
 		fmt.Printf(ClearLine)
 		if s.done != "" {
-			fmt.Printf(s.done)
+			fmt.Print(s.done)
 		}
 		return true
 	}
