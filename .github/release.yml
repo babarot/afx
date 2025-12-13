@@ -2,3 +2,26 @@ changelog:
   exclude:
     labels:
       - tagpr
+      - changelog/skip
+  categories:
+    - title: Breaking Changes
+      labels:
+        - kind/breaking-change
+    - title: New Features
+      labels:
+        - kind/feature
+    - title: Bug fixes
+      labels:
+        - kind/bug
+    - title: Deprecated features
+      labels:
+        - kind/deprecation
+    - title: Refactorings
+      labels:
+        - kind/cleanup
+    - title: Documentation
+      labels:
+        - area/docs
+    - title: Others
+      labels:
+        - "*"
