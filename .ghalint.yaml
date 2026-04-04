@@ -1,0 +1,5 @@
+excludes:
+  # tagpr needs credentials to push tags and create PRs
+  - policy_name: checkout_persist_credentials_should_be_false
+    workflow_file_path: .github/workflows/release.yaml
+    job_name: tagpr
