@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -238,12 +239,16 @@ func TestVisitYAML(t *testing.T) {
 
 	// Create test files
 	for _, name := range []string{"a.yaml", "b.yml", "c.txt", "d.json"} {
-		os.WriteFile(filepath.Join(dir, name), []byte(""), 0644)
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(""), 0644); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	var files []string
 	fn := visitYAML(&files)
-	filepath.Walk(dir, fn)
+	if err := filepath.Walk(dir, fn); err != nil {
+		t.Fatal(err)
+	}
 
 	want := 2 // a.yaml + b.yml
 	if len(files) != want {
@@ -283,14 +288,7 @@ func TestParse(t *testing.T) {
 		names[i] = p.GetName()
 	}
 	for _, want := range []string{"gh1", "gh2", "gist1", "local1"} {
-		found := false
-		for _, n := range names {
-			if n == want {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(names, want) {
 			t.Errorf("parse() missing package %q in %v", want, names)
 		}
 	}
@@ -521,4 +519,3 @@ func TestCreateDirIfNotExist(t *testing.T) {
 
 // Verify GitHubRelease type exists (needed for HasGitHubReleaseBlock)
 var _ = &GitHubRelease{}
-

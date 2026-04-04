@@ -13,7 +13,7 @@ const ClearLine = "\r\033[K"
 type Spinner struct {
 	frames []rune
 	pos    int
-	active uint64
+	active atomic.Uint64
 	text   string
 	done   string
 	tpf    time.Duration
@@ -69,12 +69,12 @@ func (s *Spinner) Set(frames string) {
 
 // Start shows the spinner.
 func (s *Spinner) Start() *Spinner {
-	if atomic.LoadUint64(&s.active) > 0 {
+	if s.active.Load() > 0 {
 		return s
 	}
-	atomic.StoreUint64(&s.active, 1)
+	s.active.Store(1)
 	go func() {
-		for atomic.LoadUint64(&s.active) > 0 {
+		for s.active.Load() > 0 {
 			fmt.Printf(s.text, s.next())
 			time.Sleep(s.tpf)
 		}
@@ -84,8 +84,8 @@ func (s *Spinner) Start() *Spinner {
 
 // Stop hides the spinner.
 func (s *Spinner) Stop() bool {
-	if x := atomic.SwapUint64(&s.active, 0); x > 0 {
-		fmt.Printf(ClearLine)
+	if x := s.active.Swap(0); x > 0 {
+		fmt.Print(ClearLine)
 		if s.done != "" {
 			fmt.Print(s.done)
 		}

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/state"
-	"github.com/spf13/cobra"
 )
 
 type uninstallCmd struct {
@@ -65,7 +66,7 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
-				fmt.Println("Cancelled")
+				fmt.Println("Canceled")
 				return nil
 			}
 

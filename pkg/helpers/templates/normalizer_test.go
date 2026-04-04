@@ -83,7 +83,7 @@ func TestExamples(t *testing.T) {
 func TestExamples_allLinesIndented(t *testing.T) {
 	input := "line1\nline2\nline3"
 	got := Examples(input)
-	for _, line := range strings.Split(got, "\n") {
+	for line := range strings.SplitSeq(got, "\n") {
 		if !strings.HasPrefix(line, Indentation) {
 			t.Errorf("line %q should start with indentation", line)
 		}
@@ -135,8 +135,7 @@ func TestNormalizer_trim(t *testing.T) {
 func TestNormalizer_indent(t *testing.T) {
 	n := normalizer{"line1\nline2"}
 	got := n.indent()
-	lines := strings.Split(got.string, "\n")
-	for _, line := range lines {
+	for line := range strings.SplitSeq(got.string, "\n") {
 		if !strings.HasPrefix(line, Indentation) {
 			t.Errorf("indent(): line %q should start with indentation", line)
 		}
@@ -146,8 +145,7 @@ func TestNormalizer_indent(t *testing.T) {
 func TestNormalizer_space(t *testing.T) {
 	n := normalizer{"line1\nline2"}
 	got := n.space()
-	lines := strings.Split(got.string, "\n")
-	for _, line := range lines {
+	for line := range strings.SplitSeq(got.string, "\n") {
 		if !strings.HasPrefix(line, Indentation) {
 			t.Errorf("space(): line %q should start with indentation", line)
 		}

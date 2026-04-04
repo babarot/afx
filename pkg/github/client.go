@@ -3,7 +3,6 @@ package github
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -40,7 +39,7 @@ type Client struct {
 	http *http.Client
 }
 
-func (c Client) REST(method string, url string, body io.Reader, data interface{}) error {
+func (c Client) REST(method string, url string, body io.Reader, data any) error {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return err
@@ -63,7 +62,7 @@ func (c Client) REST(method string, url string, body io.Reader, data interface{}
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 300
 	if !success {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
@@ -74,7 +73,7 @@ func (c Client) REST(method string, url string, body io.Reader, data interface{}
 		return nil
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

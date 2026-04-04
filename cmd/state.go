@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/state"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 )
 
 type stateCmd struct {

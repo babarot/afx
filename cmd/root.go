@@ -6,11 +6,12 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/spf13/cobra"
+
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/logging"
 	"github.com/babarot/afx/pkg/update"
-	"github.com/spf13/cobra"
 )
 
 var Repository string = "babarot/afx"
@@ -51,7 +52,7 @@ func newRootCmd(m metaCmd) *cobra.Command {
 			}()
 
 			if cmd.Runnable() {
-				cmd.Help()
+				_ = cmd.Help()
 			}
 
 			printForUpdate(uriCh)

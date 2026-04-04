@@ -2,28 +2,29 @@ package config
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver"
+	"github.com/fatih/color"
+	"github.com/go-playground/validator/v10"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Masterminds/semver"
 	"github.com/babarot/afx/pkg/data"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/github"
 	"github.com/babarot/afx/pkg/logging"
 	"github.com/babarot/afx/pkg/state"
 	"github.com/babarot/afx/pkg/templates"
-	"github.com/fatih/color"
-	"github.com/go-playground/validator/v10"
 )
 
 // GitHub represents GitHub repository
@@ -87,7 +88,7 @@ func (c GitHub) Init() error {
 
 // Clone runs git clone
 func (c GitHub) Clone(ctx context.Context) error {
-	writer := ioutil.Discard
+	writer := io.Discard
 	if logging.IsTrace() {
 		writer = os.Stdout
 	}
@@ -139,7 +140,7 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Tags:     git.NoTags,
 			Progress: writer,
 		})
-		if err != nil && err != git.NoErrAlreadyUpToDate {
+		if err != nil && !stderrors.Is(err, git.NoErrAlreadyUpToDate) {
 			return errors.Wrapf(err, "%s: failed to fetch repository", c.Branch)
 		}
 		err = w.Checkout(&git.CheckoutOptions{
@@ -219,10 +220,7 @@ func (c GitHub) Installed() bool {
 		list = append(list, c.Command.Installed(c))
 	}
 
-	switch {
-	case c.HasPluginBlock():
-	case c.HasCommandBlock():
-	default:
+	if !c.HasPluginBlock() && !c.HasCommandBlock() {
 		_, err := os.Stat(c.GetHome())
 		list = append(list, err == nil)
 	}
@@ -360,9 +358,6 @@ func (c GitHub) Uninstall(ctx context.Context) error {
 		}
 	}
 
-	if c.HasPluginBlock() {
-	}
-
 	delete(c.GetHome(), &errs)
 	return errs.ErrorOrNil()
 }
@@ -420,8 +415,6 @@ func (c GitHub) Check(ctx context.Context, status chan<- Status) error {
 
 type report struct {
 	message string
-	current *semver.Version
-	next    *semver.Version
 }
 
 func (c GitHub) checkUpdates(ctx context.Context) (report, error) {

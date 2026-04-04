@@ -1,7 +1,7 @@
 package state
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"testing"
 
@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	exists = func(path string) bool {
 		// always returns true in testing

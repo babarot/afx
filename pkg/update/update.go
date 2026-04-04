@@ -3,7 +3,6 @@ package update
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/babarot/afx/pkg/github"
 	"github.com/hashicorp/go-version"
+
+	"github.com/babarot/afx/pkg/github"
 )
 
 // refer: github.com/cli/cli/tree/<hash>/internal/update
@@ -72,7 +72,7 @@ func getLatestReleaseInfo(client *github.Client, repo string) (*ReleaseInfo, err
 }
 
 func getStateEntry(stateFilePath string) (*StateEntry, error) {
-	content, err := ioutil.ReadFile(stateFilePath)
+	content, err := os.ReadFile(stateFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func setStateEntry(stateFilePath string, t time.Time, r ReleaseInfo) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(stateFilePath, content, 0600)
+	err = os.WriteFile(stateFilePath, content, 0600)
 	return err
 }
 

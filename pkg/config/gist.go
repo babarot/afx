@@ -7,9 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
+	git "gopkg.in/src-d/go-git.v4"
+
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/state"
-	git "gopkg.in/src-d/go-git.v4"
 )
 
 // Gist represents
@@ -91,10 +92,7 @@ func (c Gist) Installed() bool {
 		list = append(list, c.Command.Installed(c))
 	}
 
-	switch {
-	case c.HasPluginBlock():
-	case c.HasCommandBlock():
-	default:
+	if !c.HasPluginBlock() && !c.HasCommandBlock() {
 		_, err := os.Stat(c.GetHome())
 		list = append(list, err == nil)
 	}
@@ -150,10 +148,6 @@ func (c Gist) Uninstall(ctx context.Context) error {
 			delete(link.From, &errs)
 			delete(link.To, &errs)
 		}
-	}
-
-	if c.HasPluginBlock() {
-		// TODO
 	}
 
 	delete(c.GetHome(), &errs)

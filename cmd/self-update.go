@@ -8,24 +8,19 @@ import (
 	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/github"
-	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/github"
+	"github.com/babarot/afx/pkg/helpers/templates"
 )
 
 type selfUpdateCmd struct {
 	metaCmd
 
-	opt selfUpdateOpt
-
 	annotation map[string]string
-}
-
-type selfUpdateOpt struct {
-	tag bool
 }
 
 var (

@@ -147,7 +147,7 @@ func TestShell_Run_contextCancel(t *testing.T) {
 
 	err := s.Run(ctx)
 	if err == nil {
-		t.Error("Run() expected error for cancelled context")
+		t.Error("Run() expected error for canceled context")
 	}
 }
 

@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/babarot/afx/pkg/dependency"
-	"github.com/babarot/afx/pkg/state"
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-multierror"
+
+	"github.com/babarot/afx/pkg/dependency"
+	"github.com/babarot/afx/pkg/state"
 )
 
 // Config structure for file describing deployment. This includes the module source, inputs
@@ -54,7 +55,9 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
-	validate.RegisterValidation("startswith-gh-if-not-empty", ValidateGHExtension)
+	if err := validate.RegisterValidation("startswith-gh-if-not-empty", ValidateGHExtension); err != nil {
+		return cfg, err
+	}
 	d := yaml.NewDecoder(
 		bufio.NewReader(f),
 		yaml.DisallowUnknownField(),

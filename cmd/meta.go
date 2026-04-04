@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,16 +9,15 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
+
 	"github.com/babarot/afx/pkg/config"
 	"github.com/babarot/afx/pkg/env"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/github"
-	"github.com/babarot/afx/pkg/helpers/shell"
 	"github.com/babarot/afx/pkg/printers"
 	"github.com/babarot/afx/pkg/state"
 	"github.com/babarot/afx/pkg/update"
-	"github.com/fatih/color"
-	"github.com/mattn/go-shellwords"
 )
 
 type metaCmd struct {
@@ -93,7 +90,7 @@ func (m *metaCmd) init() error {
 	m.packages = pkgs
 
 	m.env = env.New(cache)
-	m.env.Add(env.Variables{
+	_ = m.env.Add(env.Variables{
 		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
@@ -122,10 +119,10 @@ func (m *metaCmd) init() error {
 	}
 
 	log.Printf("[DEBUG] mkdir %s\n", root)
-	os.MkdirAll(root, os.ModePerm)
+	_ = os.MkdirAll(root, os.ModePerm)
 
 	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
-	os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
+	_ = os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
 
 	resourcers := make([]state.Resourcer, len(m.packages))
 	for i, pkg := range m.packages {
@@ -171,57 +168,7 @@ func (m *metaCmd) printForUpdate() error {
 	return nil
 }
 
-func (m *metaCmd) prompt() (config.Package, error) {
-	if m.main.FilterCmd == "" {
-		return nil, errors.New("filter_command is not set")
-	}
-
-	var stdin, stdout bytes.Buffer
-
-	p := shellwords.NewParser()
-	p.ParseEnv = true
-	p.ParseBacktick = true
-
-	args, err := p.Parse(m.main.FilterCmd)
-	if err != nil {
-		return nil, errors.New("failed to parse filter command in main config")
-	}
-
-	cmd := shell.Shell{
-		Stdin:   &stdin,
-		Stdout:  &stdout,
-		Stderr:  os.Stderr,
-		Command: args[0],
-		Args:    args[1:],
-	}
-
-	for _, pkg := range m.packages {
-		fmt.Fprintln(&stdin, pkg.GetName())
-	}
-
-	if err := cmd.Run(context.Background()); err != nil {
-		return nil, err
-	}
-
-	search := func(name string) config.Package {
-		for _, pkg := range m.packages {
-			if pkg.GetName() == name {
-				return pkg
-			}
-		}
-		return nil
-	}
-
-	for _, line := range strings.Split(stdout.String(), "\n") {
-		if pkg := search(line); pkg != nil {
-			return pkg, nil
-		}
-	}
-
-	return nil, errors.New("pkg not found")
-}
-
-func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
+func (m *metaCmd) askRunCommand(op any, pkgs []string) (bool, error) {
 	var do string
 	switch op.(type) {
 	case installCmd:
@@ -248,12 +195,13 @@ func (m *metaCmd) askRunCommand(op interface{}, pkgs []string) (bool, error) {
 	}
 
 	if len(pkgs) > length {
-		helpMessage := "\n"
+		var sb strings.Builder
+		sb.WriteString("\n")
 		sort.Strings(pkgs)
 		for _, pkg := range pkgs {
-			helpMessage += fmt.Sprintf("- %s\n", pkg)
+			fmt.Fprintf(&sb, "- %s\n", pkg)
 		}
-		confirm.Help = helpMessage
+		confirm.Help = sb.String()
 	}
 
 	if err := survey.AskOne(&confirm, &yes); err != nil {

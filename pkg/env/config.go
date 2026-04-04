@@ -3,7 +3,6 @@ package env
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -22,7 +21,7 @@ type Variables map[string]Variable
 type Variable struct {
 	Value   string `json:"value,omitempty"`
 	Default string `json:"default,omitempty"`
-	Input   Input  `json:"input,omitempty"`
+	Input   Input  `json:"input"`
 }
 
 // Input represents value input from terminal
@@ -40,22 +39,21 @@ func New(path string) *Config {
 	}
 	if _, err := os.Stat(path); err == nil {
 		// already exist
-		cfg.read()
+		_ = cfg.read()
 	}
 	return cfg
 }
 
 // Add adds environment variable with given key and given value
-func (c *Config) Add(args ...interface{}) error {
+func (c *Config) Add(args ...any) error {
 	switch len(args) {
 	case 0:
 		return errors.New("one or two args required")
 	case 1:
-		switch args[0].(type) {
+		switch v := args[0].(type) {
 		case Variables:
-			variables := args[0].(Variables)
-			for name, v := range variables {
-				c.add(name, v)
+			for name, variable := range v {
+				c.add(name, variable)
 			}
 			return nil
 		default:
@@ -78,7 +76,7 @@ func (c *Config) Add(args ...interface{}) error {
 }
 
 func (c *Config) add(name string, v Variable) {
-	defer c.save()
+	defer func() { _ = c.save() }()
 
 	existing, exist := c.Env[name]
 	if exist {
@@ -120,7 +118,7 @@ func (c *Config) Ask(keys ...string) {
 		}
 		var opts []survey.AskOpt
 		opts = append(opts, survey.WithValidator(survey.Required))
-		survey.AskOne(&survey.Password{
+		_ = survey.AskOne(&survey.Password{
 			Message: v.Input.Message,
 			Help:    v.Input.Help,
 		}, &v.Value, opts...)
@@ -129,7 +127,7 @@ func (c *Config) Ask(keys ...string) {
 		update = true
 	}
 	if update {
-		c.save()
+		_ = c.save()
 	}
 }
 
@@ -148,7 +146,7 @@ func (c *Config) AskWhen(env map[string]bool) {
 		}
 		var opts []survey.AskOpt
 		opts = append(opts, survey.WithValidator(survey.Required))
-		survey.AskOne(&survey.Password{
+		_ = survey.AskOne(&survey.Password{
 			Message: v.Input.Message,
 			Help:    v.Input.Help,
 		}, &v.Value, opts...)
@@ -157,7 +155,7 @@ func (c *Config) AskWhen(env map[string]bool) {
 		update = true
 	}
 	if update {
-		c.save()
+		_ = c.save()
 	}
 }
 
@@ -167,7 +165,7 @@ func (c *Config) read() error {
 		return err
 	}
 
-	content, err := ioutil.ReadFile(c.Path)
+	content, err := os.ReadFile(c.Path)
 	if err != nil {
 		return err
 	}

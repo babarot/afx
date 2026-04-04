@@ -41,8 +41,7 @@ type ASCIIRenderer struct {
 // removing linebreaks on things that are not a paragraph break (auto unwrap).
 func (r *ASCIIRenderer) NormalText(out *bytes.Buffer, text []byte) {
 	raw := string(text)
-	lines := strings.Split(raw, linebreak)
-	for _, line := range lines {
+	for line := range strings.SplitSeq(raw, linebreak) {
 		trimmed := strings.Trim(line, " \n\t")
 		if len(trimmed) > 0 && trimmed[0] != '_' {
 			out.WriteString(" ")
@@ -89,7 +88,7 @@ func (r *ASCIIRenderer) Paragraph(out *bytes.Buffer, text func() bool) {
 func (r *ASCIIRenderer) BlockCode(out *bytes.Buffer, text []byte, lang string) {
 	out.WriteString(linebreak)
 	lines := []string{}
-	for _, line := range strings.Split(string(text), linebreak) {
+	for line := range strings.SplitSeq(string(text), linebreak) {
 		indented := r.Indentation + line
 		lines = append(lines, indented)
 	}
@@ -132,7 +131,9 @@ func (r *ASCIIRenderer) TableCell(out *bytes.Buffer, text []byte, align int) { r
 func (r *ASCIIRenderer) Footnotes(out *bytes.Buffer, text func() bool) { text() }
 
 // FootnoteItem writes footnote item
-func (r *ASCIIRenderer) FootnoteItem(out *bytes.Buffer, name, text []byte, flags int) { r.fw(out, text) }
+func (r *ASCIIRenderer) FootnoteItem(out *bytes.Buffer, name, text []byte, flags int) {
+	r.fw(out, text)
+}
 
 // AutoLink writes autolink
 func (r *ASCIIRenderer) AutoLink(out *bytes.Buffer, link []byte, kind int) { r.fw(out, link) }
@@ -196,6 +197,6 @@ func (r *ASCIIRenderer) Image(out *bytes.Buffer, link []byte, title []byte, alt 
 
 func (r *ASCIIRenderer) fw(out io.Writer, text ...[]byte) {
 	for _, t := range text {
-		out.Write(t)
+		_, _ = out.Write(t)
 	}
 }

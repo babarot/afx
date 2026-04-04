@@ -18,7 +18,7 @@ func TestClient_REST_success(t *testing.T) {
 			t.Errorf("Content-Type = %q, want application/json", ct)
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(expected)
+		_ = json.NewEncoder(w).Encode(expected)
 	}))
 	defer server.Close()
 
@@ -49,7 +49,7 @@ func TestClient_REST_noContent(t *testing.T) {
 func TestClient_REST_errorStatus(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		io.WriteString(w, `{"message":"Not Found"}`)
+		_, _ = io.WriteString(w, `{"message":"Not Found"}`)
 	}))
 	defer server.Close()
 
@@ -64,7 +64,7 @@ func TestClient_REST_errorStatus(t *testing.T) {
 func TestClient_REST_invalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, `not json`)
+		_, _ = io.WriteString(w, `not json`)
 	}))
 	defer server.Close()
 
@@ -83,13 +83,13 @@ func TestClient_REST_withToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, `{}`)
+		_, _ = io.WriteString(w, `{}`)
 	}))
 	defer server.Close()
 
 	client := NewClient(ReplaceTripper(server.Client().Transport))
 	var result map[string]any
-	client.REST(http.MethodGet, server.URL+"/test", nil, &result)
+	_ = client.REST(http.MethodGet, server.URL+"/test", nil, &result)
 
 	if gotAuth != "token test-token-123" {
 		t.Errorf("Authorization header = %q, want %q", gotAuth, "token test-token-123")
@@ -103,13 +103,13 @@ func TestClient_REST_withoutToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, `{}`)
+		_, _ = io.WriteString(w, `{}`)
 	}))
 	defer server.Close()
 
 	client := NewClient(ReplaceTripper(server.Client().Transport))
 	var result map[string]any
-	client.REST(http.MethodGet, server.URL+"/test", nil, &result)
+	_ = client.REST(http.MethodGet, server.URL+"/test", nil, &result)
 
 	if gotAuth != "" {
 		t.Errorf("Authorization header should be empty without token, got %q", gotAuth)
@@ -119,7 +119,7 @@ func TestClient_REST_withoutToken(t *testing.T) {
 func TestHasRelease(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, `{"tag_name":"v1.0"}`)
+		_, _ = io.WriteString(w, `{"tag_name":"v1.0"}`)
 	}))
 	defer server.Close()
 

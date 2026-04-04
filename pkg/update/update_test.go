@@ -2,14 +2,15 @@ package update
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"testing"
 
-	"github.com/babarot/afx/pkg/github"
 	"github.com/cli/cli/v2/pkg/httpmock"
+
+	"github.com/babarot/afx/pkg/github"
 )
 
 func TestCheckForUpdate(t *testing.T) {
@@ -76,7 +77,7 @@ func TestCheckForUpdate(t *testing.T) {
 		},
 	}
 
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	for _, s := range scenarios {
 		t.Run(s.Name, func(t *testing.T) {
@@ -126,7 +127,7 @@ func TestCheckForUpdate(t *testing.T) {
 }
 
 func tempFilePath() string {
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	if err != nil {
 		log.Fatal(err)
 	}

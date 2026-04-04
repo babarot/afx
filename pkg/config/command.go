@@ -11,13 +11,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/babarot/afx/pkg/errors"
 	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
+
+	"github.com/babarot/afx/pkg/errors"
 )
 
-// Command is
+// Command represents shell command configuration including build steps and symlinks.
 type Command struct {
 	Build   *Build            `yaml:"build"`
 	Link    []*Link           `yaml:"link" validate:"required"`
@@ -27,14 +28,14 @@ type Command struct {
 	If      string            `yaml:"if"`
 }
 
-// Build is
+// Build represents build configuration for a package.
 type Build struct {
 	Steps     []string          `yaml:"steps" validate:"required"`
 	Env       map[string]string `yaml:"env"`
 	Directory string            `yaml:"directory"`
 }
 
-// Link is
+// Link represents a symlink mapping from source to destination.
 type Link struct {
 	From string `yaml:"from" validate:"required"`
 	To   string `yaml:"to"`
@@ -91,7 +92,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 			continue
 		}
 		file := filepath.Join(pkg.GetHome(), link.From)
-		// zglob can search file path even if file path doesn't includ asterisk at all.
+		// zglob can search file path even if file path doesn't include asterisk at all.
 		matches, err := zglob.Glob(file)
 		if err != nil {
 			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
@@ -121,7 +122,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 	return links, nil
 }
 
-// Installed returns true ...
+// Installed returns true if the command package is already installed.
 func (c Command) Installed(pkg Package) bool {
 	links, err := c.GetLink(pkg)
 	if err != nil {
@@ -157,7 +158,7 @@ func (c Command) Installed(pkg Package) bool {
 	return true
 }
 
-// buildRequired is
+// buildRequired returns true if a build step is configured.
 func (c Command) buildRequired() bool {
 	return c.Build != nil && len(c.Build.Steps) > 0
 }
@@ -210,7 +211,7 @@ func (c Command) build(pkg Package) error {
 	return errs.ErrorOrNil()
 }
 
-// Install is
+// Install installs the command package by building and creating symlinks.
 func (c Command) Install(pkg Package) error {
 	if c.buildRequired() {
 		err := c.build(pkg)
@@ -234,7 +235,7 @@ func (c Command) Install(pkg Package) error {
 		pdir := filepath.Dir(link.To)
 		if _, err := os.Stat(pdir); os.IsNotExist(err) {
 			log.Printf("[DEBUG] %s: created directory to install path", pdir)
-			os.MkdirAll(pdir, 0755)
+			_ = os.MkdirAll(pdir, 0755)
 		}
 
 		fi, err := os.Stat(link.From)
@@ -246,7 +247,7 @@ func (c Command) Install(pkg Package) error {
 		case 0755:
 			// ok
 		default:
-			os.Chmod(link.From, 0755)
+			_ = os.Chmod(link.From, 0755)
 		}
 
 		if _, err := os.Lstat(link.To); err == nil {
@@ -297,7 +298,7 @@ func (c Command) Init(pkg Package) error {
 		case 0:
 		default:
 			log.Printf("[ERROR] %s: command.if returns not zero so unlink package", pkg.GetName())
-			c.Unlink(pkg)
+			_ = c.Unlink(pkg)
 			return fmt.Errorf("%s: failed to run command.if: %w", pkg.GetName(), err)
 		}
 	}

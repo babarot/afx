@@ -6,11 +6,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/goccy/go-yaml"
+	"github.com/spf13/cobra"
+
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/printers"
 	"github.com/babarot/afx/pkg/state"
-	"github.com/goccy/go-yaml"
-	"github.com/spf13/cobra"
 )
 
 type showCmd struct {
@@ -86,7 +87,7 @@ func (m metaCmd) newShowCmd() *cobra.Command {
 	flag := showCmd.Flags()
 	flag.StringVarP(&c.opt.output, "output", "o", "default", "Output style [default,json,yaml,path,name]")
 
-	showCmd.RegisterFlagCompletionFunc("output",
+	_ = showCmd.RegisterFlagCompletionFunc("output",
 		func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			out := []string{"default", "json", "yaml", "path", "name"}
 			return out, cobra.ShellCompDirectiveNoFileComp
@@ -104,7 +105,6 @@ func (c *showCmd) run(args []string) error {
 		Type   string
 		Status string
 	}
-	type Items []Item
 
 	filter := func(items []Item, input string) []Item {
 		var tmp []Item

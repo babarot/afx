@@ -113,8 +113,12 @@ func Resolve(graph Graph) (Graph, error) {
 
 		// Remove the ready nodes and add them to the resolved graph
 		for name := range readySet.Iter() {
-			delete(nodeDependencies, name.(string))
-			resolved = append(resolved, nodeNames[name.(string)])
+			nameStr, ok := name.(string)
+			if !ok {
+				continue
+			}
+			delete(nodeDependencies, nameStr)
+			resolved = append(resolved, nodeNames[nameStr])
 		}
 
 		// Also make sure to remove the ready nodes from the

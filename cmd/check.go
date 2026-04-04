@@ -7,12 +7,13 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/babarot/afx/pkg/config"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/state"
-	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
 type checkCmd struct {
@@ -69,7 +70,7 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
-				fmt.Println("Cancelled")
+				fmt.Println("Canceled")
 				return nil
 			}
 
@@ -109,7 +110,6 @@ func (c *checkCmd) run(pkgs []config.Package) error {
 	log.Printf("[DEBUG] (check): start to run each pkg.Check()")
 	eg := errgroup.Group{}
 	for _, pkg := range pkgs {
-		pkg := pkg
 		eg.Go(func() error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
@@ -118,13 +118,13 @@ func (c *checkCmd) run(pkgs []config.Package) error {
 			case results <- checkResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: cancelled checking", pkg.GetName())
+				return errors.Wrapf(ctx.Err(), "%s: canceled checking", pkg.GetName())
 			}
 		})
 	}
 
 	go func() {
-		eg.Wait()
+		_ = eg.Wait()
 		close(results)
 	}()
 
@@ -139,7 +139,7 @@ func (c *checkCmd) run(pkgs []config.Package) error {
 
 	defer func(err error) {
 		if err != nil {
-			c.env.Refresh()
+			_ = c.env.Refresh()
 		}
 	}(exit.ErrorOrNil())
 

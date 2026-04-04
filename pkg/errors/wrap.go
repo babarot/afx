@@ -16,6 +16,6 @@ func Wrap(err error, message string) error {
 	return errors.Wrap(err, message)
 }
 
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	return errors.Wrapf(err, format, args...)
 }

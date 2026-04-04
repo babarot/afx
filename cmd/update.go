@@ -7,12 +7,13 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/babarot/afx/pkg/config"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/babarot/afx/pkg/state"
-	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 )
 
 type updateCmd struct {
@@ -69,7 +70,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 
 			yes, _ := m.askRunCommand(*c, state.Keys(resources))
 			if !yes {
-				fmt.Println("Cancelled")
+				fmt.Println("Canceled")
 				return nil
 			}
 
@@ -110,7 +111,6 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
 	eg := errgroup.Group{}
 	for _, pkg := range pkgs {
-		pkg := pkg
 		eg.Go(func() error {
 			limit <- struct{}{}
 			defer func() { <-limit }()
@@ -121,19 +121,19 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 				c.state.Update(pkg)
 			default:
 				log.Printf("[DEBUG] uninstall %q because updating failed", pkg.GetName())
-				pkg.Uninstall(ctx)
+				_ = pkg.Uninstall(ctx)
 			}
 			select {
 			case results <- updateResult{Package: pkg, Error: err}:
 				return nil
 			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: cancelled updating", pkg.GetName())
+				return errors.Wrapf(ctx.Err(), "%s: canceled updating", pkg.GetName())
 			}
 		})
 	}
 
 	go func() {
-		eg.Wait()
+		_ = eg.Wait()
 		close(results)
 	}()
 
@@ -148,7 +148,7 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 
 	defer func(err error) {
 		if err != nil {
-			c.env.Refresh()
+			_ = c.env.Refresh()
 		}
 	}(exit.ErrorOrNil())
 

@@ -3,8 +3,9 @@ package config
 import (
 	"context"
 
-	"github.com/babarot/afx/pkg/state"
 	"github.com/mattn/go-shellwords"
+
+	"github.com/babarot/afx/pkg/state"
 )
 
 // Installer is an interface related to installation of a package

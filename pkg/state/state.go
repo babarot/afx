@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/google/go-cmp/cmp"
@@ -91,7 +89,7 @@ var ReadStateFile = func(filename string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -101,20 +99,6 @@ var ReadStateFile = func(filename string) ([]byte, error) {
 
 var SaveStateFile = func(filename string) (io.Writer, error) {
 	return os.Create(filename)
-}
-
-func findRegularFile(p string) string {
-	for {
-		if s, err := os.Stat(p); err == nil && s.Mode().IsRegular() {
-			return p
-		}
-		newPath := filepath.Dir(p)
-		if newPath == p || newPath == "/" || newPath == "." {
-			break
-		}
-		p = newPath
-	}
-	return ""
 }
 
 func add(r Resource, s *State) {
@@ -290,7 +274,7 @@ func (s *State) Add(resourcer Resourcer) {
 	defer s.mu.Unlock()
 
 	add(resourcer.GetResource(), s)
-	s.save()
+	_ = s.save()
 }
 
 func (s *State) Remove(resourcer Resourcer) {
@@ -298,7 +282,7 @@ func (s *State) Remove(resourcer Resourcer) {
 	defer s.mu.Unlock()
 
 	remove(resourcer.GetResource(), s)
-	s.save()
+	_ = s.save()
 }
 
 func (s *State) Update(resourcer Resourcer) {
@@ -306,7 +290,7 @@ func (s *State) Update(resourcer Resourcer) {
 	defer s.mu.Unlock()
 
 	update(resourcer.GetResource(), s)
-	s.save()
+	_ = s.save()
 }
 
 func (s *State) List() ([]Resource, error) {

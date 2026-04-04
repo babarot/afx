@@ -4,19 +4,18 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 
+	"github.com/mholt/archiver"
+
 	"github.com/babarot/afx/pkg/data"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/state"
 	"github.com/babarot/afx/pkg/templates"
-	"github.com/h2non/filetype"
-	"github.com/mholt/archiver"
 )
 
 // HTTP represents
@@ -73,7 +72,7 @@ func (c HTTP) call(ctx context.Context) error {
 		return fmt.Errorf("%s: %d %s", c.GetName(), resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
-	os.MkdirAll(c.GetHome(), os.ModePerm)
+	_ = os.MkdirAll(c.GetHome(), os.ModePerm)
 	dest := filepath.Join(c.GetHome(), filepath.Base(c.URL))
 
 	log.Printf("[DEBUG] http: %s: copying %q to %q", c.GetName(), c.URL, dest)
@@ -134,24 +133,6 @@ func unarchiveV2(path string) error {
 	return archiver.Unarchive(path, filepath.Dir(path))
 }
 
-func unarchive(f string) error {
-	buf, err := ioutil.ReadFile(f)
-	if err != nil {
-		return err
-	}
-
-	switch {
-	case filetype.IsArchive(buf):
-		if err := archiver.Unarchive(f, filepath.Dir(f)); err != nil {
-			return errors.Wrapf(err, "%s: failed to unarhive", f)
-		}
-	default:
-		log.Printf("[DEBUG] %s: no need to unarchive", f)
-	}
-
-	return nil
-}
-
 // Installed is
 func (c HTTP) Installed() bool {
 	var list []bool
@@ -164,10 +145,7 @@ func (c HTTP) Installed() bool {
 		list = append(list, c.Command.Installed(c))
 	}
 
-	switch {
-	case c.HasPluginBlock():
-	case c.HasCommandBlock():
-	default:
+	if !c.HasPluginBlock() && !c.HasCommandBlock() {
 		_, err := os.Stat(c.GetHome())
 		list = append(list, err == nil)
 	}
@@ -215,18 +193,11 @@ func (c HTTP) Uninstall(ctx context.Context) error {
 	}
 
 	if c.HasCommandBlock() {
-		links, err := c.Command.GetLink(c)
-		if err != nil {
-			// no problem to handle error even if this links returns no value
-			// because base dir itself will be deleted below
-		}
+		links, _ := c.Command.GetLink(c)
 		for _, link := range links {
 			delete(link.From, &errs)
 			delete(link.To, &errs)
 		}
-	}
-
-	if c.HasPluginBlock() {
 	}
 
 	delete(c.GetHome(), &errs)
@@ -265,7 +236,6 @@ func (c *HTTP) ParseURL() {
 		log.Printf("[TRACE] %s: templating URL %q to %q", c.GetName(), c.URL, templated)
 		c.URL = templated
 	}
-	return
 }
 
 func (c HTTP) Check(ctx context.Context, status chan<- Status) error {

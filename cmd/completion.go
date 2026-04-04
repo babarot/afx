@@ -3,8 +3,9 @@ package cmd
 import (
 	"os"
 
-	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/spf13/cobra"
+
+	"github.com/babarot/afx/pkg/helpers/templates"
 )
 
 var (
@@ -56,15 +57,15 @@ func (m metaCmd) newCompletionCmd() *cobra.Command {
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		ValidArgs:             []string{"bash", "zsh", "fish"},
-		Args:                  cobra.ExactValidArgs(1),
+		Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
 			case "bash":
-				newRootCmd(m).GenBashCompletion(os.Stdout)
+				_ = newRootCmd(m).GenBashCompletion(os.Stdout)
 			case "zsh":
-				newRootCmd(m).GenZshCompletion(os.Stdout)
+				_ = newRootCmd(m).GenZshCompletion(os.Stdout)
 			case "fish":
-				newRootCmd(m).GenFishCompletion(os.Stdout, true)
+				_ = newRootCmd(m).GenFishCompletion(os.Stdout, true)
 			}
 			return nil
 		},

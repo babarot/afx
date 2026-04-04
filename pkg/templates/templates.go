@@ -17,7 +17,7 @@ type Template struct {
 }
 
 // Fields that will be available to the template engine.
-type Fields map[string]interface{}
+type Fields map[string]any
 
 const (
 	pkgName = "Name"

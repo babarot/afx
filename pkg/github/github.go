@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,11 +12,12 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/logging"
 	"github.com/inconshreveable/go-update"
 	"github.com/mholt/archiver"
 	"github.com/schollz/progressbar/v3"
+
+	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/logging"
 )
 
 // Release represents a GitHub release and its client
@@ -145,7 +145,7 @@ func NewRelease(ctx context.Context, owner, repo, tag string, opts ...Option) (*
 		})
 	}
 
-	tmp, err := ioutil.TempDir("", repo)
+	tmp, err := os.MkdirTemp("", repo)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 	}
 	defer resp.Body.Close()
 
-	os.MkdirAll(r.workdir, os.ModePerm)
+	_ = os.MkdirAll(r.workdir, os.ModePerm)
 	archive := filepath.Join(r.workdir, asset.Name)
 
 	file, err := os.Create(archive)
@@ -308,8 +308,8 @@ func (r *Release) Unarchive(asset Asset) error {
 			}
 		}
 		log.Printf("[DEBUG] renamed from %s to %s", archive, target)
-		os.Rename(archive, target)
-		os.Chmod(target, 0755)
+		_ = os.Rename(archive, target)
+		_ = os.Chmod(target, 0755)
 		return nil
 	}
 
@@ -339,7 +339,7 @@ func (r *Release) Unarchive(asset Asset) error {
 		*archiver.Lz4,
 		*archiver.Snappy,
 		*archiver.Xz:
-		// nothing to customise
+		// nothing to customize
 	}
 	log.Printf("[DEBUG] uaIface: %#v (%T)", uaIface, uaIface)
 
@@ -373,7 +373,7 @@ func (r *Release) Unarchive(asset Asset) error {
 	return nil
 }
 
-// Install instals unarchived packages to given path
+// Install installs unarchived packages to given path
 func (r *Release) Install(to string) error {
 	bin := filepath.Join(r.workdir, r.Name)
 	log.Printf("[DEBUG] release install: %#v", bin)

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/babarot/afx/pkg/helpers/templates"
 	"github.com/spf13/cobra"
+
+	"github.com/babarot/afx/pkg/helpers/templates"
 )
 
 var (
