@@ -5,15 +5,16 @@ import (
 
 	"github.com/mattn/go-shellwords"
 
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 )
 
 // Installer is an interface related to installation of a package
 type Installer interface {
-	Install(context.Context, chan<- Status) error
+	Install(context.Context, chan<- runner.Status) error
 	Uninstall(context.Context) error
 	Installed() bool
-	Check(context.Context, chan<- Status) error
+	Check(context.Context, chan<- runner.Status) error
 }
 
 // Loader is an interface related to initialize a package

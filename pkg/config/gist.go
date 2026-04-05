@@ -10,6 +10,7 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 
 	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 )
 
@@ -40,7 +41,7 @@ func (c Gist) Init() error {
 }
 
 // Install is
-func (c Gist) Install(ctx context.Context, status chan<- Status) error {
+func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -64,7 +65,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 		Tags: git.NoTags,
 	})
 	if err != nil {
-		status <- Status{Name: c.GetName(), Done: true, Err: true}
+		status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 		return wrapAuthError(errors.Wrapf(err, "%s: failed to clone gist repo", c.Name), c.Name)
 	}
 
@@ -76,7 +77,7 @@ func (c Gist) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 
@@ -173,7 +174,7 @@ func (c Gist) GetResource() state.Resource {
 	return getResource(c)
 }
 
-func (c Gist) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", NoColor: true}
+func (c Gist) Check(ctx context.Context, status chan<- runner.Status) error {
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", NoColor: true}
 	return nil
 }

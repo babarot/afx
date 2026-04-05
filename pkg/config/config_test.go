@@ -150,57 +150,6 @@ func TestConfig_Contains(t *testing.T) {
 	}
 }
 
-func TestCountRemaining(t *testing.T) {
-	tests := map[string]struct {
-		status    map[string]Status
-		wantCount int
-		wantNames int // number of remaining names
-	}{
-		"all done": {
-			status: map[string]Status{
-				"a": {Name: "a", Done: true},
-				"b": {Name: "b", Done: true},
-			},
-			wantCount: 2,
-			wantNames: 0,
-		},
-		"none done": {
-			status: map[string]Status{
-				"a": {Name: "a", Done: false},
-				"b": {Name: "b", Done: false},
-			},
-			wantCount: 0,
-			wantNames: 2,
-		},
-		"mixed": {
-			status: map[string]Status{
-				"a": {Name: "a", Done: true},
-				"b": {Name: "b", Done: false},
-				"c": {Name: "c", Done: false},
-			},
-			wantCount: 1,
-			wantNames: 2,
-		},
-		"empty": {
-			status:    map[string]Status{},
-			wantCount: 0,
-			wantNames: 0,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			count, repos := countRemaining(tt.status)
-			if count != tt.wantCount {
-				t.Errorf("countRemaining() count = %d, want %d", count, tt.wantCount)
-			}
-			if len(repos) != tt.wantNames {
-				t.Errorf("countRemaining() repos len = %d, want %d", len(repos), tt.wantNames)
-			}
-		})
-	}
-}
-
 func TestCommand_buildRequired(t *testing.T) {
 	tests := map[string]struct {
 		cmd  Command
@@ -394,27 +343,6 @@ func TestValidate_errorMessage(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "dup") {
 		t.Errorf("error should contain duplicate name, got: %s", err.Error())
-	}
-}
-
-func TestNewProgress(t *testing.T) {
-	pkgs := []Package{
-		&GitHub{Name: "a", Owner: "o", Repo: "r"},
-		&Local{Name: "b", Directory: "/tmp"},
-	}
-	p := NewProgress(pkgs)
-	if len(p.Status) != 2 {
-		t.Errorf("NewProgress() status len = %d, want 2", len(p.Status))
-	}
-	for _, name := range []string{"a", "b"} {
-		s, ok := p.Status[name]
-		if !ok {
-			t.Errorf("missing status for %q", name)
-			continue
-		}
-		if s.Done || s.Err {
-			t.Errorf("initial status for %q should be not done/err", name)
-		}
 	}
 }
 

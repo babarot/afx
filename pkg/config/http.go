@@ -14,6 +14,7 @@ import (
 
 	"github.com/babarot/afx/pkg/data"
 	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 	"github.com/babarot/afx/pkg/templates"
 )
@@ -94,7 +95,7 @@ func (c HTTP) call(ctx context.Context) error {
 }
 
 // Install is
-func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
+func (c HTTP) Install(ctx context.Context, status chan<- runner.Status) error {
 	select {
 	case <-ctx.Done():
 		log.Println("[DEBUG] canceled")
@@ -108,7 +109,7 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 
 	if err := c.call(ctx); err != nil {
 		err = errors.Wrapf(err, "%s: failed to make HTTP request", c.Name)
-		status <- Status{Name: c.GetName(), Done: true, Err: true}
+		status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 		return err
 	}
 
@@ -120,7 +121,7 @@ func (c HTTP) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 
@@ -238,7 +239,7 @@ func (c *HTTP) ParseURL() {
 	}
 }
 
-func (c HTTP) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", NoColor: true}
+func (c HTTP) Check(ctx context.Context, status chan<- runner.Status) error {
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", NoColor: true}
 	return nil
 }

@@ -1,4 +1,4 @@
-package config
+package runner
 
 import (
 	"fmt"
@@ -12,10 +12,12 @@ import (
 	"golang.org/x/term"
 )
 
+// Progress tracks the completion status of multiple packages.
 type Progress struct {
 	Status map[string]Status
 }
 
+// Status represents the completion status of a single package operation.
 type Status struct {
 	Name    string
 	Done    bool
@@ -24,11 +26,12 @@ type Status struct {
 	NoColor bool
 }
 
-func NewProgress(pkgs []Package) Progress {
+// NewProgress creates a Progress tracker for the given package names.
+func NewProgress(names []string) Progress {
 	status := make(map[string]Status)
-	for _, pkg := range pkgs {
-		status[pkg.GetName()] = Status{
-			Name:    pkg.GetName(),
+	for _, name := range names {
+		status[name] = Status{
+			Name:    name,
 			Done:    false,
 			Err:     false,
 			Message: "",
@@ -37,6 +40,7 @@ func NewProgress(pkgs []Package) Progress {
 	return Progress{Status: status}
 }
 
+// Print listens on the completion channel and prints progress to stdout.
 func (p Progress) Print(completion chan Status) {
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 )
 
@@ -34,7 +35,7 @@ func (c Local) Init() error {
 }
 
 // Install is
-func (c Local) Install(ctx context.Context, status chan<- Status) error {
+func (c Local) Install(ctx context.Context, status chan<- runner.Status) error {
 	return nil
 }
 
@@ -92,7 +93,7 @@ func (c Local) GetResource() state.Resource {
 	return getResource(c)
 }
 
-func (c Local) Check(ctx context.Context, status chan<- Status) error {
-	status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(local)", NoColor: true}
+func (c Local) Check(ctx context.Context, status chan<- runner.Status) error {
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(local)", NoColor: true}
 	return nil
 }

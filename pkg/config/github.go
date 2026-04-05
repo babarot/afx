@@ -23,6 +23,7 @@ import (
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/github"
 	"github.com/babarot/afx/pkg/logging"
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 	"github.com/babarot/afx/pkg/templates"
 )
@@ -156,7 +157,7 @@ func (c GitHub) Clone(ctx context.Context) error {
 }
 
 // Install installs from GitHub repository with git clone command
-func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
+func (c GitHub) Install(ctx context.Context, status chan<- runner.Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -173,14 +174,14 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		err := c.Clone(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
-			status <- Status{Name: c.GetName(), Done: true, Err: true}
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	case c.Release != nil:
 		err := c.InstallFromRelease(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
-			status <- Status{Name: c.GetName(), Done: true, Err: true}
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	}
@@ -192,7 +193,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		err := gh.Install(ctx, c.Owner, c.Repo, gh.GetTag())
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
-			status <- Status{Name: c.GetName(), Done: true, Err: true}
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	}
@@ -204,7 +205,7 @@ func (c GitHub) Install(ctx context.Context, status chan<- Status) error {
 		errs.Append(c.Command.Install(c))
 	}
 
-	status <- Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
 	return errs.ErrorOrNil()
 }
 
@@ -383,7 +384,7 @@ func (c GitHub) GetResource() state.Resource {
 	return getResource(c)
 }
 
-func (c GitHub) Check(ctx context.Context, status chan<- Status) error {
+func (c GitHub) Check(ctx context.Context, status chan<- runner.Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -398,18 +399,18 @@ func (c GitHub) Check(ctx context.Context, status chan<- Status) error {
 	switch {
 	case c.Release == nil:
 		// TODO: Check git commit
-		status <- Status{Name: c.GetName(), Done: true, Err: false, Message: "(github)", NoColor: true}
+		status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(github)", NoColor: true}
 		return nil
 	case c.Release != nil:
 		report, err := c.checkUpdates(ctx)
 		if err != nil {
 			err = errors.Wrapf(err, "%s: failed to check release version", c.Name)
 		}
-		status <- Status{Name: c.GetName(), Done: true, Err: err != nil, Message: report.message}
+		status <- runner.Status{Name: c.GetName(), Done: true, Err: err != nil, Message: report.message}
 		return err
 	}
 
-	status <- Status{Name: c.GetName(), Done: true, Err: false}
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: false}
 	return nil
 }
 

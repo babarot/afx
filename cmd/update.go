@@ -13,6 +13,7 @@ import (
 	"github.com/babarot/afx/pkg/config"
 	"github.com/babarot/afx/pkg/errors"
 	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 )
 
@@ -99,8 +100,12 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	progress := config.NewProgress(pkgs)
-	completion := make(chan config.Status)
+	names := make([]string, len(pkgs))
+	for i, p := range pkgs {
+		names[i] = p.GetName()
+	}
+	progress := runner.NewProgress(names)
+	completion := make(chan runner.Status)
 	limit := make(chan struct{}, 16)
 	results := make(chan updateResult)
 
