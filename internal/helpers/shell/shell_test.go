@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"runtime"
 	"testing"
 )
 
@@ -45,10 +44,6 @@ func TestNew_noArgs(t *testing.T) {
 }
 
 func TestShell_Run_echo(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	var stdout bytes.Buffer
 	s := Shell{
 		Stdin:   &bytes.Buffer{},
@@ -71,10 +66,6 @@ func TestShell_Run_echo(t *testing.T) {
 }
 
 func TestShell_Run_withEnv(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	var stdout bytes.Buffer
 	s := Shell{
 		Stdin:   &bytes.Buffer{},
@@ -92,10 +83,6 @@ func TestShell_Run_withEnv(t *testing.T) {
 }
 
 func TestShell_Run_withDir(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	var stdout bytes.Buffer
 	dir := t.TempDir()
 	s := Shell{
@@ -129,10 +116,6 @@ func TestShell_Run_invalidCommand(t *testing.T) {
 }
 
 func TestShell_Run_contextCancel(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
@@ -152,10 +135,6 @@ func TestShell_Run_contextCancel(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	err := RunCommand("true")
 	if err != nil {
 		t.Fatalf("RunCommand() error: %v", err)
@@ -163,10 +142,6 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestRunCommand_failure(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on windows")
-	}
-
 	err := RunCommand("false")
 	if err == nil {
 		t.Error("RunCommand() expected error for failing command")

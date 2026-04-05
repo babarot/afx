@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"runtime"
 )
 
 // Shell represents shell command
@@ -41,12 +40,7 @@ func (s Shell) Run(ctx context.Context) error {
 	for _, arg := range s.Args {
 		command += " " + arg
 	}
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.CommandContext(ctx, "cmd", "/c", command)
-	} else {
-		cmd = exec.CommandContext(ctx, "sh", "-c", command)
-	}
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	cmd.Stderr = s.Stderr
 	cmd.Stdout = s.Stdout
 	cmd.Stdin = s.Stdin

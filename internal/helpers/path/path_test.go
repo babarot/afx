@@ -1,14 +1,10 @@
 package path
 
 import (
-	"runtime"
 	"testing"
 )
 
 func TestExpandTilda(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("ExpandTilda uses HOME on Unix; skipping on Windows")
-	}
 
 	tests := map[string]struct {
 		input string

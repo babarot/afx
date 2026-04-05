@@ -1,15 +1,10 @@
 package pkg
 
 import (
-	"runtime"
 	"testing"
 )
 
 func TestDataDir(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on Windows due to HOME handling")
-	}
-
 	t.Run("default", func(t *testing.T) {
 		t.Setenv("AFX_DATA_DIR", "")
 		t.Setenv("XDG_DATA_HOME", "")
@@ -39,10 +34,6 @@ func TestDataDir(t *testing.T) {
 }
 
 func TestConfigDir(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on Windows due to HOME handling")
-	}
-
 	t.Run("default", func(t *testing.T) {
 		t.Setenv("AFX_CONFIG_DIR", "")
 		t.Setenv("XDG_CONFIG_HOME", "")
@@ -72,10 +63,6 @@ func TestConfigDir(t *testing.T) {
 }
 
 func TestBinDir(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on Windows due to HOME handling")
-	}
-
 	t.Run("default", func(t *testing.T) {
 		t.Setenv("AFX_COMMAND_PATH", "")
 		t.Setenv("HOME", "/home/user")
