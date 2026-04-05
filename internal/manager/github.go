@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	"github.com/babarot/afx/internal/gh"
 )
 
 // GitHub represents GitHub repository
@@ -24,6 +26,8 @@ type GitHub struct {
 	As      *GitHubAs `yaml:"as"`
 
 	DependsOn []string `yaml:"depends-on"`
+
+	GHRunner gh.Runner `yaml:"-"`
 }
 
 type GitHubAs struct {
