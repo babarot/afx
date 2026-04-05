@@ -11,13 +11,13 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 
-	"github.com/babarot/afx/pkg/config"
-	"github.com/babarot/afx/pkg/env"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/github"
-	"github.com/babarot/afx/pkg/printers"
-	"github.com/babarot/afx/pkg/state"
-	"github.com/babarot/afx/pkg/update"
+	"github.com/babarot/afx/internal/config"
+	"github.com/babarot/afx/internal/env"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/github"
+	"github.com/babarot/afx/internal/printers"
+	"github.com/babarot/afx/internal/state"
+	"github.com/babarot/afx/internal/update"
 )
 
 type metaCmd struct {

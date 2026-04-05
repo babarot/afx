@@ -12,7 +12,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-zglob"
 
-	pathutil "github.com/babarot/afx/pkg/helpers/path"
+	pathutil "github.com/babarot/afx/internal/helpers/path"
 )
 
 // Plugin is

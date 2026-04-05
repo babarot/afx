@@ -5,8 +5,8 @@ import (
 
 	"github.com/mattn/go-shellwords"
 
-	"github.com/babarot/afx/pkg/runner"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 // Installer is an interface related to installation of a package

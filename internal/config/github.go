@@ -19,13 +19,13 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/yaml.v2"
 
-	"github.com/babarot/afx/pkg/data"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/github"
-	"github.com/babarot/afx/pkg/logging"
-	"github.com/babarot/afx/pkg/runner"
-	"github.com/babarot/afx/pkg/state"
-	"github.com/babarot/afx/pkg/templates"
+	"github.com/babarot/afx/internal/data"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/github"
+	"github.com/babarot/afx/internal/logging"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
+	"github.com/babarot/afx/internal/templates"
 )
 
 // GitHub represents GitHub repository

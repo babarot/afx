@@ -9,9 +9,9 @@ import (
 
 	git "gopkg.in/src-d/go-git.v4"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/runner"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 // Gist represents

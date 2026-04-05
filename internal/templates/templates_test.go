@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/babarot/afx/pkg/data"
+	"github.com/babarot/afx/internal/data"
 )
 
 func testData() *data.Data {

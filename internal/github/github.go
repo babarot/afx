@@ -16,8 +16,8 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/schollz/progressbar/v3"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/logging"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/logging"
 )
 
 // Release represents a GitHub release and its client

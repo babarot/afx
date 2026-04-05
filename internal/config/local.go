@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/babarot/afx/pkg/errors"
-	pathutil "github.com/babarot/afx/pkg/helpers/path"
-	"github.com/babarot/afx/pkg/runner"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/errors"
+	pathutil "github.com/babarot/afx/internal/helpers/path"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 // Local represents

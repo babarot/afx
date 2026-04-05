@@ -10,7 +10,7 @@ import (
 
 	"github.com/cli/cli/v2/pkg/httpmock"
 
-	"github.com/babarot/afx/pkg/github"
+	"github.com/babarot/afx/internal/github"
 )
 
 func TestCheckForUpdate(t *testing.T) {

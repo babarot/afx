@@ -15,8 +15,8 @@ import (
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
 
-	"github.com/babarot/afx/pkg/errors"
-	pathutil "github.com/babarot/afx/pkg/helpers/path"
+	"github.com/babarot/afx/internal/errors"
+	pathutil "github.com/babarot/afx/internal/helpers/path"
 )
 
 // Command represents shell command configuration including build steps and symlinks.

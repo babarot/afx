@@ -14,7 +14,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
-	"github.com/babarot/afx/pkg/github"
+	"github.com/babarot/afx/internal/github"
 )
 
 // refer: github.com/cli/cli/tree/<hash>/internal/update

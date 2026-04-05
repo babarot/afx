@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/internal/errors"
 )
 
 // ClientOption represents an argument to NewClient

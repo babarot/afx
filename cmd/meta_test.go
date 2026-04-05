@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/babarot/afx/pkg/config"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/config"
+	"github.com/babarot/afx/internal/state"
 )
 
 func init() {

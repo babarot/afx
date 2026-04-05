@@ -12,8 +12,8 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/babarot/afx/pkg/dependency"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/dependency"
+	"github.com/babarot/afx/internal/state"
 )
 
 // Config structure for file describing deployment. This includes the module source, inputs

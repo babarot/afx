@@ -8,7 +8,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/auth"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 
-	"github.com/babarot/afx/pkg/errors"
+	"github.com/babarot/afx/internal/errors"
 )
 
 func allTrue(list []bool) bool {

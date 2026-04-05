@@ -10,11 +10,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/pkg/config"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/runner"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/config"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/helpers/templates"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 type checkCmd struct {
