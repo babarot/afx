@@ -4,14 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
 
-	"golang.org/x/sync/errgroup"
-
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	"github.com/babarot/afx/internal/logging"
 	afxpkg "github.com/babarot/afx/internal/pkg"
@@ -93,34 +88,17 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 	return installCmd
 }
 
-type installResult struct {
-	Package afxpkg.Package
-	Error   error
-}
-
 func (c *installCmd) run(pkgs []afxpkg.Package) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	names := make([]string, len(pkgs))
-	for i, p := range pkgs {
-		names[i] = p.GetName()
-	}
-	progress := runner.NewProgress(names)
-	completion := make(chan runner.Status)
-	limit := make(chan struct{}, 16)
-	results := make(chan installResult)
-
-	go func() {
-		progress.Print(completion)
-	}()
-
 	log.Printf("[DEBUG] (install): start to run each pkg.Install()")
-	eg := errgroup.Group{}
-	for _, pkg := range pkgs {
-		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
+
+	runnerPkgs := make([]runner.Package, len(pkgs))
+	for i, p := range pkgs {
+		runnerPkgs[i] = p
+	}
+
+	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
+		pkg, _ := p.(afxpkg.Package)
+		return func(ctx context.Context, completion chan<- runner.Status) error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
@@ -131,35 +109,12 @@ func (c *installCmd) run(pkgs []afxpkg.Package) error {
 					_ = pkg.Uninstall(ctx)
 				}
 			}
-			select {
-			case results <- installResult{Package: pkg, Error: err}:
-				return nil
-			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: canceled installation", pkg.GetName())
-			}
-		})
-	}
-
-	go func() {
-		_ = eg.Wait()
-		close(results)
-	}()
-
-	var exit errors.Errors
-	for result := range results {
-		exit.Append(result.Error)
-	}
-
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to install: %s", err)
-		exit.Append(err)
-	}
-
-	defer func(err error) {
-		if err != nil {
-			_ = c.env.Refresh()
+			return err
 		}
-	}(exit.ErrorOrNil())
+	})
 
-	return exit.ErrorOrNil()
+	if err != nil {
+		_ = c.env.Refresh()
+	}
+	return err
 }

@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/runner"
@@ -91,35 +88,18 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 	return updateCmd
 }
 
-type updateResult struct {
-	Package afxpkg.Package
-	Error   error
-}
-
 func (c *updateCmd) run(pkgs []afxpkg.Package) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	names := make([]string, len(pkgs))
-	for i, p := range pkgs {
-		names[i] = p.GetName()
-	}
-	progress := runner.NewProgress(names)
-	completion := make(chan runner.Status)
-	limit := make(chan struct{}, 16)
-	results := make(chan updateResult)
-
-	go func() {
-		progress.Print(completion)
-	}()
-
 	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
-	eg := errgroup.Group{}
-	for _, pkg := range pkgs {
-		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
-			os.RemoveAll(pkg.GetHome()) // delete before updating
+
+	runnerPkgs := make([]runner.Package, len(pkgs))
+	for i, p := range pkgs {
+		runnerPkgs[i] = p
+	}
+
+	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
+		pkg, _ := p.(afxpkg.Package)
+		return func(ctx context.Context, completion chan<- runner.Status) error {
+			_ = os.RemoveAll(pkg.GetHome()) // delete before updating
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
@@ -128,34 +108,12 @@ func (c *updateCmd) run(pkgs []afxpkg.Package) error {
 				log.Printf("[DEBUG] uninstall %q because updating failed", pkg.GetName())
 				_ = pkg.Uninstall(ctx)
 			}
-			select {
-			case results <- updateResult{Package: pkg, Error: err}:
-				return nil
-			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: canceled updating", pkg.GetName())
-			}
-		})
-	}
-
-	go func() {
-		_ = eg.Wait()
-		close(results)
-	}()
-
-	var exit errors.Errors
-	for result := range results {
-		exit.Append(result.Error)
-	}
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to update: %s", err)
-		exit.Append(err)
-	}
-
-	defer func(err error) {
-		if err != nil {
-			_ = c.env.Refresh()
+			return err
 		}
-	}(exit.ErrorOrNil())
+	})
 
-	return exit.ErrorOrNil()
+	if err != nil {
+		_ = c.env.Refresh()
+	}
+	return err
 }

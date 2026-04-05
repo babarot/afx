@@ -4,13 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/runner"
@@ -90,63 +86,23 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 	return checkCmd
 }
 
-type checkResult struct {
-	Package afxpkg.Package
-	Error   error
-}
-
 func (c *checkCmd) run(pkgs []afxpkg.Package) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	names := make([]string, len(pkgs))
-	for i, p := range pkgs {
-		names[i] = p.GetName()
-	}
-	progress := runner.NewProgress(names)
-	completion := make(chan runner.Status)
-	limit := make(chan struct{}, 16)
-	results := make(chan checkResult)
-
-	go func() {
-		progress.Print(completion)
-	}()
-
 	log.Printf("[DEBUG] (check): start to run each pkg.Check()")
-	eg := errgroup.Group{}
-	for _, pkg := range pkgs {
-		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
-			err := pkg.Check(ctx, completion)
-			select {
-			case results <- checkResult{Package: pkg, Error: err}:
-				return nil
-			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: canceled checking", pkg.GetName())
-			}
-		})
+
+	runnerPkgs := make([]runner.Package, len(pkgs))
+	for i, p := range pkgs {
+		runnerPkgs[i] = p
 	}
 
-	go func() {
-		_ = eg.Wait()
-		close(results)
-	}()
-
-	var exit errors.Errors
-	for result := range results {
-		exit.Append(result.Error)
-	}
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to check: %s", err)
-		exit.Append(err)
-	}
-
-	defer func(err error) {
-		if err != nil {
-			_ = c.env.Refresh()
+	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
+		pkg, _ := p.(afxpkg.Package)
+		return func(ctx context.Context, completion chan<- runner.Status) error {
+			return pkg.Check(ctx, completion)
 		}
-	}(exit.ErrorOrNil())
+	})
 
-	return exit.ErrorOrNil()
+	if err != nil {
+		_ = c.env.Refresh()
+	}
+	return err
 }
