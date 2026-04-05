@@ -14,7 +14,7 @@ import (
 	"github.com/babarot/afx/internal/env"
 	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
-	afxpkg "github.com/babarot/afx/internal/pkg"
+	manager "github.com/babarot/afx/internal/manager"
 	"github.com/babarot/afx/internal/printers"
 	"github.com/babarot/afx/internal/state"
 	"github.com/babarot/afx/internal/update"
@@ -22,10 +22,10 @@ import (
 
 type metaCmd struct {
 	env      *env.Config
-	packages []afxpkg.Package
-	main     *afxpkg.Main
+	packages []manager.Package
+	main     *manager.Main
 	state    *state.State
-	configs  map[string]afxpkg.Config
+	configs  map[string]manager.Config
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -55,21 +55,21 @@ func (m *metaCmd) init() error {
 
 // loadConfigs reads and parses all YAML config files from the config directory.
 func (m *metaCmd) loadConfigs() error {
-	cfgRoot := afxpkg.ConfigDir()
+	cfgRoot := manager.ConfigDir()
 
-	if err := afxpkg.CreateDirIfNotExist(cfgRoot); err != nil {
+	if err := manager.CreateDirIfNotExist(cfgRoot); err != nil {
 		return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
 	}
-	files, err := afxpkg.WalkDir(cfgRoot)
+	files, err := manager.WalkDir(cfgRoot)
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
-	var pkgs []afxpkg.Package
-	app := &afxpkg.DefaultMain
-	m.configs = map[string]afxpkg.Config{}
+	var pkgs []manager.Package
+	app := &manager.DefaultMain
+	m.configs = map[string]manager.Config{}
 	for _, file := range files {
-		cfg, err := afxpkg.Read(file)
+		cfg, err := manager.Read(file)
 		if err != nil {
 			return errors.Wrapf(err, "%s: failed to read config", file)
 		}
@@ -91,10 +91,10 @@ func (m *metaCmd) loadConfigs() error {
 
 // initPackages validates and sorts packages by dependency order.
 func (m *metaCmd) initPackages() error {
-	if err := afxpkg.Validate(m.packages); err != nil {
+	if err := manager.Validate(m.packages); err != nil {
 		return errors.Wrap(err, "failed to validate packages")
 	}
-	sorted, err := afxpkg.Sort(m.packages)
+	sorted, err := manager.Sort(m.packages)
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve dependencies between packages")
 	}
@@ -104,8 +104,8 @@ func (m *metaCmd) initPackages() error {
 
 // initEnv sets up environment variables and creates required directories.
 func (m *metaCmd) initEnv() error {
-	root := afxpkg.DataDir()
-	cfgRoot := afxpkg.ConfigDir()
+	root := manager.DataDir()
+	cfgRoot := manager.ConfigDir()
 	cache := filepath.Join(root, "cache.json")
 
 	m.env = env.New(cache)
@@ -113,18 +113,18 @@ func (m *metaCmd) initEnv() error {
 		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
-		"AFX_COMMAND_PATH": env.Variable{Default: afxpkg.BinDir()},
+		"AFX_COMMAND_PATH": env.Variable{Default: manager.BinDir()},
 		"AFX_SHELL":        env.Variable{Default: m.main.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
-				When:    afxpkg.HasSudoInCommandBuildSteps(m.packages),
+				When:    manager.HasSudoInCommandBuildSteps(m.packages),
 				Message: "Please enter sudo command password",
 				Help:    "Some packages build steps requires sudo command",
 			},
 		},
 		"GITHUB_TOKEN": env.Variable{
 			Input: env.Input{
-				When:    afxpkg.HasGitHubReleaseBlock(m.packages),
+				When:    manager.HasGitHubReleaseBlock(m.packages),
 				Message: "Please type your GITHUB_TOKEN",
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
@@ -144,7 +144,7 @@ func (m *metaCmd) initEnv() error {
 
 // initState opens the state file and logs the current state summary.
 func (m *metaCmd) initState() error {
-	root := afxpkg.DataDir()
+	root := manager.DataDir()
 
 	resourcers := make([]state.Resourcer, len(m.packages))
 	for i, pkg := range m.packages {
@@ -251,11 +251,11 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 		return nil, nil
 	}
 	client := github.NewClient()
-	stateFilePath := filepath.Join(afxpkg.DataDir(), "version.json")
+	stateFilePath := filepath.Join(manager.DataDir(), "version.json")
 	return update.CheckForUpdate(client, stateFilePath, Repository, Version)
 }
 
-func (m metaCmd) GetPackage(resource state.Resource) afxpkg.Package {
+func (m metaCmd) GetPackage(resource state.Resource) manager.Package {
 	for _, pkg := range m.packages {
 		if pkg.GetName() == resource.Name {
 			return pkg
@@ -264,16 +264,16 @@ func (m metaCmd) GetPackage(resource state.Resource) afxpkg.Package {
 	return nil
 }
 
-func (m metaCmd) GetPackages(resources []state.Resource) []afxpkg.Package {
-	var pkgs []afxpkg.Package
+func (m metaCmd) GetPackages(resources []state.Resource) []manager.Package {
+	var pkgs []manager.Package
 	for _, resource := range resources {
 		pkgs = append(pkgs, m.GetPackage(resource))
 	}
 	return pkgs
 }
 
-func (m metaCmd) GetConfig() afxpkg.Config {
-	var all afxpkg.Config
+func (m metaCmd) GetConfig() manager.Config {
+	var all manager.Config
 	for _, cfg := range m.configs {
 		if cfg.Main != nil {
 			all.Main = cfg.Main
