@@ -41,12 +41,23 @@ func (m *metaCmd) init() error {
 		m.updateMessageChan <- release
 	}()
 
-	root := afxpkg.DataDir()
-	cfgRoot := afxpkg.ConfigDir()
-	cache := filepath.Join(root, "cache.json")
+	if err := m.loadConfigs(); err != nil {
+		return err
+	}
+	if err := m.initPackages(); err != nil {
+		return err
+	}
+	if err := m.initEnv(); err != nil {
+		return err
+	}
+	return m.initState()
+}
 
-	err := afxpkg.CreateDirIfNotExist(cfgRoot)
-	if err != nil {
+// loadConfigs reads and parses all YAML config files from the config directory.
+func (m *metaCmd) loadConfigs() error {
+	cfgRoot := afxpkg.ConfigDir()
+
+	if err := afxpkg.CreateDirIfNotExist(cfgRoot); err != nil {
 		return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
 	}
 	files, err := afxpkg.WalkDir(cfgRoot)
@@ -67,27 +78,35 @@ func (m *metaCmd) init() error {
 			return errors.Wrapf(err, "%s: failed to parse config", file)
 		}
 		pkgs = append(pkgs, parsed...)
-
-		// Append config to one struct
 		m.configs[file] = cfg
-
 		if cfg.Main != nil {
 			app = cfg.Main
 		}
 	}
 
 	m.main = app
+	m.packages = pkgs
+	return nil
+}
 
-	if err := afxpkg.Validate(pkgs); err != nil {
+// initPackages validates and sorts packages by dependency order.
+func (m *metaCmd) initPackages() error {
+	if err := afxpkg.Validate(m.packages); err != nil {
 		return errors.Wrap(err, "failed to validate packages")
 	}
-
-	pkgs, err = afxpkg.Sort(pkgs)
+	sorted, err := afxpkg.Sort(m.packages)
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve dependencies between packages")
 	}
+	m.packages = sorted
+	return nil
+}
 
-	m.packages = pkgs
+// initEnv sets up environment variables and creates required directories.
+func (m *metaCmd) initEnv() error {
+	root := afxpkg.DataDir()
+	cfgRoot := afxpkg.ConfigDir()
+	cache := filepath.Join(root, "cache.json")
 
 	m.env = env.New(cache)
 	_ = m.env.Add(env.Variables{
@@ -118,11 +137,14 @@ func (m *metaCmd) init() error {
 		os.Setenv(k, v)
 	}
 
-	log.Printf("[DEBUG] mkdir %s\n", root)
 	_ = os.MkdirAll(root, os.ModePerm)
-
-	log.Printf("[DEBUG] mkdir %s\n", os.Getenv("AFX_COMMAND_PATH"))
 	_ = os.MkdirAll(os.Getenv("AFX_COMMAND_PATH"), os.ModePerm)
+	return nil
+}
+
+// initState opens the state file and logs the current state summary.
+func (m *metaCmd) initState() error {
+	root := afxpkg.DataDir()
 
 	resourcers := make([]state.Resourcer, len(m.packages))
 	for i, pkg := range m.packages {
