@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	git "gopkg.in/src-d/go-git.v4"
-
+	"github.com/babarot/afx/internal/git"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 )
@@ -63,14 +62,14 @@ func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 		os.RemoveAll(c.GetHome())
 	}
 
-	_, err := git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
-		URL:  fmt.Sprintf("https://gist.github.com/%s/%s", c.Owner, c.ID),
-		Auth: getGitAuth(),
-		Tags: git.NoTags,
-	})
-	if err != nil {
+	gitCmd := git.NewRunner()
+	url := fmt.Sprintf("https://gist.github.com/%s/%s", c.Owner, c.ID)
+	if _, err := gitCmd.Run(ctx, "clone", "--no-tags", url, c.GetHome()); err != nil {
 		status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
-		return wrapAuthError(fmt.Errorf("%s: failed to clone gist repo: %w", c.Name, err), c.Name)
+		if git.IsAuthError(err) {
+			return fmt.Errorf("%s: authentication failed. Please set GITHUB_TOKEN or configure git credentials: %w", c.Name, err)
+		}
+		return fmt.Errorf("%s: failed to clone gist repo: %w", c.Name, err)
 	}
 
 	var errs []error

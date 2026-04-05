@@ -4,85 +4,62 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"os"
-
-	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/config"
-	"gopkg.in/src-d/go-git.v4/plumbing"
+	"strconv"
 
 	"github.com/babarot/afx/internal/data"
+	"github.com/babarot/afx/internal/git"
 	"github.com/babarot/afx/internal/github"
-	"github.com/babarot/afx/internal/logging"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 	"github.com/babarot/afx/internal/templates"
 )
 
-// Clone runs git clone
+// Clone runs git clone or fetches+checkouts if already cloned.
 func (c GitHub) Clone(ctx context.Context) error {
-	writer := io.Discard
-	if logging.IsTrace() {
-		writer = os.Stdout
-	}
+	gitCmd := git.NewRunner()
 
 	var opt GitHubOption
 	if c.Option != nil {
 		opt = *c.Option
 	}
 
-	var r *git.Repository
+	url := fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo)
+
 	_, err := os.Stat(c.GetHome())
 	switch {
 	case os.IsNotExist(err):
-		r, err = git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
-			URL:      fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo),
-			Auth:     getGitAuth(),
-			Tags:     git.NoTags,
-			Depth:    opt.Depth,
-			Progress: writer,
-		})
-		if err != nil {
-			return wrapAuthError(fmt.Errorf("%s: failed to clone repository: %w", c.GetName(), err), c.GetName())
+		args := []string{"clone", "--no-tags"}
+		if opt.Depth > 0 {
+			args = append(args, "--depth", strconv.Itoa(opt.Depth))
+		}
+		if c.Branch != "" {
+			args = append(args, "--branch", c.Branch)
+		}
+		args = append(args, url, c.GetHome())
+
+		if _, err := gitCmd.Run(ctx, args...); err != nil {
+			if git.IsAuthError(err) {
+				return fmt.Errorf("%s: authentication failed. Please set GITHUB_TOKEN or configure git credentials for private repositories: %w", c.GetName(), err)
+			}
+			return fmt.Errorf("%s: failed to clone repository: %w", c.GetName(), err)
 		}
 	default:
-		r, err = git.PlainOpen(c.GetHome())
-		if err != nil {
-			return fmt.Errorf("%s: failed to open repository: %w", c.GetName(), err)
-		}
-	}
+		// Already cloned: fetch + checkout if branch is specified
+		if c.Branch != "" {
+			fetchArgs := []string{"fetch", "origin", c.Branch, "--no-tags", "--force"}
+			if opt.Depth > 0 {
+				fetchArgs = append(fetchArgs, "--depth", strconv.Itoa(opt.Depth))
+			}
 
-	w, err := r.Worktree()
-	if err != nil {
-		return fmt.Errorf("%s: failed to get worktree: %w", c.GetName(), err)
-	}
+			if _, err := gitCmd.RunInDir(ctx, c.GetHome(), fetchArgs...); err != nil {
+				return fmt.Errorf("%s: failed to fetch repository: %w", c.GetName(), err)
+			}
 
-	if c.Branch != "" {
-		var err error
-		err = r.FetchContext(ctx, &git.FetchOptions{
-			RemoteName: "origin",
-			Auth:       getGitAuth(),
-			RefSpecs: []config.RefSpec{
-				config.RefSpec(fmt.Sprintf("+%s:%s",
-					plumbing.NewBranchReferenceName(c.Branch),
-					plumbing.NewBranchReferenceName(c.Branch),
-				)),
-			},
-			Depth:    opt.Depth,
-			Force:    true,
-			Tags:     git.NoTags,
-			Progress: writer,
-		})
-		if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-			return fmt.Errorf("%s: failed to fetch repository: %w", c.Branch, err)
-		}
-		err = w.Checkout(&git.CheckoutOptions{
-			Branch: plumbing.ReferenceName("refs/heads/" + c.Branch),
-			Force:  true,
-		})
-		if err != nil {
-			return fmt.Errorf("%s: failed to checkout: %w", c.Branch, err)
+			if _, err := gitCmd.RunInDir(ctx, c.GetHome(), "checkout", "--force", c.Branch); err != nil {
+				return fmt.Errorf("%s: failed to checkout: %w", c.GetName(), err)
+			}
 		}
 	}
 
