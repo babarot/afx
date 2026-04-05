@@ -111,6 +111,10 @@ func (c Gist) HasCommandBlock() bool {
 	return c.Command != nil
 }
 
+func (c Gist) HasReleaseBlock() bool {
+	return false
+}
+
 // GetPluginBlock is
 func (c Gist) GetPluginBlock() Plugin {
 	if c.HasPluginBlock() {

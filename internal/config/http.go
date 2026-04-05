@@ -164,6 +164,10 @@ func (c HTTP) HasCommandBlock() bool {
 	return c.Command != nil
 }
 
+func (c HTTP) HasReleaseBlock() bool {
+	return false
+}
+
 // GetPluginBlock is
 func (c HTTP) GetPluginBlock() Plugin {
 	if c.HasPluginBlock() {

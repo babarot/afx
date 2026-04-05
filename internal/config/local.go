@@ -55,6 +55,10 @@ func (c Local) HasCommandBlock() bool {
 	return c.Command != nil
 }
 
+func (c Local) HasReleaseBlock() bool {
+	return false
+}
+
 // GetPluginBlock is
 func (c Local) GetPluginBlock() Plugin {
 	if c.HasPluginBlock() {

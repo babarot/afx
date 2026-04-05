@@ -29,6 +29,7 @@ type Handler interface {
 
 	HasPluginBlock() bool
 	HasCommandBlock() bool
+	HasReleaseBlock() bool
 	GetPluginBlock() Plugin
 	GetCommandBlock() Command
 
@@ -46,11 +47,7 @@ type Package interface {
 // HasGitHubReleaseBlock returns true if release block is included in one package at least
 func HasGitHubReleaseBlock(pkgs []Package) bool {
 	for _, pkg := range pkgs {
-		github, ok := pkg.(*GitHub)
-		if !ok {
-			continue
-		}
-		if github.Release != nil {
+		if pkg.HasReleaseBlock() {
 			return true
 		}
 	}
