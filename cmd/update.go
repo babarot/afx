@@ -99,14 +99,33 @@ func (c *updateCmd) run(pkgs []afxpkg.Package) error {
 	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
 		pkg, _ := p.(afxpkg.Package)
 		return func(ctx context.Context, completion chan<- runner.Status) error {
-			_ = os.RemoveAll(pkg.GetHome()) // delete before updating
+			home := pkg.GetHome()
+			backup := home + ".bak"
+
+			// Backup existing installation before updating
+			if _, err := os.Stat(home); err == nil {
+				_ = os.RemoveAll(backup) // remove stale backup if any
+				if err := os.Rename(home, backup); err != nil {
+					log.Printf("[WARN] %s: failed to backup, falling back to remove: %v", pkg.GetName(), err)
+					_ = os.RemoveAll(home)
+				}
+			}
+
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
 				c.state.Update(pkg)
+				_ = os.RemoveAll(backup) // clean up backup on success
 			default:
-				log.Printf("[DEBUG] uninstall %q because updating failed", pkg.GetName())
-				_ = pkg.Uninstall(ctx)
+				// Restore backup on failure
+				if _, statErr := os.Stat(backup); statErr == nil {
+					log.Printf("[DEBUG] restoring %q from backup after failed update", pkg.GetName())
+					_ = os.RemoveAll(home)
+					_ = os.Rename(backup, home)
+				} else {
+					log.Printf("[DEBUG] uninstall %q because updating failed (no backup)", pkg.GetName())
+					_ = pkg.Uninstall(ctx)
+				}
 			}
 			return err
 		}
