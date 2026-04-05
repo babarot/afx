@@ -102,6 +102,26 @@ func (c GitHub) Install(ctx context.Context, status chan<- runner.Status) error 
 		// Go installing step!
 	}
 
+	// gh extension: delegate entirely to gh CLI
+	if c.IsGHExtension() {
+		if c.GHRunner == nil {
+			err := fmt.Errorf("%s: gh runner not initialized", c.Name)
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
+			return err
+		}
+		ext := c.As.GHExtension
+		if err := ext.Install(ctx, c.GHRunner, c.Owner, c.Repo); err != nil {
+			err = fmt.Errorf("%s: failed to install gh extension: %w", c.Name, err)
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
+			return err
+		}
+		if err := ext.createAliasSymlink(); err != nil {
+			log.Printf("[WARN] %s: %v", c.Name, err)
+		}
+		status <- runner.Status{Name: c.GetName(), Done: true, Err: false}
+		return nil
+	}
+
 	switch {
 	case c.Release == nil:
 		err := c.Clone(ctx)
@@ -120,16 +140,6 @@ func (c GitHub) Install(ctx context.Context, status chan<- runner.Status) error 
 	}
 
 	var errs []error
-
-	if c.IsGHExtension() {
-		gh := c.As.GHExtension
-		err := gh.Install(ctx, c.Owner, c.Repo, gh.GetTag())
-		if err != nil {
-			err = fmt.Errorf("%s: failed to get from release: %w", c.Name, err)
-			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
-			return err
-		}
-	}
 
 	if c.HasPluginBlock() {
 		if err := c.Plugin.Install(c); err != nil {
@@ -224,6 +234,16 @@ func (c GitHub) templateFilename() string {
 }
 
 func (c GitHub) Uninstall(ctx context.Context) error {
+	// gh extension: delegate to gh CLI
+	if c.IsGHExtension() {
+		if c.GHRunner == nil {
+			return fmt.Errorf("%s: gh runner not initialized", c.Name)
+		}
+		ext := c.As.GHExtension
+		ext.removeAliasSymlink()
+		return ext.Uninstall(ctx, c.GHRunner)
+	}
+
 	var errs []error
 
 	delete := func(f string) {

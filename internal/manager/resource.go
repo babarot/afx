@@ -43,8 +43,10 @@ func getResource(pkg Package) state.Resource {
 		}
 		if pkg.IsGHExtension() {
 			ty = "GitHub (gh extension)"
-			gh := pkg.As.GHExtension
-			paths = append(paths, gh.GetHome())
+			ext := pkg.As.GHExtension
+			if alias := ext.GetAliasHome(); alias != "" {
+				paths = append(paths, alias)
+			}
 		}
 	case Gist:
 		ty = "Gist"

@@ -13,6 +13,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/babarot/afx/internal/env"
+	"github.com/babarot/afx/internal/gh"
 	"github.com/babarot/afx/internal/github"
 	manager "github.com/babarot/afx/internal/manager"
 	"github.com/babarot/afx/internal/printers"
@@ -44,6 +45,7 @@ func (m *metaCmd) init() error {
 	if err := m.loadConfigs(); err != nil {
 		return err
 	}
+	m.injectGHRunner()
 	if err := m.initPackages(); err != nil {
 		return err
 	}
@@ -87,6 +89,17 @@ func (m *metaCmd) loadConfigs() error {
 	m.main = app
 	m.packages = pkgs
 	return nil
+}
+
+// injectGHRunner sets a gh.Runner on all GitHub packages that are gh extensions.
+func (m *metaCmd) injectGHRunner() {
+	runner := gh.NewRunner()
+	for _, pkg := range m.packages {
+		g, ok := pkg.(*manager.GitHub)
+		if ok && g.IsGHExtension() {
+			g.GHRunner = runner
+		}
+	}
 }
 
 // initPackages validates and sorts packages by dependency order.
