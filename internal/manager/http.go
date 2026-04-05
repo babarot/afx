@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mholt/archiver"
+	"github.com/mholt/archives"
 
 	"github.com/babarot/afx/internal/data"
 	"github.com/babarot/afx/internal/runner"
@@ -134,12 +134,49 @@ func (c HTTP) Install(ctx context.Context, status chan<- runner.Status) error {
 }
 
 func unarchiveV2(path string) error {
-	_, err := archiver.ByExtension(path)
+	f, err := os.Open(path)
 	if err != nil {
-		log.Printf("[DEBUG] unarchiveV2: no need to unarchive. finished with nil")
+		return err
+	}
+	defer f.Close()
+
+	format, reader, err := archives.Identify(context.Background(), filepath.Base(path), f)
+	if err != nil {
+		log.Printf("[DEBUG] unarchiveV2: not an archive, skipping: %v", err)
 		return nil
 	}
-	return archiver.Unarchive(path, filepath.Dir(path))
+
+	destDir := filepath.Dir(path)
+	ex, ok := format.(archives.Extractor)
+	if !ok {
+		log.Printf("[DEBUG] unarchiveV2: format %T is not an extractor, skipping", format)
+		return nil
+	}
+
+	return ex.Extract(context.Background(), reader, func(ctx context.Context, info archives.FileInfo) error {
+		destPath := filepath.Join(destDir, info.NameInArchive)
+		if info.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return err
+		}
+		if info.LinkTarget != "" {
+			return os.Symlink(info.LinkTarget, destPath)
+		}
+		src, err := info.Open()
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+		dst, err := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		return err
+	})
 }
 
 // Installed is

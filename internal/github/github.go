@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/inconshreveable/go-update"
-	"github.com/mholt/archiver"
+	"github.com/mholt/archives"
 	"github.com/schollz/progressbar/v3"
 
 	"github.com/babarot/afx/internal/logging"
@@ -280,24 +280,20 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 
 // Unarchive extracts downloaded asset
 func (r *Release) Unarchive(asset Asset) error {
-	archive := filepath.Join(r.workdir, asset.Name)
+	archivePath := filepath.Join(r.workdir, asset.Name)
 
-	uaIface, err := archiver.ByExtension(archive)
+	f, err := os.Open(archivePath)
 	if err != nil {
-		// err: this will be an error of format unrecognized by filename
-		// but in this case, maybe not archived file: e.g. tigrawap/slit
-		//
-		log.Printf("[WARN] archiver.ByExtension(): %v", err)
+		return fmt.Errorf("%s: failed to open archive: %w", r.Name, err)
+	}
+	defer f.Close()
 
-		// TODO: remove this logic?
-		// thanks to this logic, we don't need to specify this statement to link.from
-		//
-		//   command:
-		//     link:
-		//     - from: '*jq*'
-		//
-		// because this logic renames a binary of 'jq-1.6' to 'jq'
-		//
+	format, reader, err := archives.Identify(context.Background(), asset.Name, f)
+	if err != nil {
+		// Format unrecognized — likely a plain binary (e.g. tigrawap/slit)
+		log.Printf("[WARN] archives.Identify(): %v", err)
+		f.Close()
+
 		target := filepath.Join(r.workdir, r.Name)
 		if _, err := os.Stat(target); err == nil {
 			if r.overwrite {
@@ -307,70 +303,84 @@ func (r *Release) Unarchive(asset Asset) error {
 				return nil
 			}
 		}
-		log.Printf("[DEBUG] renamed from %s to %s", archive, target)
-		_ = os.Rename(archive, target)
+		log.Printf("[DEBUG] renamed from %s to %s", archivePath, target)
+		_ = os.Rename(archivePath, target)
 		_ = os.Chmod(target, 0755)
 		return nil
 	}
 
-	tar := &archiver.Tar{
-		OverwriteExisting:      true,
-		MkdirAll:               false,
-		ImplicitTopLevelFolder: false,
-		ContinueOnError:        false,
-	}
-	switch v := uaIface.(type) {
-	case *archiver.Rar:
-		v.OverwriteExisting = true
-	case *archiver.Zip:
-		v.OverwriteExisting = true
-	case *archiver.TarBz2:
-		v.Tar = tar
-	case *archiver.TarGz:
-		v.Tar = tar
-	case *archiver.TarLz4:
-		v.Tar = tar
-	case *archiver.TarSz:
-		v.Tar = tar
-	case *archiver.TarXz:
-		v.Tar = tar
-	case *archiver.Gz,
-		*archiver.Bz2,
-		*archiver.Lz4,
-		*archiver.Snappy,
-		*archiver.Xz:
-		// nothing to customize
-	}
-	log.Printf("[DEBUG] uaIface: %#v (%T)", uaIface, uaIface)
+	log.Printf("[DEBUG] identified format: %T", format)
 
-	var done bool
-
-	u, ok := uaIface.(archiver.Unarchiver)
-	if ok {
-		if err := u.Unarchive(archive, r.workdir); err != nil {
-			return fmt.Errorf("%s: failed to unarchive: %w", r.Name, err)
+	// Try extraction (tar.gz, zip, etc.)
+	if ex, ok := format.(archives.Extractor); ok {
+		err := ex.Extract(context.Background(), reader, func(ctx context.Context, info archives.FileInfo) error {
+			destPath := filepath.Join(r.workdir, info.NameInArchive)
+			return extractFile(info, destPath)
+		})
+		if err != nil {
+			return fmt.Errorf("%s: failed to extract: %w", r.Name, err)
 		}
-		done = true
+		log.Printf("[DEBUG] removed archive file: %s", archivePath)
+		os.Remove(archivePath)
+		return nil
 	}
 
-	d, ok := uaIface.(archiver.Decompressor)
-	if ok {
-		fc := archiver.FileCompressor{Decompressor: d}
-		name := strings.TrimSuffix(asset.Name, filepath.Ext(asset.Name))
-		if err := fc.DecompressFile(archive, filepath.Join(r.workdir, name)); err != nil {
+	// Try decompression (gz, bz2, xz, etc. — single file)
+	if dc, ok := format.(archives.Decompressor); ok {
+		rc, err := dc.OpenReader(reader)
+		if err != nil {
 			return fmt.Errorf("%s: failed to decompress: %w", r.Name, err)
 		}
-		done = true
+		defer rc.Close()
+
+		name := strings.TrimSuffix(asset.Name, filepath.Ext(asset.Name))
+		destPath := filepath.Join(r.workdir, name)
+		out, err := os.Create(destPath)
+		if err != nil {
+			return fmt.Errorf("%s: failed to create decompressed file: %w", r.Name, err)
+		}
+		defer out.Close()
+		if _, err := io.Copy(out, rc); err != nil {
+			return fmt.Errorf("%s: failed to write decompressed file: %w", r.Name, err)
+		}
+		_ = os.Chmod(destPath, 0755)
+
+		log.Printf("[DEBUG] removed archive file: %s", archivePath)
+		os.Remove(archivePath)
+		return nil
 	}
 
-	if !done {
-		return errors.New("archiver cannot unarchive/decompress file")
+	return errors.New("archives: unsupported format")
+}
+
+// extractFile writes a single file from an archive to destPath.
+func extractFile(info archives.FileInfo, destPath string) error {
+	if info.IsDir() {
+		return os.MkdirAll(destPath, 0755)
 	}
 
-	log.Printf("[DEBUG] removed archive file: %s", archive)
-	os.Remove(archive)
+	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+		return err
+	}
 
-	return nil
+	if info.LinkTarget != "" {
+		return os.Symlink(info.LinkTarget, destPath)
+	}
+
+	src, err := info.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, info.Mode())
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
 }
 
 // Install installs unarchived packages to given path
