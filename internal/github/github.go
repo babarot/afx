@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -16,7 +17,6 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/schollz/progressbar/v3"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/logging"
 )
 
@@ -260,7 +260,7 @@ func (r *Release) Download(ctx context.Context) (Asset, error) {
 
 	file, err := os.Create(archive)
 	if err != nil {
-		return asset, errors.Wrapf(err, "%s: failed to create file", archive)
+		return asset, fmt.Errorf("%s: failed to create file: %w", archive, err)
 	}
 	defer file.Close()
 
@@ -348,7 +348,7 @@ func (r *Release) Unarchive(asset Asset) error {
 	u, ok := uaIface.(archiver.Unarchiver)
 	if ok {
 		if err := u.Unarchive(archive, r.workdir); err != nil {
-			return errors.Wrapf(err, "%s: failed to unarchive", r.Name)
+			return fmt.Errorf("%s: failed to unarchive: %w", r.Name, err)
 		}
 		done = true
 	}
@@ -358,7 +358,7 @@ func (r *Release) Unarchive(asset Asset) error {
 		fc := archiver.FileCompressor{Decompressor: d}
 		name := strings.TrimSuffix(asset.Name, filepath.Ext(asset.Name))
 		if err := fc.DecompressFile(archive, filepath.Join(r.workdir, name)); err != nil {
-			return errors.Wrapf(err, "%s: failed to decompress", r.Name)
+			return fmt.Errorf("%s: failed to decompress: %w", r.Name, err)
 		}
 		done = true
 	}
@@ -380,7 +380,7 @@ func (r *Release) Install(to string) error {
 
 	fp, err := os.Open(bin)
 	if err != nil {
-		return errors.Wrap(err, "failed to open file")
+		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer fp.Close()
 

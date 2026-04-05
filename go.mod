@@ -14,8 +14,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/goccy/go-yaml v1.9.8
 	github.com/google/go-cmp v0.5.9
-	github.com/h2non/filetype v1.1.3
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
@@ -24,7 +22,6 @@ require (
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/mattn/go-zglob v0.0.4
 	github.com/mholt/archiver v3.1.1+incompatible
-	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.6.0
 	github.com/schollz/progressbar/v3 v3.13.0
 	github.com/spf13/cobra v1.6.1
@@ -47,7 +44,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-github/v30 v30.1.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
@@ -62,6 +58,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/nwaples/rardecode v1.1.3 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

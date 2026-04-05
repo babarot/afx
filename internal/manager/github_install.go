@@ -2,7 +2,7 @@ package manager
 
 import (
 	"context"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +13,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
 	"github.com/babarot/afx/internal/data"
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
 	"github.com/babarot/afx/internal/logging"
 	"github.com/babarot/afx/internal/runner"
@@ -45,18 +44,18 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Progress: writer,
 		})
 		if err != nil {
-			return wrapAuthError(errors.Wrapf(err, "%s: failed to clone repository", c.GetName()), c.GetName())
+			return wrapAuthError(fmt.Errorf("%s: failed to clone repository: %w", c.GetName(), err), c.GetName())
 		}
 	default:
 		r, err = git.PlainOpen(c.GetHome())
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to open repository", c.GetName())
+			return fmt.Errorf("%s: failed to open repository: %w", c.GetName(), err)
 		}
 	}
 
 	w, err := r.Worktree()
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to get worktree", c.GetName())
+		return fmt.Errorf("%s: failed to get worktree: %w", c.GetName(), err)
 	}
 
 	if c.Branch != "" {
@@ -75,15 +74,15 @@ func (c GitHub) Clone(ctx context.Context) error {
 			Tags:     git.NoTags,
 			Progress: writer,
 		})
-		if err != nil && !stderrors.Is(err, git.NoErrAlreadyUpToDate) {
-			return errors.Wrapf(err, "%s: failed to fetch repository", c.Branch)
+		if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			return fmt.Errorf("%s: failed to fetch repository: %w", c.Branch, err)
 		}
 		err = w.Checkout(&git.CheckoutOptions{
 			Branch: plumbing.ReferenceName("refs/heads/" + c.Branch),
 			Force:  true,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to checkout", c.Branch)
+			return fmt.Errorf("%s: failed to checkout: %w", c.Branch, err)
 		}
 	}
 
@@ -107,40 +106,44 @@ func (c GitHub) Install(ctx context.Context, status chan<- runner.Status) error 
 	case c.Release == nil:
 		err := c.Clone(ctx)
 		if err != nil {
-			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
+			err = fmt.Errorf("%s: failed to clone repo: %w", c.Name, err)
 			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	case c.Release != nil:
 		err := c.InstallFromRelease(ctx)
 		if err != nil {
-			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+			err = fmt.Errorf("%s: failed to get from release: %w", c.Name, err)
 			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	}
 
-	var errs errors.Errors
+	var errs []error
 
 	if c.IsGHExtension() {
 		gh := c.As.GHExtension
 		err := gh.Install(ctx, c.Owner, c.Repo, gh.GetTag())
 		if err != nil {
-			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+			err = fmt.Errorf("%s: failed to get from release: %w", c.Name, err)
 			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 			return err
 		}
 	}
 
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Install(c))
+		if err := c.Plugin.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Install(c))
+		if err := c.Command.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
-	return errs.ErrorOrNil()
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errors.Join(errs...) != nil}
+	return errors.Join(errs...)
 }
 
 // InstallFromRelease runs install from GitHub release, from not repository
@@ -175,11 +178,11 @@ func (c GitHub) InstallFromRelease(ctx context.Context) error {
 
 	asset, err := release.Download(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to download", release.Name)
+		return fmt.Errorf("%s: failed to download: %w", release.Name, err)
 	}
 
 	if err := release.Unarchive(asset); err != nil {
-		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
+		return fmt.Errorf("%s: failed to unarchive: %w", release.Name, err)
 	}
 
 	return nil
@@ -221,12 +224,12 @@ func (c GitHub) templateFilename() string {
 }
 
 func (c GitHub) Uninstall(ctx context.Context) error {
-	var errs errors.Errors
+	var errs []error
 
-	delete := func(f string, errs *errors.Errors) {
+	delete := func(f string) {
 		err := os.RemoveAll(f)
 		if err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			return
 		}
 		log.Printf("[INFO] Delete %s\n", f)
@@ -235,13 +238,13 @@ func (c GitHub) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, _ := c.Command.GetLink(c)
 		for _, link := range links {
-			delete(link.From, &errs)
-			delete(link.To, &errs)
+			delete(link.From)
+			delete(link.To)
 		}
 	}
 
-	delete(c.GetHome(), &errs)
-	return errs.ErrorOrNil()
+	delete(c.GetHome())
+	return errors.Join(errs...)
 }
 
 func (c GitHub) GetResource() state.Resource {

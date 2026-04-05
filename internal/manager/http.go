@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +14,6 @@ import (
 	"github.com/mholt/archiver"
 
 	"github.com/babarot/afx/internal/data"
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 	"github.com/babarot/afx/internal/templates"
@@ -39,14 +39,18 @@ type Templates struct {
 
 // Init is
 func (c HTTP) Init() error {
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Init(c))
+		if err := c.Plugin.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Init(c))
+		if err := c.Command.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func (c HTTP) call(ctx context.Context) error {
@@ -88,7 +92,7 @@ func (c HTTP) call(ctx context.Context) error {
 	}
 
 	if err := unarchiveV2(dest); err != nil {
-		return errors.Wrapf(err, "failed to unarchive: %s", dest)
+		return fmt.Errorf("failed to unarchive: %s: %w", dest, err)
 	}
 
 	return nil
@@ -108,21 +112,25 @@ func (c HTTP) Install(ctx context.Context, status chan<- runner.Status) error {
 	defer cancel()
 
 	if err := c.call(ctx); err != nil {
-		err = errors.Wrapf(err, "%s: failed to make HTTP request", c.Name)
+		err = fmt.Errorf("%s: failed to make HTTP request: %w", c.Name, err)
 		status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
 		return err
 	}
 
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Install(c))
+		if err := c.Plugin.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Install(c))
+		if err := c.Command.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
-	return errs.ErrorOrNil()
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errors.Join(errs...) != nil}
+	return errors.Join(errs...)
 }
 
 func unarchiveV2(path string) error {
@@ -186,12 +194,12 @@ func (c HTTP) GetCommandBlock() Command {
 
 // Uninstall is
 func (c HTTP) Uninstall(ctx context.Context) error {
-	var errs errors.Errors
+	var errs []error
 
-	delete := func(f string, errs *errors.Errors) {
+	del := func(f string) {
 		err := os.RemoveAll(f)
 		if err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			return
 		}
 		log.Printf("[INFO] Delete %s", f)
@@ -200,14 +208,14 @@ func (c HTTP) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, _ := c.Command.GetLink(c)
 		for _, link := range links {
-			delete(link.From, &errs)
-			delete(link.To, &errs)
+			del(link.From)
+			del(link.To)
 		}
 	}
 
-	delete(c.GetHome(), &errs)
+	del(c.GetHome())
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // GetName returns a name

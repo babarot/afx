@@ -3,6 +3,7 @@ package manager
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -15,7 +16,6 @@ import (
 	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-zglob"
 
-	"github.com/babarot/afx/internal/errors"
 	pathutil "github.com/babarot/afx/internal/helpers/path"
 )
 
@@ -54,7 +54,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	if err := yaml.Unmarshal(b, &tmp); err != nil {
-		return errors.Wrap(err, "failed to unmarshal YAML")
+		return fmt.Errorf("failed to unmarshal YAML: %w", err)
 	}
 
 	l.From = tmp.From
@@ -96,7 +96,7 @@ func (c Command) GetLink(pkg Package) ([]Link, error) {
 		// zglob can search file path even if file path doesn't include asterisk at all.
 		matches, err := zglob.Glob(file)
 		if err != nil {
-			return links, errors.Wrapf(err, "%s: failed to get links", pkg.GetName())
+			return links, fmt.Errorf("%s: failed to get links: %w", pkg.GetName(), err)
 		}
 
 		log.Printf("[TRACE] Run zglob.Glob() to search files: %s", file)
@@ -176,11 +176,11 @@ func (c Command) build(pkg Package) error {
 	p.ParseBacktick = true
 	p.Dir = dir
 
-	var errs errors.Errors
+	var errs []error
 	for _, step := range c.Build.Steps {
 		args, err := p.Parse(step)
 		if err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			continue
 		}
 		var stdin io.Reader = os.Stdin
@@ -203,13 +203,13 @@ func (c Command) build(pkg Package) error {
 		log.Printf("[DEBUG] change dir to: %s\n", dir)
 		cmd.Dir = dir
 		if err := cmd.Run(); err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			if stderr.String() != "" {
-				errs.Append(errors.New(stderr.String()))
+				errs = append(errs, errors.New(stderr.String()))
 			}
 		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // Install installs the command package by building and creating symlinks.
@@ -217,20 +217,20 @@ func (c Command) Install(pkg Package) error {
 	if c.buildRequired() {
 		err := c.build(pkg)
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to build", pkg.GetName())
+			return fmt.Errorf("%s: failed to build: %w", pkg.GetName(), err)
 		}
 	}
 
 	links, err := c.GetLink(pkg)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+		return fmt.Errorf("%s: failed to get command.link: %w", pkg.GetName(), err)
 	}
 
 	if len(links) == 0 {
 		return fmt.Errorf("%s: failed to install command due to no links specified", pkg.GetName())
 	}
 
-	var errs errors.Errors
+	var errs []error
 	for _, link := range links {
 		// Create base dir if not exists when creating symlink
 		pdir := filepath.Dir(link.To)
@@ -259,25 +259,27 @@ func (c Command) Install(pkg Package) error {
 		log.Printf("[DEBUG] created symlink %s to %s", link.From, link.To)
 		if err := os.Symlink(link.From, link.To); err != nil {
 			log.Printf("[ERROR] failed to create symlink: %v", err)
-			errs.Append(err)
+			errs = append(errs, err)
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func (c Command) Unlink(pkg Package) error {
 	links, err := c.GetLink(pkg)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to get command.link", pkg.GetName())
+		return fmt.Errorf("%s: failed to get command.link: %w", pkg.GetName(), err)
 	}
 
-	var errs errors.Errors
+	var errs []error
 	for _, link := range links {
 		log.Printf("[DEBUG] %s: unlinked %s", pkg.GetName(), link.To)
-		errs.Append(os.Remove(link.To))
+		if err := os.Remove(link.To); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // Init returns necessary things which should be loaded when executing commands

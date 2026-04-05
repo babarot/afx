@@ -12,7 +12,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v2"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
 )
 
@@ -98,11 +97,11 @@ func (gh GHExtension) InstallFromRelease(ctx context.Context, owner, repo, tag s
 
 	asset, err := release.Download(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to download", release.Name)
+		return fmt.Errorf("%s: failed to download: %w", release.Name, err)
 	}
 
 	if err := release.Unarchive(asset); err != nil {
-		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
+		return fmt.Errorf("%s: failed to unarchive: %w", release.Name, err)
 	}
 
 	return nil

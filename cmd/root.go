@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	"github.com/babarot/afx/internal/logging"
 	"github.com/babarot/afx/internal/update"
@@ -82,7 +81,7 @@ func newRootCmd(m metaCmd) *cobra.Command {
 func Execute() error {
 	logWriter, err := logging.LogOutput()
 	if err != nil {
-		return errors.Wrap(err, "%s: failed to set logger")
+		return fmt.Errorf("%%s: failed to set logger: %w", err)
 	}
 	log.SetOutput(logWriter)
 
@@ -93,7 +92,7 @@ func Execute() error {
 
 	meta := metaCmd{}
 	if err := meta.init(); err != nil {
-		return errors.Wrap(err, "failed to initialize afx")
+		return fmt.Errorf("failed to initialize afx: %w", err)
 	}
 	if meta.state != nil {
 		defer meta.state.Close()

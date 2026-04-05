@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -9,7 +10,6 @@ import (
 
 	git "gopkg.in/src-d/go-git.v4"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 )
@@ -30,14 +30,18 @@ type Gist struct {
 
 // Init is
 func (c Gist) Init() error {
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Init(c))
+		if err := c.Plugin.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Init(c))
+		if err := c.Command.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // Install is
@@ -66,19 +70,23 @@ func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 	})
 	if err != nil {
 		status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
-		return wrapAuthError(errors.Wrapf(err, "%s: failed to clone gist repo", c.Name), c.Name)
+		return wrapAuthError(fmt.Errorf("%s: failed to clone gist repo: %w", c.Name, err), c.Name)
 	}
 
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Install(c))
+		if err := c.Plugin.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Install(c))
+		if err := c.Command.Install(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
-	return errs.ErrorOrNil()
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errors.Join(errs...) != nil}
+	return errors.Join(errs...)
 }
 
 // Installed is
@@ -133,12 +141,12 @@ func (c Gist) GetCommandBlock() Command {
 
 // Uninstall is
 func (c Gist) Uninstall(ctx context.Context) error {
-	var errs errors.Errors
+	var errs []error
 
-	delete := func(f string, errs *errors.Errors) {
+	del := func(f string) {
 		err := os.RemoveAll(f)
 		if err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			return
 		}
 		log.Printf("[INFO] Delete %s\n", f)
@@ -147,17 +155,17 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	if c.HasCommandBlock() {
 		links, err := c.Command.GetLink(c)
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to get command.link", c.Name)
+			return fmt.Errorf("%s: failed to get command.link: %w", c.Name, err)
 		}
 		for _, link := range links {
-			delete(link.From, &errs)
-			delete(link.To, &errs)
+			del(link.From)
+			del(link.To)
 		}
 	}
 
-	delete(c.GetHome(), &errs)
+	del(c.GetHome())
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // GetName returns a name

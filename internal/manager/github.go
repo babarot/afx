@@ -1,10 +1,9 @@
 package manager
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
-
-	"github.com/babarot/afx/internal/errors"
 )
 
 // GitHub represents GitHub repository
@@ -56,14 +55,18 @@ type GitHubReleaseAsset struct {
 
 // Init runs initialization step related to GitHub packages
 func (c GitHub) Init() error {
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Init(c))
+		if err := c.Plugin.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Init(c))
+		if err := c.Command.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // Installed returns true the GitHub package is already installed
