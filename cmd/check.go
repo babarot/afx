@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/internal/config"
 	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
+	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 )
@@ -77,7 +77,7 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 
 			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
-				"GITHUB_TOKEN": config.HasGitHubReleaseBlock(pkgs),
+				"GITHUB_TOKEN": afxpkg.HasGitHubReleaseBlock(pkgs),
 			})
 
 			return c.run(pkgs)
@@ -91,11 +91,11 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 }
 
 type checkResult struct {
-	Package config.Package
+	Package afxpkg.Package
 	Error   error
 }
 
-func (c *checkCmd) run(pkgs []config.Package) error {
+func (c *checkCmd) run(pkgs []afxpkg.Package) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 

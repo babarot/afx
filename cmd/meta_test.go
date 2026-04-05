@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/babarot/afx/internal/config"
+	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/state"
 )
 
@@ -16,9 +17,9 @@ func init() {
 
 func TestGetPackage_found(t *testing.T) {
 	m := metaCmd{
-		packages: []config.Package{
-			&config.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&config.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
+		packages: []afxpkg.Package{
+			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+			&afxpkg.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
 		},
 	}
 
@@ -35,8 +36,8 @@ func TestGetPackage_found(t *testing.T) {
 
 func TestGetPackage_notFound(t *testing.T) {
 	m := metaCmd{
-		packages: []config.Package{
-			&config.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+		packages: []afxpkg.Package{
+			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
 		},
 	}
 
@@ -50,10 +51,10 @@ func TestGetPackage_notFound(t *testing.T) {
 
 func TestGetPackages(t *testing.T) {
 	m := metaCmd{
-		packages: []config.Package{
-			&config.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&config.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
-			&config.GitHub{Name: "tool-c", Owner: "owner", Repo: "tool-c"},
+		packages: []afxpkg.Package{
+			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+			&afxpkg.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
+			&afxpkg.GitHub{Name: "tool-c", Owner: "owner", Repo: "tool-c"},
 		},
 	}
 
@@ -81,19 +82,19 @@ func TestGetConfig_mergesAll(t *testing.T) {
 		configs: map[string]config.Config{
 			"file1.yaml": {
 				Main: main,
-				GitHub: []*config.GitHub{
+				GitHub: []*afxpkg.GitHub{
 					{Name: "gh1", Owner: "o", Repo: "r1"},
 					{Name: "gh2", Owner: "o", Repo: "r2"},
 				},
-				Gist: []*config.Gist{
+				Gist: []*afxpkg.Gist{
 					{Name: "gist1", Owner: "o", ID: "id1"},
 				},
 			},
 			"file2.yaml": {
-				GitHub: []*config.GitHub{
+				GitHub: []*afxpkg.GitHub{
 					{Name: "gh3", Owner: "o", Repo: "r3"},
 				},
-				Gist: []*config.Gist{
+				Gist: []*afxpkg.Gist{
 					{Name: "gist2", Owner: "o", ID: "id2"},
 				},
 			},
@@ -123,7 +124,7 @@ func TestGetConfig_noMain(t *testing.T) {
 	m := metaCmd{
 		configs: map[string]config.Config{
 			"file1.yaml": {
-				GitHub: []*config.GitHub{
+				GitHub: []*afxpkg.GitHub{
 					{Name: "gh1", Owner: "o", Repo: "r1"},
 				},
 			},

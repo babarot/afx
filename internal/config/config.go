@@ -13,16 +13,16 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/babarot/afx/internal/dependency"
-	"github.com/babarot/afx/internal/state"
+	afxpkg "github.com/babarot/afx/internal/pkg"
 )
 
 // Config structure for file describing deployment. This includes the module source, inputs
 // dependencies, backend etc. One config element is connected to a single deployment
 type Config struct {
-	GitHub []*GitHub `yaml:"github,omitempty"`
-	Gist   []*Gist   `yaml:"gist,omitempty"`
-	Local  []*Local  `yaml:"local,omitempty"`
-	HTTP   []*HTTP   `yaml:"http,omitempty"`
+	GitHub []*afxpkg.GitHub `yaml:"github,omitempty"`
+	Gist   []*afxpkg.Gist   `yaml:"gist,omitempty"`
+	Local  []*afxpkg.Local  `yaml:"local,omitempty"`
+	HTTP   []*afxpkg.HTTP   `yaml:"http,omitempty"`
 
 	Main *Main `yaml:"main,omitempty"`
 }
@@ -55,7 +55,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
-	if err := validate.RegisterValidation("startswith-gh-if-not-empty", ValidateGHExtension); err != nil {
+	if err := validate.RegisterValidation("startswith-gh-if-not-empty", afxpkg.ValidateGHExtension); err != nil {
 		return cfg, err
 	}
 	d := yaml.NewDecoder(
@@ -71,8 +71,8 @@ func Read(path string) (Config, error) {
 	return cfg, err
 }
 
-func parse(cfg Config) []Package {
-	var pkgs []Package
+func parse(cfg Config) []afxpkg.Package {
+	var pkgs []afxpkg.Package
 
 	for _, pkg := range cfg.GitHub {
 		pkgs = append(pkgs, pkg)
@@ -92,7 +92,7 @@ func parse(cfg Config) []Package {
 }
 
 // Parse parses a config given via yaml files and converts it into package interface
-func (c Config) Parse() ([]Package, error) {
+func (c Config) Parse() ([]afxpkg.Package, error) {
 	log.Printf("[INFO] Parsing config...")
 	// TODO: divide from parse()
 	return parse(c), nil
@@ -166,11 +166,11 @@ func WalkDir(path string) ([]string, error) {
 	return files, nil
 }
 
-func Sort(given []Package) ([]Package, error) {
-	var pkgs []Package
+func Sort(given []afxpkg.Package) ([]afxpkg.Package, error) {
+	var pkgs []afxpkg.Package
 	var graph dependency.Graph
 
-	table := map[string]Package{}
+	table := map[string]afxpkg.Package{}
 
 	for _, pkg := range given {
 		table[pkg.GetName()] = pkg
@@ -209,7 +209,7 @@ func Sort(given []Package) ([]Package, error) {
 }
 
 // Validate validates if packages are not violated some rules
-func Validate(pkgs []Package) error {
+func Validate(pkgs []afxpkg.Package) error {
 	m := make(map[string]bool)
 	var list []string
 
@@ -228,69 +228,6 @@ func Validate(pkgs []Package) error {
 	}
 
 	return nil
-}
-
-func getResource(pkg Package) state.Resource {
-	var paths []string
-
-	// repository existence is also one of the path resource
-	paths = append(paths, pkg.GetHome())
-
-	if pkg.HasPluginBlock() {
-		plugin := pkg.GetPluginBlock()
-		paths = append(paths, plugin.GetSources(pkg)...)
-	}
-
-	if pkg.HasCommandBlock() {
-		command := pkg.GetCommandBlock()
-		links, _ := command.GetLink(pkg)
-		for _, link := range links {
-			paths = append(paths, link.From)
-			paths = append(paths, link.To)
-		}
-	}
-
-	var ty string
-	var version string
-	var id string
-
-	switch pkg := pkg.(type) {
-	case GitHub:
-		ty = "GitHub"
-		if pkg.HasReleaseBlock() {
-			ty = "GitHub Release"
-			version = pkg.Release.Tag
-		}
-		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
-		if pkg.HasReleaseBlock() {
-			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
-		}
-		if pkg.IsGHExtension() {
-			ty = "GitHub (gh extension)"
-			gh := pkg.As.GHExtension
-			paths = append(paths, gh.GetHome())
-		}
-	case Gist:
-		ty = "Gist"
-		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
-	case Local:
-		ty = "Local"
-		id = fmt.Sprintf("local/%s", pkg.Directory)
-	case HTTP:
-		ty = "HTTP"
-		id = pkg.URL
-	default:
-		ty = "Unknown"
-	}
-
-	return state.Resource{
-		ID:      id,
-		Name:    pkg.GetName(),
-		Home:    pkg.GetHome(),
-		Type:    ty,
-		Version: version,
-		Paths:   paths,
-	}
 }
 
 func (c Config) Get(args ...string) Config {

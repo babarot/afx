@@ -15,6 +15,7 @@ import (
 	"github.com/babarot/afx/internal/env"
 	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
+	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/printers"
 	"github.com/babarot/afx/internal/state"
 	"github.com/babarot/afx/internal/update"
@@ -22,7 +23,7 @@ import (
 
 type metaCmd struct {
 	env      *env.Config
-	packages []config.Package
+	packages []afxpkg.Package
 	main     *config.Main
 	state    *state.State
 	configs  map[string]config.Config
@@ -54,7 +55,7 @@ func (m *metaCmd) init() error {
 		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
-	var pkgs []config.Package
+	var pkgs []afxpkg.Package
 	app := &config.DefaultMain
 	m.configs = map[string]config.Config{}
 	for _, file := range files {
@@ -98,14 +99,14 @@ func (m *metaCmd) init() error {
 		"AFX_SHELL":        env.Variable{Default: m.main.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
-				When:    config.HasSudoInCommandBuildSteps(m.packages),
+				When:    afxpkg.HasSudoInCommandBuildSteps(m.packages),
 				Message: "Please enter sudo command password",
 				Help:    "Some packages build steps requires sudo command",
 			},
 		},
 		"GITHUB_TOKEN": env.Variable{
 			Input: env.Input{
-				When:    config.HasGitHubReleaseBlock(m.packages),
+				When:    afxpkg.HasGitHubReleaseBlock(m.packages),
 				Message: "Please type your GITHUB_TOKEN",
 				Help:    "To fetch GitHub Releases, GitHub token is required",
 			},
@@ -233,7 +234,7 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 	return update.CheckForUpdate(client, stateFilePath, Repository, Version)
 }
 
-func (m metaCmd) GetPackage(resource state.Resource) config.Package {
+func (m metaCmd) GetPackage(resource state.Resource) afxpkg.Package {
 	for _, pkg := range m.packages {
 		if pkg.GetName() == resource.Name {
 			return pkg
@@ -242,8 +243,8 @@ func (m metaCmd) GetPackage(resource state.Resource) config.Package {
 	return nil
 }
 
-func (m metaCmd) GetPackages(resources []state.Resource) []config.Package {
-	var pkgs []config.Package
+func (m metaCmd) GetPackages(resources []state.Resource) []afxpkg.Package {
+	var pkgs []afxpkg.Package
 	for _, resource := range resources {
 		pkgs = append(pkgs, m.GetPackage(resource))
 	}

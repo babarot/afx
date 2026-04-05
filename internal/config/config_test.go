@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	afxpkg "github.com/babarot/afx/internal/pkg"
 )
 
 func init() {
@@ -16,38 +18,38 @@ func init() {
 
 func TestValidate(t *testing.T) {
 	tests := map[string]struct {
-		pkgs    []Package
+		pkgs    []afxpkg.Package
 		wantErr bool
 	}{
 		"no duplicates": {
-			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
-				&GitHub{Name: "pkg2", Owner: "o", Repo: "r2"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
+				&afxpkg.GitHub{Name: "pkg2", Owner: "o", Repo: "r2"},
 			},
 			wantErr: false,
 		},
 		"with duplicates": {
-			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r2"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
+				&afxpkg.GitHub{Name: "pkg1", Owner: "o", Repo: "r2"},
 			},
 			wantErr: true,
 		},
 		"empty": {
-			pkgs:    []Package{},
+			pkgs:    []afxpkg.Package{},
 			wantErr: false,
 		},
 		"mixed types no duplicate": {
-			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r"},
-				&Local{Name: "pkg2", Directory: "/tmp"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "pkg1", Owner: "o", Repo: "r"},
+				&afxpkg.Local{Name: "pkg2", Directory: "/tmp"},
 			},
 			wantErr: false,
 		},
 		"mixed types with duplicate": {
-			pkgs: []Package{
-				&GitHub{Name: "same", Owner: "o", Repo: "r"},
-				&Local{Name: "same", Directory: "/tmp"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "same", Owner: "o", Repo: "r"},
+				&afxpkg.Local{Name: "same", Directory: "/tmp"},
 			},
 			wantErr: true,
 		},
@@ -68,11 +70,11 @@ func TestValidate(t *testing.T) {
 
 func TestConfig_Get(t *testing.T) {
 	cfg := Config{
-		GitHub: []*GitHub{
+		GitHub: []*afxpkg.GitHub{
 			{Name: "foo", Owner: "o", Repo: "foo"},
 			{Name: "bar", Owner: "o", Repo: "bar"},
 		},
-		Local: []*Local{
+		Local: []*afxpkg.Local{
 			{Name: "baz", Directory: "/tmp/baz"},
 		},
 	}
@@ -112,11 +114,11 @@ func TestConfig_Get(t *testing.T) {
 
 func TestConfig_Contains(t *testing.T) {
 	cfg := Config{
-		GitHub: []*GitHub{
+		GitHub: []*afxpkg.GitHub{
 			{Name: "my-tool", Owner: "o", Repo: "r1"},
 			{Name: "other-lib", Owner: "o", Repo: "r2"},
 		},
-		Local: []*Local{
+		Local: []*afxpkg.Local{
 			{Name: "my-local", Directory: "/tmp"},
 		},
 	}
@@ -145,35 +147,6 @@ func TestConfig_Contains(t *testing.T) {
 			total := len(got.GitHub) + len(got.Gist) + len(got.Local) + len(got.HTTP)
 			if total != tt.wantCount {
 				t.Errorf("Contains() returned %d packages, want %d", total, tt.wantCount)
-			}
-		})
-	}
-}
-
-func TestCommand_buildRequired(t *testing.T) {
-	tests := map[string]struct {
-		cmd  Command
-		want bool
-	}{
-		"nil build": {
-			cmd:  Command{Build: nil},
-			want: false,
-		},
-		"empty steps": {
-			cmd:  Command{Build: &Build{Steps: []string{}}},
-			want: false,
-		},
-		"has steps": {
-			cmd:  Command{Build: &Build{Steps: []string{"make"}}},
-			want: true,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := tt.cmd.buildRequired()
-			if got != tt.want {
-				t.Errorf("buildRequired() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -214,14 +187,14 @@ func TestVisitYAML(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	cfg := Config{
-		GitHub: []*GitHub{
+		GitHub: []*afxpkg.GitHub{
 			{Name: "gh1", Owner: "o", Repo: "r1"},
 			{Name: "gh2", Owner: "o", Repo: "r2"},
 		},
-		Gist: []*Gist{
+		Gist: []*afxpkg.Gist{
 			{Name: "gist1", Owner: "o", ID: "abc"},
 		},
-		Local: []*Local{
+		Local: []*afxpkg.Local{
 			{Name: "local1", Directory: "/tmp"},
 		},
 	}
@@ -245,34 +218,34 @@ func TestParse(t *testing.T) {
 
 func TestSort(t *testing.T) {
 	tests := map[string]struct {
-		pkgs    []Package
+		pkgs    []afxpkg.Package
 		wantErr bool
 		wantLen int
 	}{
 		"no dependencies": {
-			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a"},
-				&GitHub{Name: "b", Owner: "o", Repo: "b"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "a"},
+				&afxpkg.GitHub{Name: "b", Owner: "o", Repo: "b"},
 			},
 			wantLen: 2,
 		},
 		"with dependency": {
-			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
-				&GitHub{Name: "b", Owner: "o", Repo: "b"},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
+				&afxpkg.GitHub{Name: "b", Owner: "o", Repo: "b"},
 			},
 			wantLen: 2,
 		},
 		"invalid dependency": {
-			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"nonexistent"}},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"nonexistent"}},
 			},
 			wantErr: true,
 		},
 		"circular dependency": {
-			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
-				&GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
+			pkgs: []afxpkg.Package{
+				&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
+				&afxpkg.GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
 			},
 			wantErr: true,
 		},
@@ -299,9 +272,9 @@ func TestSort(t *testing.T) {
 
 func TestSort_order(t *testing.T) {
 	// b depends on a, so a must come first
-	pkgs := []Package{
-		&GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
-		&GitHub{Name: "a", Owner: "o", Repo: "a"},
+	pkgs := []afxpkg.Package{
+		&afxpkg.GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
+		&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "a"},
 	}
 	sorted, err := Sort(pkgs)
 	if err != nil {
@@ -319,10 +292,10 @@ func TestSort_order(t *testing.T) {
 
 func TestConfig_Get_allTypes(t *testing.T) {
 	cfg := Config{
-		GitHub: []*GitHub{{Name: "x", Owner: "o", Repo: "r"}},
-		Gist:   []*Gist{{Name: "x", Owner: "o", ID: "id"}},
-		Local:  []*Local{{Name: "x", Directory: "/tmp"}},
-		HTTP:   []*HTTP{{Name: "x", URL: "https://example.com"}},
+		GitHub: []*afxpkg.GitHub{{Name: "x", Owner: "o", Repo: "r"}},
+		Gist:   []*afxpkg.Gist{{Name: "x", Owner: "o", ID: "id"}},
+		Local:  []*afxpkg.Local{{Name: "x", Directory: "/tmp"}},
+		HTTP:   []*afxpkg.HTTP{{Name: "x", URL: "https://example.com"}},
 	}
 
 	got := cfg.Get("x")
@@ -333,9 +306,9 @@ func TestConfig_Get_allTypes(t *testing.T) {
 }
 
 func TestValidate_errorMessage(t *testing.T) {
-	pkgs := []Package{
-		&GitHub{Name: "dup", Owner: "o", Repo: "r1"},
-		&GitHub{Name: "dup", Owner: "o", Repo: "r2"},
+	pkgs := []afxpkg.Package{
+		&afxpkg.GitHub{Name: "dup", Owner: "o", Repo: "r1"},
+		&afxpkg.GitHub{Name: "dup", Owner: "o", Repo: "r2"},
 	}
 	err := Validate(pkgs)
 	if err == nil {
@@ -348,32 +321,32 @@ func TestValidate_errorMessage(t *testing.T) {
 
 func TestHasGitHubReleaseBlock(t *testing.T) {
 	tests := map[string]struct {
-		pkgs []Package
+		pkgs []afxpkg.Package
 		want bool
 	}{
 		"no release": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r"}},
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "r"}},
 			want: false,
 		},
 		"with release": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r", Release: &GitHubRelease{}}},
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "r", Release: &afxpkg.GitHubRelease{}}},
 			want: true,
 		},
 		"non-github": {
-			pkgs: []Package{&Local{Name: "a", Directory: "/tmp"}},
+			pkgs: []afxpkg.Package{&afxpkg.Local{Name: "a", Directory: "/tmp"}},
 			want: false,
 		},
 		"empty": {
-			pkgs: []Package{},
+			pkgs: []afxpkg.Package{},
 			want: false,
 		},
 	}
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := HasGitHubReleaseBlock(tt.pkgs)
+			got := afxpkg.HasGitHubReleaseBlock(tt.pkgs)
 			if got != tt.want {
-				t.Errorf("HasGitHubReleaseBlock() = %v, want %v", got, tt.want)
+				t.Errorf("afxpkg.HasGitHubReleaseBlock() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -381,31 +354,31 @@ func TestHasGitHubReleaseBlock(t *testing.T) {
 
 func TestHasSudoInCommandBuildSteps(t *testing.T) {
 	tests := map[string]struct {
-		pkgs []Package
+		pkgs []afxpkg.Package
 		want bool
 	}{
 		"no command block": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r"}},
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{Name: "a", Owner: "o", Repo: "r"}},
 			want: false,
 		},
 		"with sudo": {
-			pkgs: []Package{&GitHub{
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{
 				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{Build: &Build{Steps: []string{"sudo make install"}}},
+				Command: &afxpkg.Command{Build: &afxpkg.Build{Steps: []string{"sudo make install"}}},
 			}},
 			want: true,
 		},
 		"without sudo": {
-			pkgs: []Package{&GitHub{
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{
 				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{Build: &Build{Steps: []string{"make install"}}},
+				Command: &afxpkg.Command{Build: &afxpkg.Build{Steps: []string{"make install"}}},
 			}},
 			want: false,
 		},
 		"no build": {
-			pkgs: []Package{&GitHub{
+			pkgs: []afxpkg.Package{&afxpkg.GitHub{
 				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{},
+				Command: &afxpkg.Command{},
 			}},
 			want: false,
 		},
@@ -413,9 +386,9 @@ func TestHasSudoInCommandBuildSteps(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := HasSudoInCommandBuildSteps(tt.pkgs)
+			got := afxpkg.HasSudoInCommandBuildSteps(tt.pkgs)
 			if got != tt.want {
-				t.Errorf("HasSudoInCommandBuildSteps() = %v, want %v", got, tt.want)
+				t.Errorf("afxpkg.HasSudoInCommandBuildSteps() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -446,4 +419,4 @@ func TestCreateDirIfNotExist(t *testing.T) {
 }
 
 // Verify GitHubRelease type exists (needed for HasGitHubReleaseBlock)
-var _ = &GitHubRelease{}
+var _ = &afxpkg.GitHubRelease{}
