@@ -2,9 +2,9 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"os"
 
-	"github.com/babarot/afx/internal/errors"
 	pathutil "github.com/babarot/afx/internal/helpers/path"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
@@ -25,14 +25,18 @@ type Local struct {
 
 // Init is
 func (c Local) Init() error {
-	var errs errors.Errors
+	var errs []error
 	if c.HasPluginBlock() {
-		errs.Append(c.Plugin.Init(c))
+		if err := c.Plugin.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if c.HasCommandBlock() {
-		errs.Append(c.Command.Init(c))
+		if err := c.Command.Init(c); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // Install is

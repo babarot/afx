@@ -1,14 +1,13 @@
 package manager
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/auth"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-
-	"github.com/babarot/afx/internal/errors"
 )
 
 func allTrue(list []bool) bool {
@@ -61,7 +60,7 @@ func wrapAuthError(err error, name string) error {
 		strings.Contains(errStr, "authorization") ||
 		strings.Contains(errStr, "401") ||
 		strings.Contains(errStr, "403") {
-		return errors.Wrapf(err, "%s: authentication failed. Please set GITHUB_TOKEN environment variable for private repositories", name)
+		return fmt.Errorf("%s: authentication failed. Please set GITHUB_TOKEN environment variable for private repositories: %w", name, err)
 	}
 	return err
 }

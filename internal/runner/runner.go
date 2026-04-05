@@ -2,13 +2,12 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
 
 	"golang.org/x/sync/errgroup"
-
-	"github.com/babarot/afx/internal/errors"
 )
 
 // Package is the minimal interface needed by the runner.
@@ -66,14 +65,16 @@ func Execute(pkgs []Package, taskFn func(pkg Package) TaskFunc) error {
 		close(results)
 	}()
 
-	var exit errors.Errors
+	var exit []error
 	for result := range results {
-		exit.Append(result.Error)
+		if result.Error != nil {
+			exit = append(exit, result.Error)
+		}
 	}
 	if err := eg.Wait(); err != nil {
 		log.Printf("[ERROR] execution failed: %s", err)
-		exit.Append(err)
+		exit = append(exit, err)
 	}
 
-	return exit.ErrorOrNil()
+	return errors.Join(exit...)
 }

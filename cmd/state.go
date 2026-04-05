@@ -7,7 +7,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	"github.com/babarot/afx/internal/state"
 )
@@ -89,7 +88,7 @@ func (c stateCmd) newStateRefreshCmd() *cobra.Command {
 				return c.state.New()
 			}
 			if err := c.state.Refresh(); err != nil {
-				return errors.Wrap(err, "failed to refresh state")
+				return fmt.Errorf("failed to refresh state: %w", err)
 			}
 			fmt.Println(color.WhiteString("Successfully refreshed"))
 			return nil
@@ -115,7 +114,7 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 			case 0:
 				rs, err := c.state.List()
 				if err != nil {
-					return errors.Wrap(err, "failed to list state items")
+					return fmt.Errorf("failed to list state items: %w", err)
 				}
 				var items []string
 				for _, r := range rs {
@@ -126,18 +125,18 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 					Message: "Choose a package:",
 					Options: items,
 				}, &selected); err != nil {
-					return errors.Wrap(err, "failed to get input from console")
+					return fmt.Errorf("failed to get input from console: %w", err)
 				}
 				resource, err := c.state.Get(selected)
 				if err != nil {
-					return errors.Wrapf(err, "%s: failed to get state file", selected)
+					return fmt.Errorf("%s: failed to get state file: %w", selected, err)
 				}
 				resources = append(resources, resource)
 			default:
 				for _, arg := range cmd.Flags().Args() {
 					resource, err := c.state.Get(arg)
 					if err != nil {
-						return errors.Wrapf(err, "%s: failed to get state file", arg)
+						return fmt.Errorf("%s: failed to get state file: %w", arg, err)
 					}
 					resources = append(resources, resource)
 				}

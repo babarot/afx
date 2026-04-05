@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/helpers/templates"
 	"github.com/babarot/afx/internal/state"
 )
@@ -81,25 +81,27 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 }
 
 func (c *uninstallCmd) run(resources []state.Resource) error {
-	var errs errors.Errors
+	var errs []error
 
 	delete := func(paths ...string) error {
-		var errs errors.Errors
+		var errs []error
 		for _, path := range paths {
-			errs.Append(os.RemoveAll(path))
+			if err := os.RemoveAll(path); err != nil {
+				errs = append(errs, err)
+			}
 		}
-		return errs.ErrorOrNil()
+		return errors.Join(errs...)
 	}
 
 	for _, resource := range resources {
 		err := delete(append(resource.Paths, resource.Home)...)
 		if err != nil {
-			errs.Append(err)
+			errs = append(errs, err)
 			continue
 		}
 		c.state.Remove(resource)
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }

@@ -2,13 +2,13 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
 	"github.com/babarot/afx/internal/runner"
 )
@@ -33,7 +33,7 @@ func (c GitHub) Check(ctx context.Context, status chan<- runner.Status) error {
 	case c.Release != nil:
 		report, err := c.checkUpdates(ctx)
 		if err != nil {
-			err = errors.Wrapf(err, "%s: failed to check release version", c.Name)
+			err = fmt.Errorf("%s: failed to check release version: %w", c.Name, err)
 		}
 		status <- runner.Status{Name: c.GetName(), Done: true, Err: err != nil, Message: report.message}
 		return err

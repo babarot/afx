@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/babarot/afx/internal/env"
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
 	manager "github.com/babarot/afx/internal/manager"
 	"github.com/babarot/afx/internal/printers"
@@ -58,11 +58,11 @@ func (m *metaCmd) loadConfigs() error {
 	cfgRoot := manager.ConfigDir()
 
 	if err := manager.CreateDirIfNotExist(cfgRoot); err != nil {
-		return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
+		return fmt.Errorf("%s: failed to create dir: %w", cfgRoot, err)
 	}
 	files, err := manager.WalkDir(cfgRoot)
 	if err != nil {
-		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
+		return fmt.Errorf("%s: failed to walk dir: %w", cfgRoot, err)
 	}
 
 	var pkgs []manager.Package
@@ -71,11 +71,11 @@ func (m *metaCmd) loadConfigs() error {
 	for _, file := range files {
 		cfg, err := manager.Read(file)
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to read config", file)
+			return fmt.Errorf("%s: failed to read config: %w", file, err)
 		}
 		parsed, err := cfg.Parse()
 		if err != nil {
-			return errors.Wrapf(err, "%s: failed to parse config", file)
+			return fmt.Errorf("%s: failed to parse config: %w", file, err)
 		}
 		pkgs = append(pkgs, parsed...)
 		m.configs[file] = cfg
@@ -92,11 +92,11 @@ func (m *metaCmd) loadConfigs() error {
 // initPackages validates and sorts packages by dependency order.
 func (m *metaCmd) initPackages() error {
 	if err := manager.Validate(m.packages); err != nil {
-		return errors.Wrap(err, "failed to validate packages")
+		return fmt.Errorf("failed to validate packages: %w", err)
 	}
 	sorted, err := manager.Sort(m.packages)
 	if err != nil {
-		return errors.Wrap(err, "failed to resolve dependencies between packages")
+		return fmt.Errorf("failed to resolve dependencies between packages: %w", err)
 	}
 	m.packages = sorted
 	return nil
@@ -153,7 +153,7 @@ func (m *metaCmd) initState() error {
 
 	s, err := state.Open(filepath.Join(root, "state.json"), resourcers)
 	if err != nil {
-		return errors.Wrap(err, "failed to open state file")
+		return fmt.Errorf("failed to open state file: %w", err)
 	}
 	m.state = s
 
@@ -186,6 +186,7 @@ func (m *metaCmd) printForUpdate() error {
 	if m.updateMessageChan == nil {
 		return errors.New("update message chan is not set")
 	}
+
 	printForUpdate(m.updateMessageChan)
 	return nil
 }
@@ -227,7 +228,7 @@ func (m *metaCmd) askRunCommand(op any, pkgs []string) (bool, error) {
 	}
 
 	if err := survey.AskOne(&confirm, &yes); err != nil {
-		return false, errors.Wrap(err, "failed to get input from console")
+		return false, fmt.Errorf("failed to get input from console: %w", err)
 	}
 	return yes, nil
 }

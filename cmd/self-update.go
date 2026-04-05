@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
 	"github.com/babarot/afx/internal/helpers/templates"
 )
@@ -86,7 +86,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 
 	latest, found, err := selfupdate.DetectLatest(ctx, selfupdate.ParseSlug(Repository))
 	if err != nil {
-		return errors.Wrap(err, "error occurred while detecting version")
+		return fmt.Errorf("error occurred while detecting version: %w", err)
 	}
 
 	if !found {
@@ -104,7 +104,7 @@ func (c *selfUpdateCmd) run(args []string) error {
 		Message: fmt.Sprintf("Do you update to %s? (current version: %s)",
 			latest.Version(), Version),
 	}, &yes); err != nil {
-		return errors.Wrap(err, "cannot get answer from console")
+		return fmt.Errorf("cannot get answer from console: %w", err)
 	}
 	if !yes {
 		return nil

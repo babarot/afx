@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/babarot/afx/internal/dependency"
 )
@@ -175,19 +175,19 @@ func Sort(given []Package) ([]Package, error) {
 		table[pkg.GetName()] = pkg
 	}
 
-	var err error
+	var errs []error
 	for name, pkg := range table {
 		dependencies := pkg.GetDependsOn()
 		for _, dep := range pkg.GetDependsOn() {
 			if _, ok := table[dep]; !ok {
-				err = multierror.Append(err,
+				errs = append(errs,
 					fmt.Errorf("%s: not valid package name in depends-on: %q", pkg.GetName(), dep),
 				)
 			}
 		}
 		graph = append(graph, dependency.NewNode(name, dependencies...))
 	}
-	if err != nil {
+	if err := errors.Join(errs...); err != nil {
 		return pkgs, err
 	}
 
