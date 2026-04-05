@@ -95,6 +95,9 @@ func Execute() error {
 	if err := meta.init(); err != nil {
 		return errors.Wrap(err, "failed to initialize afx")
 	}
+	if meta.state != nil {
+		defer meta.state.Close()
+	}
 
 	defer log.Printf("[INFO] root command execution finished")
 	return newRootCmd(meta).Execute()

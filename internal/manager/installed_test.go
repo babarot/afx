@@ -1,9 +1,8 @@
-package pkg
+package manager
 
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -43,9 +42,6 @@ func TestGist_GetHome(t *testing.T) {
 }
 
 func TestLocal_GetHome(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on Windows due to HOME handling")
-	}
 	t.Setenv("HOME", "/test/home")
 	l := Local{Directory: "~/mydir"}
 	got := l.GetHome()
@@ -64,9 +60,6 @@ func TestLocal_GetHome_absolute(t *testing.T) {
 }
 
 func TestHTTP_GetHome(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping on Windows due to HOME path handling")
-	}
 	t.Setenv("HOME", "/test/home")
 	h := HTTP{URL: "https://example.com/releases/tool.tar.gz"}
 	got := h.GetHome()

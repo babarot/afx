@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/babarot/afx/internal/helpers/templates"
-	afxpkg "github.com/babarot/afx/internal/pkg"
+	manager "github.com/babarot/afx/internal/manager"
 	"github.com/babarot/afx/internal/runner"
 	"github.com/babarot/afx/internal/state"
 )
@@ -74,8 +74,8 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 
 			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
-				"GITHUB_TOKEN":      afxpkg.HasGitHubReleaseBlock(pkgs),
-				"AFX_SUDO_PASSWORD": afxpkg.HasSudoInCommandBuildSteps(pkgs),
+				"GITHUB_TOKEN":      manager.HasGitHubReleaseBlock(pkgs),
+				"AFX_SUDO_PASSWORD": manager.HasSudoInCommandBuildSteps(pkgs),
 			})
 
 			return c.run(pkgs)
@@ -88,7 +88,7 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 	return updateCmd
 }
 
-func (c *updateCmd) run(pkgs []afxpkg.Package) error {
+func (c *updateCmd) run(pkgs []manager.Package) error {
 	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
 
 	runnerPkgs := make([]runner.Package, len(pkgs))
@@ -97,7 +97,7 @@ func (c *updateCmd) run(pkgs []afxpkg.Package) error {
 	}
 
 	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
-		pkg, _ := p.(afxpkg.Package)
+		pkg, _ := p.(manager.Package)
 		return func(ctx context.Context, completion chan<- runner.Status) error {
 			home := pkg.GetHome()
 			backup := home + ".bak"

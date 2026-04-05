@@ -28,6 +28,7 @@ type State struct {
 	packages map[ID]Resource
 	path     string
 	mu       sync.RWMutex
+	flock    *fileLock
 
 	// No record in state file
 	Additions []Resource
@@ -227,11 +228,17 @@ func Keys(resources []Resource) []string {
 }
 
 func Open(path string, resourcers []Resourcer) (*State, error) {
+	fl := newFileLock(path)
+	if err := fl.lock(); err != nil {
+		log.Printf("[WARN] failed to acquire state lock: %v", err)
+	}
+
 	s := State{
 		Self:     Self{Resources: map[ID]Resource{}},
 		path:     path,
 		packages: map[ID]Resource{},
 		mu:       sync.RWMutex{},
+		flock:    fl,
 	}
 
 	for _, resourcer := range resourcers {
@@ -267,6 +274,14 @@ func Open(path string, resourcers []Resourcer) (*State, error) {
 	}
 
 	return &s, s.save()
+}
+
+// Close releases the file lock on the state file.
+func (s *State) Close() error {
+	if s.flock != nil {
+		return s.flock.unlock()
+	}
+	return nil
 }
 
 func (s *State) Add(resourcer Resourcer) {

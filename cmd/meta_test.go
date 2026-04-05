@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	afxpkg "github.com/babarot/afx/internal/pkg"
+	manager "github.com/babarot/afx/internal/manager"
 	"github.com/babarot/afx/internal/state"
 )
 
@@ -16,9 +16,9 @@ func init() {
 
 func TestGetPackage_found(t *testing.T) {
 	m := metaCmd{
-		packages: []afxpkg.Package{
-			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&afxpkg.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
+		packages: []manager.Package{
+			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+			&manager.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
 		},
 	}
 
@@ -35,8 +35,8 @@ func TestGetPackage_found(t *testing.T) {
 
 func TestGetPackage_notFound(t *testing.T) {
 	m := metaCmd{
-		packages: []afxpkg.Package{
-			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+		packages: []manager.Package{
+			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
 		},
 	}
 
@@ -50,10 +50,10 @@ func TestGetPackage_notFound(t *testing.T) {
 
 func TestGetPackages(t *testing.T) {
 	m := metaCmd{
-		packages: []afxpkg.Package{
-			&afxpkg.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&afxpkg.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
-			&afxpkg.GitHub{Name: "tool-c", Owner: "owner", Repo: "tool-c"},
+		packages: []manager.Package{
+			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+			&manager.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
+			&manager.GitHub{Name: "tool-c", Owner: "owner", Repo: "tool-c"},
 		},
 	}
 
@@ -75,25 +75,25 @@ func TestGetPackages(t *testing.T) {
 }
 
 func TestGetConfig_mergesAll(t *testing.T) {
-	main := &afxpkg.Main{Shell: "zsh"}
+	main := &manager.Main{Shell: "zsh"}
 
 	m := metaCmd{
-		configs: map[string]afxpkg.Config{
+		configs: map[string]manager.Config{
 			"file1.yaml": {
 				Main: main,
-				GitHub: []*afxpkg.GitHub{
+				GitHub: []*manager.GitHub{
 					{Name: "gh1", Owner: "o", Repo: "r1"},
 					{Name: "gh2", Owner: "o", Repo: "r2"},
 				},
-				Gist: []*afxpkg.Gist{
+				Gist: []*manager.Gist{
 					{Name: "gist1", Owner: "o", ID: "id1"},
 				},
 			},
 			"file2.yaml": {
-				GitHub: []*afxpkg.GitHub{
+				GitHub: []*manager.GitHub{
 					{Name: "gh3", Owner: "o", Repo: "r3"},
 				},
-				Gist: []*afxpkg.Gist{
+				Gist: []*manager.Gist{
 					{Name: "gist2", Owner: "o", ID: "id2"},
 				},
 			},
@@ -121,9 +121,9 @@ func TestGetConfig_mergesAll(t *testing.T) {
 
 func TestGetConfig_noMain(t *testing.T) {
 	m := metaCmd{
-		configs: map[string]afxpkg.Config{
+		configs: map[string]manager.Config{
 			"file1.yaml": {
-				GitHub: []*afxpkg.GitHub{
+				GitHub: []*manager.GitHub{
 					{Name: "gh1", Owner: "o", Repo: "r1"},
 				},
 			},

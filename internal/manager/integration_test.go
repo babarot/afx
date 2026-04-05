@@ -1,11 +1,10 @@
-package pkg
+package manager
 
 import (
 	"io"
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -16,10 +15,6 @@ func init() {
 // TestCommand_GetLink_Install_Unlink tests the full symlink lifecycle:
 // create a binary in home dir → GetLink → Install (symlink) → Installed → Unlink
 func TestCommand_GetLink_Install_Unlink(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("symlink tests not reliable on Windows CI")
-	}
-
 	// Setup: create home dir with a binary
 	homeDir := t.TempDir()
 	binDir := t.TempDir()
@@ -93,10 +88,6 @@ func TestCommand_GetLink_Install_Unlink(t *testing.T) {
 
 // TestCommand_GetLink_dotFrom tests the special case where From is "."
 func TestCommand_GetLink_dotFrom(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("symlink tests not reliable on Windows CI")
-	}
-
 	homeDir := t.TempDir()
 	binDir := t.TempDir()
 	t.Setenv("AFX_COMMAND_PATH", binDir)
@@ -205,10 +196,6 @@ func TestGist_Uninstall(t *testing.T) {
 
 // TestCommand_Install_overwritesExistingSymlink tests that Install replaces an existing symlink
 func TestCommand_Install_overwritesExistingSymlink(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("symlink tests not reliable on Windows CI")
-	}
-
 	homeDir := t.TempDir()
 	binDir := t.TempDir()
 	t.Setenv("AFX_COMMAND_PATH", binDir)
