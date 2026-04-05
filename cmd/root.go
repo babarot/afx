@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/logging"
-	"github.com/babarot/afx/pkg/update"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/helpers/templates"
+	"github.com/babarot/afx/internal/logging"
+	"github.com/babarot/afx/internal/update"
 )
 
 var Repository string = "babarot/afx"

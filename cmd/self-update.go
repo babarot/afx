@@ -12,9 +12,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/github"
-	"github.com/babarot/afx/pkg/helpers/templates"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/github"
+	"github.com/babarot/afx/internal/helpers/templates"
 )
 
 type selfUpdateCmd struct {

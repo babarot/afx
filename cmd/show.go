@@ -9,9 +9,9 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/printers"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/helpers/templates"
+	"github.com/babarot/afx/internal/printers"
+	"github.com/babarot/afx/internal/state"
 )
 
 type showCmd struct {

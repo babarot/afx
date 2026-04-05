@@ -4,16 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/pkg/config"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/helpers/templates"
+	afxpkg "github.com/babarot/afx/internal/pkg"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 type checkCmd struct {
@@ -76,7 +73,7 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 
 			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
-				"GITHUB_TOKEN": config.HasGitHubReleaseBlock(pkgs),
+				"GITHUB_TOKEN": afxpkg.HasGitHubReleaseBlock(pkgs),
 			})
 
 			return c.run(pkgs)
@@ -89,59 +86,23 @@ func (m metaCmd) newCheckCmd() *cobra.Command {
 	return checkCmd
 }
 
-type checkResult struct {
-	Package config.Package
-	Error   error
-}
-
-func (c *checkCmd) run(pkgs []config.Package) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	progress := config.NewProgress(pkgs)
-	completion := make(chan config.Status)
-	limit := make(chan struct{}, 16)
-	results := make(chan checkResult)
-
-	go func() {
-		progress.Print(completion)
-	}()
-
+func (c *checkCmd) run(pkgs []afxpkg.Package) error {
 	log.Printf("[DEBUG] (check): start to run each pkg.Check()")
-	eg := errgroup.Group{}
-	for _, pkg := range pkgs {
-		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
-			err := pkg.Check(ctx, completion)
-			select {
-			case results <- checkResult{Package: pkg, Error: err}:
-				return nil
-			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: canceled checking", pkg.GetName())
-			}
-		})
+
+	runnerPkgs := make([]runner.Package, len(pkgs))
+	for i, p := range pkgs {
+		runnerPkgs[i] = p
 	}
 
-	go func() {
-		_ = eg.Wait()
-		close(results)
-	}()
-
-	var exit errors.Errors
-	for result := range results {
-		exit.Append(result.Error)
-	}
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to check: %s", err)
-		exit.Append(err)
-	}
-
-	defer func(err error) {
-		if err != nil {
-			_ = c.env.Refresh()
+	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
+		pkg, _ := p.(afxpkg.Package)
+		return func(ctx context.Context, completion chan<- runner.Status) error {
+			return pkg.Check(ctx, completion)
 		}
-	}(exit.ErrorOrNil())
+	})
 
-	return exit.ErrorOrNil()
+	if err != nil {
+		_ = c.env.Refresh()
+	}
+	return err
 }

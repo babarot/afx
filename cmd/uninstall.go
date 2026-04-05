@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/helpers/templates"
+	"github.com/babarot/afx/internal/state"
 )
 
 type uninstallCmd struct {

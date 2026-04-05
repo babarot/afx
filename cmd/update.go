@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/errgroup"
 
-	"github.com/babarot/afx/pkg/config"
-	"github.com/babarot/afx/pkg/errors"
-	"github.com/babarot/afx/pkg/helpers/templates"
-	"github.com/babarot/afx/pkg/state"
+	"github.com/babarot/afx/internal/helpers/templates"
+	afxpkg "github.com/babarot/afx/internal/pkg"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
 )
 
 type updateCmd struct {
@@ -76,8 +74,8 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 
 			pkgs := m.GetPackages(resources)
 			m.env.AskWhen(map[string]bool{
-				"GITHUB_TOKEN":      config.HasGitHubReleaseBlock(pkgs),
-				"AFX_SUDO_PASSWORD": config.HasSudoInCommandBuildSteps(pkgs),
+				"GITHUB_TOKEN":      afxpkg.HasGitHubReleaseBlock(pkgs),
+				"AFX_SUDO_PASSWORD": afxpkg.HasSudoInCommandBuildSteps(pkgs),
 			})
 
 			return c.run(pkgs)
@@ -90,31 +88,18 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 	return updateCmd
 }
 
-type updateResult struct {
-	Package config.Package
-	Error   error
-}
-
-func (c *updateCmd) run(pkgs []config.Package) error {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	progress := config.NewProgress(pkgs)
-	completion := make(chan config.Status)
-	limit := make(chan struct{}, 16)
-	results := make(chan updateResult)
-
-	go func() {
-		progress.Print(completion)
-	}()
-
+func (c *updateCmd) run(pkgs []afxpkg.Package) error {
 	log.Printf("[DEBUG] (update): start to run each pkg.Install()")
-	eg := errgroup.Group{}
-	for _, pkg := range pkgs {
-		eg.Go(func() error {
-			limit <- struct{}{}
-			defer func() { <-limit }()
-			os.RemoveAll(pkg.GetHome()) // delete before updating
+
+	runnerPkgs := make([]runner.Package, len(pkgs))
+	for i, p := range pkgs {
+		runnerPkgs[i] = p
+	}
+
+	err := runner.Execute(runnerPkgs, func(p runner.Package) runner.TaskFunc {
+		pkg, _ := p.(afxpkg.Package)
+		return func(ctx context.Context, completion chan<- runner.Status) error {
+			_ = os.RemoveAll(pkg.GetHome()) // delete before updating
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
@@ -123,34 +108,12 @@ func (c *updateCmd) run(pkgs []config.Package) error {
 				log.Printf("[DEBUG] uninstall %q because updating failed", pkg.GetName())
 				_ = pkg.Uninstall(ctx)
 			}
-			select {
-			case results <- updateResult{Package: pkg, Error: err}:
-				return nil
-			case <-ctx.Done():
-				return errors.Wrapf(ctx.Err(), "%s: canceled updating", pkg.GetName())
-			}
-		})
-	}
-
-	go func() {
-		_ = eg.Wait()
-		close(results)
-	}()
-
-	var exit errors.Errors
-	for result := range results {
-		exit.Append(result.Error)
-	}
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] failed to update: %s", err)
-		exit.Append(err)
-	}
-
-	defer func(err error) {
-		if err != nil {
-			_ = c.env.Refresh()
+			return err
 		}
-	}(exit.ErrorOrNil())
+	})
 
-	return exit.ErrorOrNil()
+	if err != nil {
+		_ = c.env.Refresh()
+	}
+	return err
 }
