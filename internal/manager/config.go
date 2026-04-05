@@ -15,8 +15,7 @@ import (
 	"github.com/babarot/afx/internal/dependency"
 )
 
-// Config structure for file describing deployment. This includes the module source, inputs
-// dependencies, backend etc. One config element is connected to a single deployment
+// Config represents a parsed YAML configuration file containing package definitions.
 type Config struct {
 	GitHub []*GitHub `yaml:"github,omitempty"`
 	Gist   []*Gist   `yaml:"gist,omitempty"`

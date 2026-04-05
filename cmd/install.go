@@ -66,7 +66,10 @@ func (m metaCmd) newInstallCmd() *cobra.Command {
 				resources = tmp
 			}
 
-			yes, _ := m.askRunCommand(*c, state.Keys(resources))
+			yes, err := m.askRunCommand(*c, state.Keys(resources))
+			if err != nil {
+				return fmt.Errorf("failed to confirm: %w", err)
+			}
 			if !yes {
 				fmt.Println("Canceled")
 				return nil

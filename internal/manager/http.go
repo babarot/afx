@@ -69,12 +69,7 @@ func (c HTTP) call(ctx context.Context) error {
 	defer resp.Body.Close()
 
 	log.Printf("[DEBUG] response code: %d", resp.StatusCode)
-	switch resp.StatusCode {
-	case 200, 301, 302:
-		// go
-	case 404:
-		return fmt.Errorf("%s: %d Not Found in %s", c.GetName(), resp.StatusCode, c.URL)
-	default:
+	if resp.StatusCode != 200 {
 		return fmt.Errorf("%s: %d %s", c.GetName(), resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
