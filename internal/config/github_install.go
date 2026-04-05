@@ -1,0 +1,249 @@
+package config
+
+import (
+	"context"
+	stderrors "errors"
+	"fmt"
+	"io"
+	"log"
+	"os"
+
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+
+	"github.com/babarot/afx/internal/data"
+	"github.com/babarot/afx/internal/errors"
+	"github.com/babarot/afx/internal/github"
+	"github.com/babarot/afx/internal/logging"
+	"github.com/babarot/afx/internal/runner"
+	"github.com/babarot/afx/internal/state"
+	"github.com/babarot/afx/internal/templates"
+)
+
+// Clone runs git clone
+func (c GitHub) Clone(ctx context.Context) error {
+	writer := io.Discard
+	if logging.IsTrace() {
+		writer = os.Stdout
+	}
+
+	var opt GitHubOption
+	if c.Option != nil {
+		opt = *c.Option
+	}
+
+	var r *git.Repository
+	_, err := os.Stat(c.GetHome())
+	switch {
+	case os.IsNotExist(err):
+		r, err = git.PlainCloneContext(ctx, c.GetHome(), false, &git.CloneOptions{
+			URL:      fmt.Sprintf("https://github.com/%s/%s", c.Owner, c.Repo),
+			Auth:     getGitAuth(),
+			Tags:     git.NoTags,
+			Depth:    opt.Depth,
+			Progress: writer,
+		})
+		if err != nil {
+			return wrapAuthError(errors.Wrapf(err, "%s: failed to clone repository", c.GetName()), c.GetName())
+		}
+	default:
+		r, err = git.PlainOpen(c.GetHome())
+		if err != nil {
+			return errors.Wrapf(err, "%s: failed to open repository", c.GetName())
+		}
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to get worktree", c.GetName())
+	}
+
+	if c.Branch != "" {
+		var err error
+		err = r.FetchContext(ctx, &git.FetchOptions{
+			RemoteName: "origin",
+			Auth:       getGitAuth(),
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("+%s:%s",
+					plumbing.NewBranchReferenceName(c.Branch),
+					plumbing.NewBranchReferenceName(c.Branch),
+				)),
+			},
+			Depth:    opt.Depth,
+			Force:    true,
+			Tags:     git.NoTags,
+			Progress: writer,
+		})
+		if err != nil && !stderrors.Is(err, git.NoErrAlreadyUpToDate) {
+			return errors.Wrapf(err, "%s: failed to fetch repository", c.Branch)
+		}
+		err = w.Checkout(&git.CheckoutOptions{
+			Branch: plumbing.ReferenceName("refs/heads/" + c.Branch),
+			Force:  true,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "%s: failed to checkout", c.Branch)
+		}
+	}
+
+	return nil
+}
+
+// Install installs from GitHub repository with git clone command
+func (c GitHub) Install(ctx context.Context, status chan<- runner.Status) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	select {
+	case <-ctx.Done():
+		log.Println("[DEBUG] canceled")
+		return nil
+	default:
+		// Go installing step!
+	}
+
+	switch {
+	case c.Release == nil:
+		err := c.Clone(ctx)
+		if err != nil {
+			err = errors.Wrapf(err, "%s: failed to clone repo", c.Name)
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
+			return err
+		}
+	case c.Release != nil:
+		err := c.InstallFromRelease(ctx)
+		if err != nil {
+			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
+			return err
+		}
+	}
+
+	var errs errors.Errors
+
+	if c.IsGHExtension() {
+		gh := c.As.GHExtension
+		err := gh.Install(ctx, c.Owner, c.Repo, gh.GetTag())
+		if err != nil {
+			err = errors.Wrapf(err, "%s: failed to get from release", c.Name)
+			status <- runner.Status{Name: c.GetName(), Done: true, Err: true}
+			return err
+		}
+	}
+
+	if c.HasPluginBlock() {
+		errs.Append(c.Plugin.Install(c))
+	}
+	if c.HasCommandBlock() {
+		errs.Append(c.Command.Install(c))
+	}
+
+	status <- runner.Status{Name: c.GetName(), Done: true, Err: errs.ErrorOrNil() != nil}
+	return errs.ErrorOrNil()
+}
+
+// InstallFromRelease runs install from GitHub release, from not repository
+func (c GitHub) InstallFromRelease(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	owner, repo, tag := c.Owner, c.Repo, c.GetReleaseTag()
+	log.Printf("[DEBUG] install from release: %s/%s (%s)", owner, repo, tag)
+
+	release, err := github.NewRelease(
+		ctx, owner, repo, tag,
+		github.WithWorkdir(c.GetHome()),
+		github.WithFilter(func(filename string) github.FilterFunc {
+			if filename == "" {
+				// cancel filtering
+				return nil
+			}
+			return func(assets github.Assets) *github.Asset {
+				for _, asset := range assets {
+					if asset.Name == filename {
+						return &asset
+					}
+				}
+				return nil
+			}
+		}(c.templateFilename())),
+	)
+	if err != nil {
+		return err
+	}
+
+	asset, err := release.Download(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "%s: failed to download", release.Name)
+	}
+
+	if err := release.Unarchive(asset); err != nil {
+		return errors.Wrapf(err, "%s: failed to unarchive", release.Name)
+	}
+
+	return nil
+}
+
+func (c GitHub) templateFilename() string {
+	release := c.Release
+	if release == nil {
+		return ""
+	}
+
+	filename := release.Asset.Filename
+	replacements := release.Asset.Replacements
+
+	if filename == "" {
+		// no filename specified
+		return ""
+	}
+
+	log.Printf("[DEBUG] asset: templating filename from %q", filename)
+
+	data := data.New(
+		data.WithPackage(c),
+		data.WithRelease(data.Release{
+			Name: release.Name,
+			Tag:  release.Tag,
+		}),
+	)
+
+	filename, err := templates.New(data).
+		Replace(replacements).
+		Apply(filename)
+	if err != nil {
+		log.Printf("[WARN] asset: failed to template filename: %q", filename)
+	}
+
+	log.Printf("[DEBUG] asset: templated filename: -> %q", filename)
+	return filename
+}
+
+func (c GitHub) Uninstall(ctx context.Context) error {
+	var errs errors.Errors
+
+	delete := func(f string, errs *errors.Errors) {
+		err := os.RemoveAll(f)
+		if err != nil {
+			errs.Append(err)
+			return
+		}
+		log.Printf("[INFO] Delete %s\n", f)
+	}
+
+	if c.HasCommandBlock() {
+		links, _ := c.Command.GetLink(c)
+		for _, link := range links {
+			delete(link.From, &errs)
+			delete(link.To, &errs)
+		}
+	}
+
+	delete(c.GetHome(), &errs)
+	return errs.ErrorOrNil()
+}
+
+func (c GitHub) GetResource() state.Resource {
+	return getResource(c)
+}
