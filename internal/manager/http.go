@@ -82,7 +82,9 @@ func (c HTTP) call(ctx context.Context) error {
 		return err
 	}
 	defer file.Close()
-	_, err = io.Copy(file, resp.Body)
+	// Limit download size to 1 GiB to prevent disk exhaustion
+	const maxDownloadSize = 1 << 30
+	_, err = io.Copy(file, io.LimitReader(resp.Body, maxDownloadSize))
 	if err != nil {
 		return err
 	}

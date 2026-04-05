@@ -139,27 +139,9 @@ func (p Plugin) Init(pkg Package) error {
 }
 
 func glob(path string) []string {
-	var matches, sources []string
-	var err error
-
-	matches, err = filepath.Glob(path)
-	if err == nil {
-		sources = append(sources, matches...)
+	matches, err := zglob.Glob(path)
+	if err != nil {
+		return nil
 	}
-	matches, err = zglob.Glob(path)
-	if err == nil {
-		sources = append(sources, matches...)
-	}
-
-	m := make(map[string]bool)
-	unique := []string{}
-
-	for _, source := range sources {
-		if !m[source] {
-			m[source] = true
-			unique = append(unique, source)
-		}
-	}
-
-	return unique
+	return matches
 }
