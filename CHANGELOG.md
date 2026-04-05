@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.2.3](https://github.com/babarot/afx/compare/v0.2.2...v0.2.3) - 2026-04-05
+### Deprecated features
+- Drop Windows support, rename pkg to manager, add state file lock by @babarot in https://github.com/babarot/afx/pull/71
+### Refactorings
+- Refactor package structure: break god package and migrate to internal/ by @babarot in https://github.com/babarot/afx/pull/69
+- Replace custom error library with stdlib errors and fmt.Errorf by @babarot in https://github.com/babarot/afx/pull/73
+- Migrate from deprecated mholt/archiver v3 to mholt/archives by @babarot in https://github.com/babarot/afx/pull/74
+- Delegate gh extension management to gh CLI subprocess by @babarot in https://github.com/babarot/afx/pull/75
+- Fix critical bugs and clean up dead code by @babarot in https://github.com/babarot/afx/pull/76
+- Replace go-git library with git subprocess execution by @babarot in https://github.com/babarot/afx/pull/77
+
 ## [v0.2.2](https://github.com/babarot/afx/compare/v0.2.1...v0.2.2) - 2025-12-13
 - fix: resolve issue with unrecognized symblic links by @elecdeer in https://github.com/babarot/afx/pull/62
 - Add Git Authentication Support for Private Repositories by @babarot in https://github.com/babarot/afx/pull/64
