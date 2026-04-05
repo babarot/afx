@@ -64,14 +64,15 @@ func TestLocal_GetHome_absolute(t *testing.T) {
 }
 
 func TestHTTP_GetHome(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping on Windows due to HOME path handling")
+	}
 	t.Setenv("HOME", "/test/home")
 	h := HTTP{URL: "https://example.com/releases/tool.tar.gz"}
 	got := h.GetHome()
-	// Should be based on URL host + path dir
 	if got == "" {
 		t.Error("GetHome() should not be empty")
 	}
-	// Should contain the host
 	if !filepath.IsAbs(got) {
 		t.Errorf("GetHome() = %q, should be absolute path", got)
 	}

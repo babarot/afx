@@ -188,6 +188,7 @@ func (c *Config) save() error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	return json.NewEncoder(f).Encode(cfg)
 }
 
