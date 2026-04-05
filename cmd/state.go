@@ -142,7 +142,9 @@ func (c stateCmd) newStateRemoveCmd() *cobra.Command {
 				}
 			}
 			for _, resource := range resources {
-				c.state.Remove(resource)
+				if err := c.state.Remove(resource); err != nil {
+					return fmt.Errorf("%s: failed to save state: %w", resource.Name, err)
+				}
 			}
 			return nil
 		},

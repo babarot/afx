@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
 	"os/signal"
 
@@ -53,28 +52,25 @@ func Execute(pkgs []Package, taskFn func(pkg Package) TaskFunc) error {
 			err := fn(ctx, completion)
 			select {
 			case results <- Result{Name: pkg.GetName(), Error: err}:
-				return nil
 			case <-ctx.Done():
-				return ctx.Err()
 			}
+			// Always return nil so errgroup doesn't cancel sibling tasks.
+			// Errors are collected via the results channel below.
+			return nil
 		})
 	}
 
 	go func() {
-		_ = eg.Wait()
+		_ = eg.Wait() // tasks always return nil; errors flow via results channel
 		close(results)
 	}()
 
-	var exit []error
+	var errs []error
 	for result := range results {
 		if result.Error != nil {
-			exit = append(exit, result.Error)
+			errs = append(errs, result.Error)
 		}
 	}
-	if err := eg.Wait(); err != nil {
-		log.Printf("[ERROR] execution failed: %s", err)
-		exit = append(exit, err)
-	}
 
-	return errors.Join(exit...)
+	return errors.Join(errs...)
 }

@@ -66,7 +66,10 @@ func (m metaCmd) newUpdateCmd() *cobra.Command {
 				resources = tmp
 			}
 
-			yes, _ := m.askRunCommand(*c, state.Keys(resources))
+			yes, err := m.askRunCommand(*c, state.Keys(resources))
+			if err != nil {
+				return fmt.Errorf("failed to confirm: %w", err)
+			}
 			if !yes {
 				fmt.Println("Canceled")
 				return nil
@@ -114,7 +117,9 @@ func (c *updateCmd) run(pkgs []manager.Package) error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
-				c.state.Update(pkg)
+				if saveErr := c.state.Update(pkg); saveErr != nil {
+					log.Printf("[ERROR] %s: failed to save state: %v", pkg.GetName(), saveErr)
+				}
 				_ = os.RemoveAll(backup) // clean up backup on success
 			default:
 				// Restore backup on failure

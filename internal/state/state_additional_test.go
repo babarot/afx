@@ -23,7 +23,9 @@ func TestState_Add(t *testing.T) {
 		Home: "/home/.afx/github.com/babarot/enhancd",
 		Type: "GitHub",
 	}
-	state.Add(testPackage{r: r})
+	if err := state.Add(testPackage{r: r}); err != nil {
+		t.Fatal(err)
+	}
 
 	got, ok := state.Resources[r.ID]
 	if !ok {
@@ -59,7 +61,9 @@ func TestState_Remove(t *testing.T) {
 		ID:   "github.com/babarot/enhancd",
 		Name: "babarot/enhancd",
 	}
-	state.Remove(testPackage{r: r})
+	if err := state.Remove(testPackage{r: r}); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, ok := state.Resources[r.ID]; ok {
 		t.Error("Remove() did not remove the resource from state")
@@ -97,7 +101,9 @@ func TestState_Update(t *testing.T) {
 		Type:    "GitHub Release",
 		Version: "jq-1.7",
 	}
-	state.Update(testPackage{r: updated})
+	if err := state.Update(testPackage{r: updated}); err != nil {
+		t.Fatal(err)
+	}
 
 	got := state.Resources[updated.ID]
 	if got.Version != "jq-1.7" {
@@ -119,7 +125,9 @@ func TestState_Update_nonexistent(t *testing.T) {
 		ID:   "github.com/nonexistent/pkg",
 		Name: "nonexistent/pkg",
 	}
-	state.Update(testPackage{r: r})
+	if err := state.Update(testPackage{r: r}); err != nil {
+		t.Fatal(err)
+	}
 
 	if _, ok := state.Resources[r.ID]; ok {
 		t.Error("Update() should not add non-existent resource")

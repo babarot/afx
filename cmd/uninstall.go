@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -64,7 +65,10 @@ func (m metaCmd) newUninstallCmd() *cobra.Command {
 				resources = tmp
 			}
 
-			yes, _ := m.askRunCommand(*c, state.Keys(resources))
+			yes, err := m.askRunCommand(*c, state.Keys(resources))
+			if err != nil {
+				return fmt.Errorf("failed to confirm: %w", err)
+			}
 			if !yes {
 				fmt.Println("Canceled")
 				return nil
@@ -99,7 +103,9 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs = append(errs, err)
 			continue
 		}
-		c.state.Remove(resource)
+		if saveErr := c.state.Remove(resource); saveErr != nil {
+			log.Printf("[ERROR] %s: failed to save state: %v", resource.Name, saveErr)
+		}
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 

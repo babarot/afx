@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archives"
 
@@ -68,12 +69,7 @@ func (c HTTP) call(ctx context.Context) error {
 	defer resp.Body.Close()
 
 	log.Printf("[DEBUG] response code: %d", resp.StatusCode)
-	switch resp.StatusCode {
-	case 200, 301, 302:
-		// go
-	case 404:
-		return fmt.Errorf("%s: %d Not Found in %s", c.GetName(), resp.StatusCode, c.URL)
-	default:
+	if resp.StatusCode != 200 {
 		return fmt.Errorf("%s: %d %s", c.GetName(), resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
@@ -86,7 +82,9 @@ func (c HTTP) call(ctx context.Context) error {
 		return err
 	}
 	defer file.Close()
-	_, err = io.Copy(file, resp.Body)
+	// Limit download size to 1 GiB to prevent disk exhaustion
+	const maxDownloadSize = 1 << 30
+	_, err = io.Copy(file, io.LimitReader(resp.Body, maxDownloadSize))
 	if err != nil {
 		return err
 	}
@@ -155,6 +153,9 @@ func unarchiveV2(path string) error {
 
 	return ex.Extract(context.Background(), reader, func(ctx context.Context, info archives.FileInfo) error {
 		destPath := filepath.Join(destDir, info.NameInArchive)
+		if !strings.HasPrefix(filepath.Clean(destPath), filepath.Clean(destDir)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path in archive: %s", info.NameInArchive)
+		}
 		if info.IsDir() {
 			return os.MkdirAll(destPath, 0755)
 		}
