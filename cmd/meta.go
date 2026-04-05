@@ -41,8 +41,8 @@ func (m *metaCmd) init() error {
 		m.updateMessageChan <- release
 	}()
 
-	root := filepath.Join(os.Getenv("HOME"), ".afx")
-	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
+	root := afxpkg.DataDir()
+	cfgRoot := afxpkg.ConfigDir()
 	cache := filepath.Join(root, "cache.json")
 
 	err := afxpkg.CreateDirIfNotExist(cfgRoot)
@@ -94,7 +94,7 @@ func (m *metaCmd) init() error {
 		"AFX_CONFIG_PATH":  env.Variable{Value: cfgRoot},
 		"AFX_LOG":          env.Variable{},
 		"AFX_LOG_PATH":     env.Variable{},
-		"AFX_COMMAND_PATH": env.Variable{Default: filepath.Join(os.Getenv("HOME"), "bin")},
+		"AFX_COMMAND_PATH": env.Variable{Default: afxpkg.BinDir()},
 		"AFX_SHELL":        env.Variable{Default: m.main.Shell},
 		"AFX_SUDO_PASSWORD": env.Variable{
 			Input: env.Input{
@@ -229,7 +229,7 @@ func checkForUpdate(currentVersion string) (*update.ReleaseInfo, error) {
 		return nil, nil
 	}
 	client := github.NewClient()
-	stateFilePath := filepath.Join(os.Getenv("HOME"), ".afx", "version.json")
+	stateFilePath := filepath.Join(afxpkg.DataDir(), "version.json")
 	return update.CheckForUpdate(client, stateFilePath, Repository, Version)
 }
 

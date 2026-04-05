@@ -129,7 +129,7 @@ func (c GitHub) GetHome() string {
 	if c.IsGHExtension() {
 		return c.As.GHExtension.GetHome()
 	}
-	return filepath.Join(os.Getenv("HOME"), ".afx", "github.com", c.Owner, c.Repo)
+	return filepath.Join(DataDir(), "github.com", c.Owner, c.Repo)
 }
 
 func (c GitHub) GetDependsOn() []string {
