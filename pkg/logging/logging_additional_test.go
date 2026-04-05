@@ -1,10 +1,13 @@
 package logging
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/logutils"
 )
 
 func TestLogOutput_disabled(t *testing.T) {
@@ -40,7 +43,12 @@ func TestLogOutput_stderr(t *testing.T) {
 }
 
 func TestLogOutput_file(t *testing.T) {
-	dir := t.TempDir()
+	// Use manual temp dir to avoid TempDir cleanup issues on Windows
+	// where the log file is still open
+	dir, err := os.MkdirTemp("", "logtest")
+	if err != nil {
+		t.Fatal(err)
+	}
 	logFile := filepath.Join(dir, "test.log")
 
 	t.Setenv("AFX_LOG", "INFO")
@@ -58,6 +66,14 @@ func TestLogOutput_file(t *testing.T) {
 	if _, err := os.Stat(logFile); os.IsNotExist(err) {
 		t.Error("LogOutput() did not create log file")
 	}
+
+	// Close underlying file handle, then clean up
+	if lf, ok := out.(*logutils.LevelFilter); ok {
+		if c, ok := lf.Writer.(io.Closer); ok {
+			c.Close()
+		}
+	}
+	os.RemoveAll(dir)
 }
 
 func TestLogOutput_invalidPath(t *testing.T) {

@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -87,7 +88,7 @@ func TestTemplate_Apply(t *testing.T) {
 		},
 		"dir func": {
 			input: `{{ dir .Home }}`,
-			want:  "/home/user/.afx",
+			want:  filepath.Dir("/home/user/.afx/test-pkg"),
 		},
 		"time func does not error": {
 			input: `{{ time "2006" }}`,

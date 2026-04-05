@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -44,6 +45,10 @@ func TestAllTrue(t *testing.T) {
 }
 
 func TestExpandTilda(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("expandTilda uses HOME on Unix; skipping on Windows")
+	}
+
 	tests := map[string]struct {
 		input string
 		home  string
