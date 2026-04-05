@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/babarot/afx/pkg/errors"
+	pathutil "github.com/babarot/afx/pkg/helpers/path"
 	"github.com/babarot/afx/pkg/runner"
 	"github.com/babarot/afx/pkg/state"
 )
@@ -82,7 +83,7 @@ func (c Local) GetName() string {
 
 // GetHome returns a path
 func (c Local) GetHome() string {
-	return expandTilda(os.ExpandEnv(c.Directory))
+	return pathutil.ExpandTilda(os.ExpandEnv(c.Directory))
 }
 
 func (c Local) GetDependsOn() []string {

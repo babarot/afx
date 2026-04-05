@@ -11,6 +11,8 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/mattn/go-zglob"
+
+	pathutil "github.com/babarot/afx/pkg/helpers/path"
 )
 
 // Plugin is
@@ -47,7 +49,7 @@ func (p *Plugin) UnmarshalYAML(b []byte) error {
 
 	var sources []string
 	for _, source := range tmp.Sources {
-		sources = append(sources, expandTilda(os.ExpandEnv(source)))
+		sources = append(sources, pathutil.ExpandTilda(os.ExpandEnv(source)))
 	}
 
 	p.Sources = sources
@@ -122,7 +124,7 @@ func (p Plugin) Init(pkg Package) error {
 		switch k {
 		case "PATH":
 			// avoid overwriting PATH
-			v = fmt.Sprintf("$PATH:%s", expandTilda(v))
+			v = fmt.Sprintf("$PATH:%s", pathutil.ExpandTilda(v))
 		default:
 			// through
 		}

@@ -3,8 +3,6 @@ package config
 import (
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/auth"
@@ -23,29 +21,6 @@ func allTrue(list []bool) bool {
 		}
 	}
 	return true
-}
-
-func expandTilda(path string) string {
-	if !strings.HasPrefix(path, "~") {
-		return path
-	}
-
-	home := ""
-	switch runtime.GOOS {
-	case "windows":
-		home = filepath.Join(os.Getenv("HomeDrive"), os.Getenv("HomePath"))
-		if home == "" {
-			home = os.Getenv("UserProfile")
-		}
-	default:
-		home = os.Getenv("HOME")
-	}
-
-	if home == "" {
-		return path
-	}
-
-	return home + path[1:]
 }
 
 // getGitAuth returns BasicAuth for git operations.

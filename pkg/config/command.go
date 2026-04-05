@@ -16,6 +16,7 @@ import (
 	"github.com/mattn/go-zglob"
 
 	"github.com/babarot/afx/pkg/errors"
+	pathutil "github.com/babarot/afx/pkg/helpers/path"
 )
 
 // Command represents shell command configuration including build steps and symlinks.
@@ -57,7 +58,7 @@ func (l *Link) UnmarshalYAML(b []byte) error {
 	}
 
 	l.From = tmp.From
-	l.To = expandTilda(os.ExpandEnv(tmp.To))
+	l.To = pathutil.ExpandTilda(os.ExpandEnv(tmp.To))
 
 	return nil
 }
@@ -307,7 +308,7 @@ func (c Command) Init(pkg Package) error {
 		switch k {
 		case "PATH":
 			// avoid overwriting PATH
-			v = fmt.Sprintf("$PATH:%s", expandTilda(v))
+			v = fmt.Sprintf("$PATH:%s", pathutil.ExpandTilda(v))
 		default:
 			// through
 		}

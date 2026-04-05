@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
 	"testing"
 )
@@ -39,54 +38,6 @@ func TestAllTrue(t *testing.T) {
 			got := allTrue(tt.input)
 			if got != tt.want {
 				t.Errorf("allTrue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestExpandTilda(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("expandTilda uses HOME on Unix; skipping on Windows")
-	}
-
-	tests := map[string]struct {
-		input string
-		home  string
-		want  string
-	}{
-		"with tilde": {
-			input: "~/foo",
-			home:  "/home/user",
-			want:  "/home/user/foo",
-		},
-		"absolute path": {
-			input: "/absolute/path",
-			home:  "/home/user",
-			want:  "/absolute/path",
-		},
-		"tilde only": {
-			input: "~",
-			home:  "/home/user",
-			want:  "/home/user",
-		},
-		"empty": {
-			input: "",
-			home:  "/home/user",
-			want:  "",
-		},
-		"empty home": {
-			input: "~/foo",
-			home:  "",
-			want:  "~/foo",
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Setenv("HOME", tt.home)
-			got := expandTilda(tt.input)
-			if got != tt.want {
-				t.Errorf("expandTilda(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}
