@@ -1,4 +1,4 @@
-package config
+package pkg
 
 import (
 	"bufio"
@@ -13,16 +13,15 @@ import (
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/babarot/afx/internal/dependency"
-	afxpkg "github.com/babarot/afx/internal/pkg"
 )
 
 // Config structure for file describing deployment. This includes the module source, inputs
 // dependencies, backend etc. One config element is connected to a single deployment
 type Config struct {
-	GitHub []*afxpkg.GitHub `yaml:"github,omitempty"`
-	Gist   []*afxpkg.Gist   `yaml:"gist,omitempty"`
-	Local  []*afxpkg.Local  `yaml:"local,omitempty"`
-	HTTP   []*afxpkg.HTTP   `yaml:"http,omitempty"`
+	GitHub []*GitHub `yaml:"github,omitempty"`
+	Gist   []*Gist   `yaml:"gist,omitempty"`
+	Local  []*Local  `yaml:"local,omitempty"`
+	HTTP   []*HTTP   `yaml:"http,omitempty"`
 
 	Main *Main `yaml:"main,omitempty"`
 }
@@ -55,7 +54,7 @@ func Read(path string) (Config, error) {
 	defer f.Close()
 
 	validate := validator.New()
-	if err := validate.RegisterValidation("startswith-gh-if-not-empty", afxpkg.ValidateGHExtension); err != nil {
+	if err := validate.RegisterValidation("startswith-gh-if-not-empty", ValidateGHExtension); err != nil {
 		return cfg, err
 	}
 	d := yaml.NewDecoder(
@@ -71,8 +70,8 @@ func Read(path string) (Config, error) {
 	return cfg, err
 }
 
-func parse(cfg Config) []afxpkg.Package {
-	var pkgs []afxpkg.Package
+func parse(cfg Config) []Package {
+	var pkgs []Package
 
 	for _, pkg := range cfg.GitHub {
 		pkgs = append(pkgs, pkg)
@@ -92,7 +91,7 @@ func parse(cfg Config) []afxpkg.Package {
 }
 
 // Parse parses a config given via yaml files and converts it into package interface
-func (c Config) Parse() ([]afxpkg.Package, error) {
+func (c Config) Parse() ([]Package, error) {
 	log.Printf("[INFO] Parsing config...")
 	// TODO: divide from parse()
 	return parse(c), nil
@@ -166,11 +165,11 @@ func WalkDir(path string) ([]string, error) {
 	return files, nil
 }
 
-func Sort(given []afxpkg.Package) ([]afxpkg.Package, error) {
-	var pkgs []afxpkg.Package
+func Sort(given []Package) ([]Package, error) {
+	var pkgs []Package
 	var graph dependency.Graph
 
-	table := map[string]afxpkg.Package{}
+	table := map[string]Package{}
 
 	for _, pkg := range given {
 		table[pkg.GetName()] = pkg
@@ -209,7 +208,7 @@ func Sort(given []afxpkg.Package) ([]afxpkg.Package, error) {
 }
 
 // Validate validates if packages are not violated some rules
-func Validate(pkgs []afxpkg.Package) error {
+func Validate(pkgs []Package) error {
 	m := make(map[string]bool)
 	var list []string
 

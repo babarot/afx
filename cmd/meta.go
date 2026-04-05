@@ -11,7 +11,6 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 
-	"github.com/babarot/afx/internal/config"
 	"github.com/babarot/afx/internal/env"
 	"github.com/babarot/afx/internal/errors"
 	"github.com/babarot/afx/internal/github"
@@ -24,9 +23,9 @@ import (
 type metaCmd struct {
 	env      *env.Config
 	packages []afxpkg.Package
-	main     *config.Main
+	main     *afxpkg.Main
 	state    *state.State
-	configs  map[string]config.Config
+	configs  map[string]afxpkg.Config
 
 	updateMessageChan chan *update.ReleaseInfo
 }
@@ -46,20 +45,20 @@ func (m *metaCmd) init() error {
 	cfgRoot := filepath.Join(os.Getenv("HOME"), ".config", "afx")
 	cache := filepath.Join(root, "cache.json")
 
-	err := config.CreateDirIfNotExist(cfgRoot)
+	err := afxpkg.CreateDirIfNotExist(cfgRoot)
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed to create dir", cfgRoot)
 	}
-	files, err := config.WalkDir(cfgRoot)
+	files, err := afxpkg.WalkDir(cfgRoot)
 	if err != nil {
 		return errors.Wrapf(err, "%s: failed to walk dir", cfgRoot)
 	}
 
 	var pkgs []afxpkg.Package
-	app := &config.DefaultMain
-	m.configs = map[string]config.Config{}
+	app := &afxpkg.DefaultMain
+	m.configs = map[string]afxpkg.Config{}
 	for _, file := range files {
-		cfg, err := config.Read(file)
+		cfg, err := afxpkg.Read(file)
 		if err != nil {
 			return errors.Wrapf(err, "%s: failed to read config", file)
 		}
@@ -79,11 +78,11 @@ func (m *metaCmd) init() error {
 
 	m.main = app
 
-	if err := config.Validate(pkgs); err != nil {
+	if err := afxpkg.Validate(pkgs); err != nil {
 		return errors.Wrap(err, "failed to validate packages")
 	}
 
-	pkgs, err = config.Sort(pkgs)
+	pkgs, err = afxpkg.Sort(pkgs)
 	if err != nil {
 		return errors.Wrap(err, "failed to resolve dependencies between packages")
 	}
@@ -251,16 +250,16 @@ func (m metaCmd) GetPackages(resources []state.Resource) []afxpkg.Package {
 	return pkgs
 }
 
-func (m metaCmd) GetConfig() config.Config {
-	var all config.Config
-	for _, config := range m.configs {
-		if config.Main != nil {
-			all.Main = config.Main
+func (m metaCmd) GetConfig() afxpkg.Config {
+	var all afxpkg.Config
+	for _, cfg := range m.configs {
+		if cfg.Main != nil {
+			all.Main = cfg.Main
 		}
-		all.GitHub = append(all.GitHub, config.GitHub...)
-		all.Gist = append(all.Gist, config.Gist...)
-		all.HTTP = append(all.HTTP, config.HTTP...)
-		all.Local = append(all.Local, config.Local...)
+		all.GitHub = append(all.GitHub, cfg.GitHub...)
+		all.Gist = append(all.Gist, cfg.Gist...)
+		all.HTTP = append(all.HTTP, cfg.HTTP...)
+		all.Local = append(all.Local, cfg.Local...)
 	}
 	return all
 }

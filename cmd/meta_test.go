@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/babarot/afx/internal/config"
 	afxpkg "github.com/babarot/afx/internal/pkg"
 	"github.com/babarot/afx/internal/state"
 )
@@ -76,10 +75,10 @@ func TestGetPackages(t *testing.T) {
 }
 
 func TestGetConfig_mergesAll(t *testing.T) {
-	main := &config.Main{Shell: "zsh"}
+	main := &afxpkg.Main{Shell: "zsh"}
 
 	m := metaCmd{
-		configs: map[string]config.Config{
+		configs: map[string]afxpkg.Config{
 			"file1.yaml": {
 				Main: main,
 				GitHub: []*afxpkg.GitHub{
@@ -122,7 +121,7 @@ func TestGetConfig_mergesAll(t *testing.T) {
 
 func TestGetConfig_noMain(t *testing.T) {
 	m := metaCmd{
-		configs: map[string]config.Config{
+		configs: map[string]afxpkg.Config{
 			"file1.yaml": {
 				GitHub: []*afxpkg.GitHub{
 					{Name: "gh1", Owner: "o", Repo: "r1"},
