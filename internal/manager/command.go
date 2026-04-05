@@ -193,12 +193,12 @@ func (c Command) build(pkg Package) error {
 		}
 		log.Printf("[DEBUG] run command: %#v\n", args)
 		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Env = os.Environ()
 		for k, v := range c.Build.Env {
-			cmd.Env = append(os.Environ(), fmt.Sprintf("%s=%s", k, v))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}
 		cmd.Stdin = stdin
 		cmd.Stdout = &stdout
-		cmd.Stdout = os.Stdout // TODO: remove
 		cmd.Stderr = &stderr
 		log.Printf("[DEBUG] change dir to: %s\n", dir)
 		cmd.Dir = dir

@@ -102,7 +102,9 @@ func (c *installCmd) run(pkgs []manager.Package) error {
 			err := pkg.Install(ctx, completion)
 			switch err {
 			case nil:
-				c.state.Add(pkg)
+				if saveErr := c.state.Add(pkg); saveErr != nil {
+					log.Printf("[ERROR] %s: failed to save state: %v", pkg.GetName(), saveErr)
+				}
 			default:
 				if !logging.IsSet() {
 					log.Printf("[DEBUG] uninstall %q because installation failed", pkg.GetName())

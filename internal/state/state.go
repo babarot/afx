@@ -284,28 +284,28 @@ func (s *State) Close() error {
 	return nil
 }
 
-func (s *State) Add(resourcer Resourcer) {
+func (s *State) Add(resourcer Resourcer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	add(resourcer.GetResource(), s)
-	_ = s.save()
+	return s.save()
 }
 
-func (s *State) Remove(resourcer Resourcer) {
+func (s *State) Remove(resourcer Resourcer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	remove(resourcer.GetResource(), s)
-	_ = s.save()
+	return s.save()
 }
 
-func (s *State) Update(resourcer Resourcer) {
+func (s *State) Update(resourcer Resourcer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	update(resourcer.GetResource(), s)
-	_ = s.save()
+	return s.save()
 }
 
 func (s *State) List() ([]Resource, error) {

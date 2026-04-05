@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -99,7 +100,9 @@ func (c *uninstallCmd) run(resources []state.Resource) error {
 			errs = append(errs, err)
 			continue
 		}
-		c.state.Remove(resource)
+		if saveErr := c.state.Remove(resource); saveErr != nil {
+			log.Printf("[ERROR] %s: failed to save state: %v", resource.Name, saveErr)
+		}
 		fmt.Printf("deleted %s\n", resource.Home)
 	}
 

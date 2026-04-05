@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archives"
 
@@ -155,6 +156,9 @@ func unarchiveV2(path string) error {
 
 	return ex.Extract(context.Background(), reader, func(ctx context.Context, info archives.FileInfo) error {
 		destPath := filepath.Join(destDir, info.NameInArchive)
+		if !strings.HasPrefix(filepath.Clean(destPath), filepath.Clean(destDir)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path in archive: %s", info.NameInArchive)
+		}
 		if info.IsDir() {
 			return os.MkdirAll(destPath, 0755)
 		}
