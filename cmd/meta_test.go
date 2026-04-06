@@ -17,8 +17,8 @@ func init() {
 func TestGetPackage_found(t *testing.T) {
 	m := metaCmd{
 		packages: []manager.Package{
-			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&manager.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-a"}, Owner: "owner", Repo: "tool-a"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-b"}, Owner: "owner", Repo: "tool-b"},
 		},
 	}
 
@@ -36,7 +36,7 @@ func TestGetPackage_found(t *testing.T) {
 func TestGetPackage_notFound(t *testing.T) {
 	m := metaCmd{
 		packages: []manager.Package{
-			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-a"}, Owner: "owner", Repo: "tool-a"},
 		},
 	}
 
@@ -51,9 +51,9 @@ func TestGetPackage_notFound(t *testing.T) {
 func TestGetPackages(t *testing.T) {
 	m := metaCmd{
 		packages: []manager.Package{
-			&manager.GitHub{Name: "tool-a", Owner: "owner", Repo: "tool-a"},
-			&manager.GitHub{Name: "tool-b", Owner: "owner", Repo: "tool-b"},
-			&manager.GitHub{Name: "tool-c", Owner: "owner", Repo: "tool-c"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-a"}, Owner: "owner", Repo: "tool-a"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-b"}, Owner: "owner", Repo: "tool-b"},
+			&manager.GitHub{Base: manager.Base{Name: "tool-c"}, Owner: "owner", Repo: "tool-c"},
 		},
 	}
 
@@ -82,19 +82,19 @@ func TestGetConfig_mergesAll(t *testing.T) {
 			"file1.yaml": {
 				Main: main,
 				GitHub: []*manager.GitHub{
-					{Name: "gh1", Owner: "o", Repo: "r1"},
-					{Name: "gh2", Owner: "o", Repo: "r2"},
+					{Base: manager.Base{Name: "gh1"}, Owner: "o", Repo: "r1"},
+					{Base: manager.Base{Name: "gh2"}, Owner: "o", Repo: "r2"},
 				},
 				Gist: []*manager.Gist{
-					{Name: "gist1", Owner: "o", ID: "id1"},
+					{Base: manager.Base{Name: "gist1"}, Owner: "o", ID: "id1"},
 				},
 			},
 			"file2.yaml": {
 				GitHub: []*manager.GitHub{
-					{Name: "gh3", Owner: "o", Repo: "r3"},
+					{Base: manager.Base{Name: "gh3"}, Owner: "o", Repo: "r3"},
 				},
 				Gist: []*manager.Gist{
-					{Name: "gist2", Owner: "o", ID: "id2"},
+					{Base: manager.Base{Name: "gist2"}, Owner: "o", ID: "id2"},
 				},
 			},
 		},
@@ -124,7 +124,7 @@ func TestGetConfig_noMain(t *testing.T) {
 		configs: map[string]manager.Config{
 			"file1.yaml": {
 				GitHub: []*manager.GitHub{
-					{Name: "gh1", Owner: "o", Repo: "r1"},
+					{Base: manager.Base{Name: "gh1"}, Owner: "o", Repo: "r1"},
 				},
 			},
 		},

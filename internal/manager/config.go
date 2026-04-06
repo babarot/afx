@@ -207,75 +207,63 @@ func Sort(given []Package) ([]Package, error) {
 }
 
 // Validate validates if packages are not violated some rules
+// Validate validates if packages are not violated some rules
 func Validate(pkgs []Package) error {
 	m := make(map[string]bool)
 	var list []string
+	var errs []error
 
 	for _, pkg := range pkgs {
 		name := pkg.GetName()
-		_, exist := m[name]
-		if exist {
+		if m[name] {
 			list = append(list, name)
-			continue
 		}
 		m[name] = true
+
+		// GitHub-specific: command block is required when release block is present
+		if gh, ok := pkg.(*GitHub); ok {
+			if gh.Release != nil && gh.Command == nil {
+				errs = append(errs, fmt.Errorf("%s: command block is required when release block is present", name))
+			}
+		}
 	}
 
 	if len(list) > 0 {
-		return fmt.Errorf("duplicated packages: [%s]", strings.Join(list, ","))
+		errs = append(errs, fmt.Errorf("duplicated packages: [%s]", strings.Join(list, ",")))
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c Config) Get(args ...string) Config {
-	var part Config
-	for _, arg := range args {
-		for _, github := range c.GitHub {
-			if github.Name == arg {
-				part.GitHub = append(part.GitHub, github)
-			}
-		}
-		for _, gist := range c.Gist {
-			if gist.Name == arg {
-				part.Gist = append(part.Gist, gist)
-			}
-		}
-		for _, local := range c.Local {
-			if local.Name == arg {
-				part.Local = append(part.Local, local)
-			}
-		}
-		for _, http := range c.HTTP {
-			if http.Name == arg {
-				part.HTTP = append(part.HTTP, http)
-			}
-		}
-	}
-	return part
+	return c.filter(func(name, arg string) bool { return name == arg }, args...)
 }
 
 func (c Config) Contains(args ...string) Config {
+	return c.filter(func(name, arg string) bool { return strings.Contains(name, arg) }, args...)
+}
+
+func (c Config) filter(match func(name, arg string) bool, args ...string) Config {
 	var part Config
 	for _, arg := range args {
-		for _, github := range c.GitHub {
-			if strings.Contains(github.Name, arg) {
-				part.GitHub = append(part.GitHub, github)
+		for _, pkg := range c.GitHub {
+			if match(pkg.Name, arg) {
+				part.GitHub = append(part.GitHub, pkg)
 			}
 		}
-		for _, gist := range c.Gist {
-			if strings.Contains(gist.Name, arg) {
-				part.Gist = append(part.Gist, gist)
+		for _, pkg := range c.Gist {
+			if match(pkg.Name, arg) {
+				part.Gist = append(part.Gist, pkg)
 			}
 		}
-		for _, local := range c.Local {
-			if strings.Contains(local.Name, arg) {
-				part.Local = append(part.Local, local)
+		for _, pkg := range c.Local {
+			if match(pkg.Name, arg) {
+				part.Local = append(part.Local, pkg)
 			}
 		}
-		for _, http := range c.HTTP {
-			if strings.Contains(http.Name, arg) {
-				part.HTTP = append(part.HTTP, http)
+		for _, pkg := range c.HTTP {
+			if match(pkg.Name, arg) {
+				part.HTTP = append(part.HTTP, pkg)
 			}
 		}
 	}
