@@ -1,10 +1,17 @@
 package manager
 
 import (
-	"fmt"
-
 	"github.com/babarot/afx/internal/state"
 )
+
+// ResourceMeta provides type-specific metadata for resource tracking.
+// All concrete package types implement this interface.
+type ResourceMeta interface {
+	ResourceType() string
+	ResourceID() string
+	ResourceVersion() string
+	ResourceExtraPaths() []string
+}
 
 func getResource(pkg Package) state.Resource {
 	var paths []string
@@ -26,47 +33,24 @@ func getResource(pkg Package) state.Resource {
 		}
 	}
 
-	var ty string
-	var version string
-	var id string
-
-	switch pkg := pkg.(type) {
-	case GitHub:
-		ty = "GitHub"
-		if pkg.HasReleaseBlock() {
-			ty = "GitHub Release"
-			version = pkg.Release.Tag
+	meta, ok := pkg.(ResourceMeta)
+	if !ok {
+		return state.Resource{
+			Name:  pkg.GetName(),
+			Home:  pkg.GetHome(),
+			Type:  "Unknown",
+			Paths: paths,
 		}
-		id = fmt.Sprintf("github.com/%s/%s", pkg.Owner, pkg.Repo)
-		if pkg.HasReleaseBlock() {
-			id = fmt.Sprintf("github.com/release/%s/%s", pkg.Owner, pkg.Repo)
-		}
-		if pkg.IsGHExtension() {
-			ty = "GitHub (gh extension)"
-			ext := pkg.As.GHExtension
-			if alias := ext.GetAliasHome(); alias != "" {
-				paths = append(paths, alias)
-			}
-		}
-	case Gist:
-		ty = "Gist"
-		id = fmt.Sprintf("gist.github.com/%s/%s", pkg.Owner, pkg.ID)
-	case Local:
-		ty = "Local"
-		id = fmt.Sprintf("local/%s", pkg.Directory)
-	case HTTP:
-		ty = "HTTP"
-		id = pkg.URL
-	default:
-		ty = "Unknown"
 	}
 
+	paths = append(paths, meta.ResourceExtraPaths()...)
+
 	return state.Resource{
-		ID:      id,
+		ID:      meta.ResourceID(),
 		Name:    pkg.GetName(),
 		Home:    pkg.GetHome(),
-		Type:    ty,
-		Version: version,
+		Type:    meta.ResourceType(),
+		Version: meta.ResourceVersion(),
 		Paths:   paths,
 	}
 }

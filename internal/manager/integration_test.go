@@ -13,7 +13,7 @@ func init() {
 }
 
 // TestCommand_GetLink_Install_Unlink tests the full symlink lifecycle:
-// create a binary in home dir → GetLink → Install (symlink) → Installed → Unlink
+// create a binary in home dir -> GetLink -> Install (symlink) -> Installed -> Unlink
 func TestCommand_GetLink_Install_Unlink(t *testing.T) {
 	// Setup: create home dir with a binary
 	homeDir := t.TempDir()
@@ -26,11 +26,11 @@ func TestCommand_GetLink_Install_Unlink(t *testing.T) {
 	}
 
 	pkg := &Local{
-		Name:      "test-local",
-		Directory: homeDir,
-		Command: &Command{
-			Link: []*Link{{From: "mytool"}},
+		Base: Base{
+			Name:    "test-local",
+			Command: &Command{Link: []*Link{{From: "mytool"}}},
 		},
+		Directory: homeDir,
 	}
 
 	// Test GetLink
@@ -93,11 +93,11 @@ func TestCommand_GetLink_dotFrom(t *testing.T) {
 	t.Setenv("AFX_COMMAND_PATH", binDir)
 
 	pkg := &Local{
-		Name:      "test-dot",
-		Directory: homeDir,
-		Command: &Command{
-			Link: []*Link{{From: "."}},
+		Base: Base{
+			Name:    "test-dot",
+			Command: &Command{Link: []*Link{{From: "."}}},
 		},
+		Directory: homeDir,
 	}
 
 	links, err := pkg.Command.GetLink(pkg)
@@ -116,11 +116,11 @@ func TestCommand_GetLink_dotFrom(t *testing.T) {
 // TestCommand_GetLink_homeNotExist tests error when home dir doesn't exist
 func TestCommand_GetLink_homeNotExist(t *testing.T) {
 	pkg := &Local{
-		Name:      "test-nodir",
-		Directory: "/nonexistent/path",
-		Command: &Command{
-			Link: []*Link{{From: "tool"}},
+		Base: Base{
+			Name:    "test-nodir",
+			Command: &Command{Link: []*Link{{From: "tool"}}},
 		},
+		Directory: "/nonexistent/path",
 	}
 
 	_, err := pkg.Command.GetLink(pkg)
@@ -134,11 +134,11 @@ func TestCommand_GetLink_noMatches(t *testing.T) {
 	homeDir := t.TempDir()
 
 	pkg := &Local{
-		Name:      "test-nomatch",
-		Directory: homeDir,
-		Command: &Command{
-			Link: []*Link{{From: "nonexistent_binary"}},
+		Base: Base{
+			Name:    "test-nomatch",
+			Command: &Command{Link: []*Link{{From: "nonexistent_binary"}}},
 		},
+		Directory: homeDir,
 	}
 
 	_, err := pkg.Command.GetLink(pkg)
@@ -152,7 +152,7 @@ func TestGitHub_Uninstall(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 
-	g := GitHub{Name: "test-uninstall", Owner: "owner", Repo: "repo"}
+	g := GitHub{Base: Base{Name: "test-uninstall"}, Owner: "owner", Repo: "repo"}
 	home := g.GetHome()
 
 	// Create home dir
@@ -178,7 +178,7 @@ func TestGist_Uninstall(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 
-	g := Gist{Name: "test-uninstall", Owner: "owner", ID: "abc123"}
+	g := Gist{Base: Base{Name: "test-uninstall"}, Owner: "owner", ID: "abc123"}
 	home := g.GetHome()
 
 	if err := os.MkdirAll(home, 0755); err != nil {
@@ -218,11 +218,11 @@ func TestCommand_Install_overwritesExistingSymlink(t *testing.T) {
 	}
 
 	pkg := &Local{
-		Name:      "test-overwrite",
-		Directory: homeDir,
-		Command: &Command{
-			Link: []*Link{{From: "tool"}},
+		Base: Base{
+			Name:    "test-overwrite",
+			Command: &Command{Link: []*Link{{From: "tool"}}},
 		},
+		Directory: homeDir,
 	}
 
 	// Install should overwrite the existing symlink

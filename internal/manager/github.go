@@ -1,31 +1,24 @@
 package manager
 
 import (
-	"errors"
-	"os"
+	"fmt"
 	"path/filepath"
 
 	"github.com/babarot/afx/internal/gh"
+	"github.com/babarot/afx/internal/state"
 )
 
 // GitHub represents GitHub repository
 type GitHub struct {
-	Name string `yaml:"name" validate:"required"`
+	Base `yaml:",inline"`
 
-	Owner       string `yaml:"owner"       validate:"required"`
-	Repo        string `yaml:"repo"        validate:"required"`
-	Description string `yaml:"description"`
+	Owner  string `yaml:"owner" validate:"required"`
+	Repo   string `yaml:"repo"  validate:"required"`
+	Branch string `yaml:"branch"`
 
-	Branch string        `yaml:"branch"`
-	Option *GitHubOption `yaml:"with"`
-
+	Option  *GitHubOption  `yaml:"with"`
 	Release *GitHubRelease `yaml:"release"`
-
-	Plugin  *Plugin   `yaml:"plugin"`
-	Command *Command  `yaml:"command" validate:"required_with=Release"` // TODO: (not required Release)
-	As      *GitHubAs `yaml:"as"`
-
-	DependsOn []string `yaml:"depends-on"`
+	As      *GitHubAs      `yaml:"as"`
 
 	GHRunner gh.Runner `yaml:"-"`
 }
@@ -59,38 +52,17 @@ type GitHubReleaseAsset struct {
 
 // Init runs initialization step related to GitHub packages
 func (c GitHub) Init() error {
-	var errs []error
-	if c.HasPluginBlock() {
-		if err := c.Plugin.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if c.HasCommandBlock() {
-		if err := c.Command.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return errors.Join(errs...)
+	return initPackage(c.Plugin, c.Command, c)
 }
 
-// Installed returns true the GitHub package is already installed
+// Installed returns true if the GitHub package is already installed
 func (c GitHub) Installed() bool {
-	var list []bool
+	return installedPackage(c.Plugin, c.Command, c)
+}
 
-	if c.HasPluginBlock() {
-		list = append(list, c.Plugin.Installed(c))
-	}
-
-	if c.HasCommandBlock() {
-		list = append(list, c.Command.Installed(c))
-	}
-
-	if !c.HasPluginBlock() && !c.HasCommandBlock() {
-		_, err := os.Stat(c.GetHome())
-		list = append(list, err == nil)
-	}
-
-	return allTrue(list)
+// HasReleaseBlock overrides Base to check the Release field.
+func (c GitHub) HasReleaseBlock() bool {
+	return c.Release != nil
 }
 
 func (c GitHub) GetReleaseTag() string {
@@ -100,38 +72,7 @@ func (c GitHub) GetReleaseTag() string {
 	return "latest"
 }
 
-func (c GitHub) HasPluginBlock() bool {
-	return c.Plugin != nil
-}
-
-func (c GitHub) HasCommandBlock() bool {
-	return c.Command != nil
-}
-
-func (c GitHub) HasReleaseBlock() bool {
-	return c.Release != nil
-}
-
-func (c GitHub) GetPluginBlock() Plugin {
-	if c.HasPluginBlock() {
-		return *c.Plugin
-	}
-	return Plugin{}
-}
-
-func (c GitHub) GetCommandBlock() Command {
-	if c.HasCommandBlock() {
-		return *c.Command
-	}
-	return Command{}
-}
-
-// GetName returns a name
-func (c GitHub) GetName() string {
-	return c.Name
-}
-
-// GetHome returns a path
+// GetHome returns the installation path for this package.
 func (c GitHub) GetHome() string {
 	if c.IsGHExtension() {
 		return c.As.GHExtension.GetHome()
@@ -139,6 +80,41 @@ func (c GitHub) GetHome() string {
 	return filepath.Join(DataDir(), "github.com", c.Owner, c.Repo)
 }
 
-func (c GitHub) GetDependsOn() []string {
-	return c.DependsOn
+func (c GitHub) GetResource() state.Resource {
+	return getResource(c)
+}
+
+// ResourceMeta implementation
+
+func (c GitHub) ResourceType() string {
+	if c.IsGHExtension() {
+		return "GitHub (gh extension)"
+	}
+	if c.HasReleaseBlock() {
+		return "GitHub Release"
+	}
+	return "GitHub"
+}
+
+func (c GitHub) ResourceID() string {
+	if c.HasReleaseBlock() {
+		return fmt.Sprintf("github.com/release/%s/%s", c.Owner, c.Repo)
+	}
+	return fmt.Sprintf("github.com/%s/%s", c.Owner, c.Repo)
+}
+
+func (c GitHub) ResourceVersion() string {
+	if c.HasReleaseBlock() {
+		return c.Release.Tag
+	}
+	return ""
+}
+
+func (c GitHub) ResourceExtraPaths() []string {
+	if c.IsGHExtension() {
+		if alias := c.As.GHExtension.GetAliasHome(); alias != "" {
+			return []string{alias}
+		}
+	}
+	return nil
 }

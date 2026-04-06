@@ -14,14 +14,14 @@ func TestGetResource(t *testing.T) {
 		wantName string
 	}{
 		"GitHub basic": {
-			pkg:      GitHub{Name: "test", Owner: "owner", Repo: "repo"},
+			pkg:      GitHub{Base: Base{Name: "test"}, Owner: "owner", Repo: "repo"},
 			wantType: "GitHub",
 			wantID:   "github.com/owner/repo",
 			wantName: "test",
 		},
 		"GitHub with Release": {
 			pkg: GitHub{
-				Name:    "test",
+				Base:    Base{Name: "test"},
 				Owner:   "o",
 				Repo:    "r",
 				Release: &GitHubRelease{Name: "r", Tag: "v1.0"},
@@ -32,7 +32,7 @@ func TestGetResource(t *testing.T) {
 		},
 		"GitHub GH Extension": {
 			pkg: GitHub{
-				Name:  "test",
+				Base:  Base{Name: "test"},
 				Owner: "o",
 				Repo:  "r",
 				As: &GitHubAs{
@@ -44,19 +44,19 @@ func TestGetResource(t *testing.T) {
 			wantName: "test",
 		},
 		"Gist": {
-			pkg:      Gist{Name: "test", Owner: "owner", ID: "abc123"},
+			pkg:      Gist{Base: Base{Name: "test"}, Owner: "owner", ID: "abc123"},
 			wantType: "Gist",
 			wantID:   "gist.github.com/owner/abc123",
 			wantName: "test",
 		},
 		"Local": {
-			pkg:      Local{Name: "test", Directory: "/tmp/test"},
+			pkg:      Local{Base: Base{Name: "test"}, Directory: "/tmp/test"},
 			wantType: "Local",
 			wantID:   "local//tmp/test",
 			wantName: "test",
 		},
 		"HTTP": {
-			pkg:      HTTP{Name: "test", URL: "https://example.com/tool"},
+			pkg:      HTTP{Base: Base{Name: "test"}, URL: "https://example.com/tool"},
 			wantType: "HTTP",
 			wantID:   "https://example.com/tool",
 			wantName: "test",
@@ -90,7 +90,7 @@ func TestGetResource_GitHubReleaseVersion(t *testing.T) {
 	t.Setenv("HOME", "/test/home")
 
 	pkg := GitHub{
-		Name:    "test",
+		Base:    Base{Name: "test"},
 		Owner:   "o",
 		Repo:    "r",
 		Release: &GitHubRelease{Name: "r", Tag: "v1.0"},
@@ -104,7 +104,7 @@ func TestGetResource_GitHubReleaseVersion(t *testing.T) {
 func TestGetResource_GitHubBasicNoVersion(t *testing.T) {
 	t.Setenv("HOME", "/test/home")
 
-	pkg := GitHub{Name: "test", Owner: "owner", Repo: "repo"}
+	pkg := GitHub{Base: Base{Name: "test"}, Owner: "owner", Repo: "repo"}
 	got := getResource(pkg)
 	if got.Version != "" {
 		t.Errorf("Version = %q, want empty string for non-release GitHub package", got.Version)
