@@ -220,11 +220,9 @@ func Validate(pkgs []Package) error {
 		}
 		m[name] = true
 
-		// GitHub-specific: command block is required when release block is present
-		if gh, ok := pkg.(*GitHub); ok {
-			if gh.Release != nil && gh.Command == nil {
-				errs = append(errs, fmt.Errorf("%s: command block is required when release block is present", name))
-			}
+		// command block is required when release block is present
+		if pkg.HasReleaseBlock() && !pkg.HasCommandBlock() {
+			errs = append(errs, fmt.Errorf("%s: command block is required when release block is present", name))
 		}
 	}
 
