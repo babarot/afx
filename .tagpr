@@ -40,8 +40,8 @@
 #
 [tagpr]
 	changelog = true
-	majorLabels = release/major
-	minorLabels = release/minor
+	majorLabels = kind/breaking-change
+	minorLabels = kind/feature,kind/deprecation
 	releaseBranch = main
 	vPrefix = true
 	versionFile = VERSION
