@@ -13,37 +13,23 @@ import (
 	"github.com/babarot/afx/internal/state"
 )
 
-// Gist represents
+// Gist represents a GitHub Gist package.
 type Gist struct {
-	Name string `yaml:"name" validate:"required"`
+	Base `yaml:",inline"`
 
-	Owner       string `yaml:"owner" validate:"required"`
-	ID          string `yaml:"id" validate:"required"`
-	Description string `yaml:"description"`
-
-	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command"`
-
-	DependsOn []string `yaml:"depends-on"`
+	Owner string `yaml:"owner" validate:"required"`
+	ID    string `yaml:"id" validate:"required"`
 }
 
-// Init is
-func (c Gist) Init() error {
-	var errs []error
-	if c.HasPluginBlock() {
-		if err := c.Plugin.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if c.HasCommandBlock() {
-		if err := c.Command.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return errors.Join(errs...)
+func (c Gist) Init() error     { return initPackage(c.Plugin, c.Command, c) }
+func (c Gist) Installed() bool { return installedPackage(c.Plugin, c.Command, c) }
+
+func (c Gist) GetHome() string {
+	return filepath.Join(DataDir(), "gist.github.com", c.Owner, c.ID)
 }
 
-// Install is
+func (c Gist) GetResource() state.Resource { return getResource(c) }
+
 func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -53,7 +39,6 @@ func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 		log.Println("[DEBUG] canceled")
 		return nil
 	default:
-		// Go installing step!
 	}
 
 	if _, err := os.Stat(c.GetHome()); err == nil {
@@ -88,57 +73,6 @@ func (c Gist) Install(ctx context.Context, status chan<- runner.Status) error {
 	return errors.Join(errs...)
 }
 
-// Installed is
-func (c Gist) Installed() bool {
-	var list []bool
-
-	if c.HasPluginBlock() {
-		list = append(list, c.Plugin.Installed(c))
-	}
-
-	if c.HasCommandBlock() {
-		list = append(list, c.Command.Installed(c))
-	}
-
-	if !c.HasPluginBlock() && !c.HasCommandBlock() {
-		_, err := os.Stat(c.GetHome())
-		list = append(list, err == nil)
-	}
-
-	return allTrue(list)
-}
-
-// HasPluginBlock is
-func (c Gist) HasPluginBlock() bool {
-	return c.Plugin != nil
-}
-
-// HasCommandBlock is
-func (c Gist) HasCommandBlock() bool {
-	return c.Command != nil
-}
-
-func (c Gist) HasReleaseBlock() bool {
-	return false
-}
-
-// GetPluginBlock is
-func (c Gist) GetPluginBlock() Plugin {
-	if c.HasPluginBlock() {
-		return *c.Plugin
-	}
-	return Plugin{}
-}
-
-// GetCommandBlock is
-func (c Gist) GetCommandBlock() Command {
-	if c.HasCommandBlock() {
-		return *c.Command
-	}
-	return Command{}
-}
-
-// Uninstall is
 func (c Gist) Uninstall(ctx context.Context) error {
 	var errs []error
 
@@ -163,29 +97,17 @@ func (c Gist) Uninstall(ctx context.Context) error {
 	}
 
 	del(c.GetHome())
-
 	return errors.Join(errs...)
-}
-
-// GetName returns a name
-func (c Gist) GetName() string {
-	return c.Name
-}
-
-// GetHome returns a path
-func (c Gist) GetHome() string {
-	return filepath.Join(DataDir(), "gist.github.com", c.Owner, c.ID)
-}
-
-func (c Gist) GetDependsOn() []string {
-	return c.DependsOn
-}
-
-func (c Gist) GetResource() state.Resource {
-	return getResource(c)
 }
 
 func (c Gist) Check(ctx context.Context, status chan<- runner.Status) error {
 	status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(gist)", NoColor: true}
 	return nil
 }
+
+// ResourceMeta implementation
+
+func (c Gist) ResourceType() string         { return "Gist" }
+func (c Gist) ResourceID() string           { return fmt.Sprintf("gist.github.com/%s/%s", c.Owner, c.ID) }
+func (c Gist) ResourceVersion() string      { return "" }
+func (c Gist) ResourceExtraPaths() []string { return nil }

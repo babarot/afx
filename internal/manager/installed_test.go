@@ -73,7 +73,7 @@ func TestHTTP_GetHome(t *testing.T) {
 
 func TestHTTP_ParseURL(t *testing.T) {
 	h := &HTTP{
-		Name: "test",
+		Base: Base{Name: "test"},
 		URL:  "https://example.com/{{ .OS }}/tool",
 	}
 	h.ParseURL()
@@ -93,7 +93,7 @@ func TestGitHub_HasPluginBlock(t *testing.T) {
 			want:   false,
 		},
 		"with plugin": {
-			github: GitHub{Plugin: &Plugin{}},
+			github: GitHub{Base: Base{Plugin: &Plugin{}}},
 			want:   true,
 		},
 	}
@@ -117,7 +117,7 @@ func TestGitHub_HasCommandBlock(t *testing.T) {
 			want:   false,
 		},
 		"with command": {
-			github: GitHub{Command: &Command{}},
+			github: GitHub{Base: Base{Command: &Command{}}},
 			want:   true,
 		},
 	}
@@ -184,7 +184,7 @@ func TestGitHub_Installed_noPluginNoCommand(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 
-	g := GitHub{Name: "test", Owner: "owner", Repo: "repo"}
+	g := GitHub{Base: Base{Name: "test"}, Owner: "owner", Repo: "repo"}
 
 	// Home doesn't exist yet
 	if g.Installed() {
@@ -206,7 +206,7 @@ func TestGist_Installed_noPluginNoCommand(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 
-	g := Gist{Name: "test", Owner: "owner", ID: "abc123"}
+	g := Gist{Base: Base{Name: "test"}, Owner: "owner", ID: "abc123"}
 
 	if g.Installed() {
 		t.Error("Installed() should be false when home dir doesn't exist")
@@ -226,7 +226,7 @@ func TestHTTP_Installed_noPluginNoCommand(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
 
-	h := HTTP{Name: "test", URL: "https://example.com/tool"}
+	h := HTTP{Base: Base{Name: "test"}, URL: "https://example.com/tool"}
 
 	if h.Installed() {
 		t.Error("Installed() should be false when home dir doesn't exist")
@@ -243,7 +243,7 @@ func TestHTTP_Installed_noPluginNoCommand(t *testing.T) {
 }
 
 func TestLocal_Installed(t *testing.T) {
-	l := Local{Name: "test", Directory: "/tmp"}
+	l := Local{Base: Base{Name: "test"}, Directory: "/tmp"}
 	// Local.Installed() always returns true
 	if !l.Installed() {
 		t.Error("Installed() should always be true for Local")
@@ -259,7 +259,7 @@ func TestGitHub_GetPluginBlock(t *testing.T) {
 		}
 	})
 	t.Run("with plugin returns it", func(t *testing.T) {
-		g := GitHub{Plugin: &Plugin{Sources: []string{"*.zsh"}}}
+		g := GitHub{Base: Base{Plugin: &Plugin{Sources: []string{"*.zsh"}}}}
 		p := g.GetPluginBlock()
 		if len(p.Sources) != 1 {
 			t.Errorf("expected 1 source, got %d", len(p.Sources))
@@ -276,7 +276,7 @@ func TestGitHub_GetCommandBlock(t *testing.T) {
 		}
 	})
 	t.Run("with command returns it", func(t *testing.T) {
-		g := GitHub{Command: &Command{Link: []*Link{{From: "bin"}}}}
+		g := GitHub{Base: Base{Command: &Command{Link: []*Link{{From: "bin"}}}}}
 		c := g.GetCommandBlock()
 		if len(c.Link) != 1 {
 			t.Errorf("expected 1 link, got %d", len(c.Link))

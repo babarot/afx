@@ -21,15 +21,15 @@ func TestValidate(t *testing.T) {
 	}{
 		"no duplicates": {
 			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
-				&GitHub{Name: "pkg2", Owner: "o", Repo: "r2"},
+				&GitHub{Base: Base{Name: "pkg1"}, Owner: "o", Repo: "r1"},
+				&GitHub{Base: Base{Name: "pkg2"}, Owner: "o", Repo: "r2"},
 			},
 			wantErr: false,
 		},
 		"with duplicates": {
 			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r1"},
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r2"},
+				&GitHub{Base: Base{Name: "pkg1"}, Owner: "o", Repo: "r1"},
+				&GitHub{Base: Base{Name: "pkg1"}, Owner: "o", Repo: "r2"},
 			},
 			wantErr: true,
 		},
@@ -39,15 +39,15 @@ func TestValidate(t *testing.T) {
 		},
 		"mixed types no duplicate": {
 			pkgs: []Package{
-				&GitHub{Name: "pkg1", Owner: "o", Repo: "r"},
-				&Local{Name: "pkg2", Directory: "/tmp"},
+				&GitHub{Base: Base{Name: "pkg1"}, Owner: "o", Repo: "r"},
+				&Local{Base: Base{Name: "pkg2"}, Directory: "/tmp"},
 			},
 			wantErr: false,
 		},
 		"mixed types with duplicate": {
 			pkgs: []Package{
-				&GitHub{Name: "same", Owner: "o", Repo: "r"},
-				&Local{Name: "same", Directory: "/tmp"},
+				&GitHub{Base: Base{Name: "same"}, Owner: "o", Repo: "r"},
+				&Local{Base: Base{Name: "same"}, Directory: "/tmp"},
 			},
 			wantErr: true,
 		},
@@ -69,11 +69,11 @@ func TestValidate(t *testing.T) {
 func TestConfig_Get(t *testing.T) {
 	cfg := Config{
 		GitHub: []*GitHub{
-			{Name: "foo", Owner: "o", Repo: "foo"},
-			{Name: "bar", Owner: "o", Repo: "bar"},
+			{Base: Base{Name: "foo"}, Owner: "o", Repo: "foo"},
+			{Base: Base{Name: "bar"}, Owner: "o", Repo: "bar"},
 		},
 		Local: []*Local{
-			{Name: "baz", Directory: "/tmp/baz"},
+			{Base: Base{Name: "baz"}, Directory: "/tmp/baz"},
 		},
 	}
 
@@ -113,11 +113,11 @@ func TestConfig_Get(t *testing.T) {
 func TestConfig_Contains(t *testing.T) {
 	cfg := Config{
 		GitHub: []*GitHub{
-			{Name: "my-tool", Owner: "o", Repo: "r1"},
-			{Name: "other-lib", Owner: "o", Repo: "r2"},
+			{Base: Base{Name: "my-tool"}, Owner: "o", Repo: "r1"},
+			{Base: Base{Name: "other-lib"}, Owner: "o", Repo: "r2"},
 		},
 		Local: []*Local{
-			{Name: "my-local", Directory: "/tmp"},
+			{Base: Base{Name: "my-local"}, Directory: "/tmp"},
 		},
 	}
 
@@ -186,14 +186,14 @@ func TestVisitYAML(t *testing.T) {
 func TestParse(t *testing.T) {
 	cfg := Config{
 		GitHub: []*GitHub{
-			{Name: "gh1", Owner: "o", Repo: "r1"},
-			{Name: "gh2", Owner: "o", Repo: "r2"},
+			{Base: Base{Name: "gh1"}, Owner: "o", Repo: "r1"},
+			{Base: Base{Name: "gh2"}, Owner: "o", Repo: "r2"},
 		},
 		Gist: []*Gist{
-			{Name: "gist1", Owner: "o", ID: "abc"},
+			{Base: Base{Name: "gist1"}, Owner: "o", ID: "abc"},
 		},
 		Local: []*Local{
-			{Name: "local1", Directory: "/tmp"},
+			{Base: Base{Name: "local1"}, Directory: "/tmp"},
 		},
 	}
 
@@ -222,28 +222,28 @@ func TestSort(t *testing.T) {
 	}{
 		"no dependencies": {
 			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a"},
-				&GitHub{Name: "b", Owner: "o", Repo: "b"},
+				&GitHub{Base: Base{Name: "a"}, Owner: "o", Repo: "a"},
+				&GitHub{Base: Base{Name: "b"}, Owner: "o", Repo: "b"},
 			},
 			wantLen: 2,
 		},
 		"with dependency": {
 			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
-				&GitHub{Name: "b", Owner: "o", Repo: "b"},
+				&GitHub{Base: Base{Name: "a", DependsOn: []string{"b"}}, Owner: "o", Repo: "a"},
+				&GitHub{Base: Base{Name: "b"}, Owner: "o", Repo: "b"},
 			},
 			wantLen: 2,
 		},
 		"invalid dependency": {
 			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"nonexistent"}},
+				&GitHub{Base: Base{Name: "a", DependsOn: []string{"nonexistent"}}, Owner: "o", Repo: "a"},
 			},
 			wantErr: true,
 		},
 		"circular dependency": {
 			pkgs: []Package{
-				&GitHub{Name: "a", Owner: "o", Repo: "a", DependsOn: []string{"b"}},
-				&GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
+				&GitHub{Base: Base{Name: "a", DependsOn: []string{"b"}}, Owner: "o", Repo: "a"},
+				&GitHub{Base: Base{Name: "b", DependsOn: []string{"a"}}, Owner: "o", Repo: "b"},
 			},
 			wantErr: true,
 		},
@@ -271,8 +271,8 @@ func TestSort(t *testing.T) {
 func TestSort_order(t *testing.T) {
 	// b depends on a, so a must come first
 	pkgs := []Package{
-		&GitHub{Name: "b", Owner: "o", Repo: "b", DependsOn: []string{"a"}},
-		&GitHub{Name: "a", Owner: "o", Repo: "a"},
+		&GitHub{Base: Base{Name: "b", DependsOn: []string{"a"}}, Owner: "o", Repo: "b"},
+		&GitHub{Base: Base{Name: "a"}, Owner: "o", Repo: "a"},
 	}
 	sorted, err := Sort(pkgs)
 	if err != nil {
@@ -290,10 +290,10 @@ func TestSort_order(t *testing.T) {
 
 func TestConfig_Get_allTypes(t *testing.T) {
 	cfg := Config{
-		GitHub: []*GitHub{{Name: "x", Owner: "o", Repo: "r"}},
-		Gist:   []*Gist{{Name: "x", Owner: "o", ID: "id"}},
-		Local:  []*Local{{Name: "x", Directory: "/tmp"}},
-		HTTP:   []*HTTP{{Name: "x", URL: "https://example.com"}},
+		GitHub: []*GitHub{{Base: Base{Name: "x"}, Owner: "o", Repo: "r"}},
+		Gist:   []*Gist{{Base: Base{Name: "x"}, Owner: "o", ID: "id"}},
+		Local:  []*Local{{Base: Base{Name: "x"}, Directory: "/tmp"}},
+		HTTP:   []*HTTP{{Base: Base{Name: "x"}, URL: "https://example.com"}},
 	}
 
 	got := cfg.Get("x")
@@ -305,8 +305,8 @@ func TestConfig_Get_allTypes(t *testing.T) {
 
 func TestValidate_errorMessage(t *testing.T) {
 	pkgs := []Package{
-		&GitHub{Name: "dup", Owner: "o", Repo: "r1"},
-		&GitHub{Name: "dup", Owner: "o", Repo: "r2"},
+		&GitHub{Base: Base{Name: "dup"}, Owner: "o", Repo: "r1"},
+		&GitHub{Base: Base{Name: "dup"}, Owner: "o", Repo: "r2"},
 	}
 	err := Validate(pkgs)
 	if err == nil {
@@ -323,15 +323,15 @@ func TestHasGitHubReleaseBlock(t *testing.T) {
 		want bool
 	}{
 		"no release": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r"}},
+			pkgs: []Package{&GitHub{Base: Base{Name: "a"}, Owner: "o", Repo: "r"}},
 			want: false,
 		},
 		"with release": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r", Release: &GitHubRelease{}}},
+			pkgs: []Package{&GitHub{Base: Base{Name: "a"}, Owner: "o", Repo: "r", Release: &GitHubRelease{}}},
 			want: true,
 		},
 		"non-github": {
-			pkgs: []Package{&Local{Name: "a", Directory: "/tmp"}},
+			pkgs: []Package{&Local{Base: Base{Name: "a"}, Directory: "/tmp"}},
 			want: false,
 		},
 		"empty": {
@@ -356,27 +356,27 @@ func TestHasSudoInCommandBuildSteps(t *testing.T) {
 		want bool
 	}{
 		"no command block": {
-			pkgs: []Package{&GitHub{Name: "a", Owner: "o", Repo: "r"}},
+			pkgs: []Package{&GitHub{Base: Base{Name: "a"}, Owner: "o", Repo: "r"}},
 			want: false,
 		},
 		"with sudo": {
 			pkgs: []Package{&GitHub{
-				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{Build: &Build{Steps: []string{"sudo make install"}}},
+				Base:  Base{Name: "a", Command: &Command{Build: &Build{Steps: []string{"sudo make install"}}}},
+				Owner: "o", Repo: "r",
 			}},
 			want: true,
 		},
 		"without sudo": {
 			pkgs: []Package{&GitHub{
-				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{Build: &Build{Steps: []string{"make install"}}},
+				Base:  Base{Name: "a", Command: &Command{Build: &Build{Steps: []string{"make install"}}}},
+				Owner: "o", Repo: "r",
 			}},
 			want: false,
 		},
 		"no build": {
 			pkgs: []Package{&GitHub{
-				Name: "a", Owner: "o", Repo: "r",
-				Command: &Command{},
+				Base:  Base{Name: "a", Command: &Command{}},
+				Owner: "o", Repo: "r",
 			}},
 			want: false,
 		},

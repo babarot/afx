@@ -12,7 +12,6 @@ import (
 	"github.com/babarot/afx/internal/git"
 	"github.com/babarot/afx/internal/github"
 	"github.com/babarot/afx/internal/runner"
-	"github.com/babarot/afx/internal/state"
 	"github.com/babarot/afx/internal/templates"
 )
 
@@ -242,8 +241,4 @@ func (c GitHub) Uninstall(ctx context.Context) error {
 
 	delete(c.GetHome())
 	return errors.Join(errs...)
-}
-
-func (c GitHub) GetResource() state.Resource {
-	return getResource(c)
 }

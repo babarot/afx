@@ -20,17 +20,11 @@ import (
 	"github.com/babarot/afx/internal/templates"
 )
 
-// HTTP represents
+// HTTP represents an HTTP-downloadable package.
 type HTTP struct {
-	Name string `yaml:"name" validate:"required"`
+	Base `yaml:",inline"`
 
-	URL         string `yaml:"url" validate:"required,url"`
-	Description string `yaml:"description"`
-
-	Plugin  *Plugin  `yaml:"plugin"`
-	Command *Command `yaml:"command"`
-
-	DependsOn []string  `yaml:"depends-on"`
+	URL       string    `yaml:"url" validate:"required,url"`
 	Templates Templates `yaml:"templates"`
 }
 
@@ -38,21 +32,15 @@ type Templates struct {
 	Replacements map[string]string `yaml:"replacements"`
 }
 
-// Init is
-func (c HTTP) Init() error {
-	var errs []error
-	if c.HasPluginBlock() {
-		if err := c.Plugin.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if c.HasCommandBlock() {
-		if err := c.Command.Init(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return errors.Join(errs...)
+func (c HTTP) Init() error     { return initPackage(c.Plugin, c.Command, c) }
+func (c HTTP) Installed() bool { return installedPackage(c.Plugin, c.Command, c) }
+
+func (c HTTP) GetHome() string {
+	u, _ := url.Parse(c.URL)
+	return filepath.Join(DataDir(), u.Host, filepath.Dir(u.Path))
 }
+
+func (c HTTP) GetResource() state.Resource { return getResource(c) }
 
 func (c HTTP) call(ctx context.Context) error {
 	log.Printf("[TRACE] Get %s\n", c.URL)
@@ -96,14 +84,12 @@ func (c HTTP) call(ctx context.Context) error {
 	return nil
 }
 
-// Install is
 func (c HTTP) Install(ctx context.Context, status chan<- runner.Status) error {
 	select {
 	case <-ctx.Done():
 		log.Println("[DEBUG] canceled")
 		return nil
 	default:
-		// Go installing step!
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -180,57 +166,6 @@ func unarchiveV2(path string) error {
 	})
 }
 
-// Installed is
-func (c HTTP) Installed() bool {
-	var list []bool
-
-	if c.HasPluginBlock() {
-		list = append(list, c.Plugin.Installed(c))
-	}
-
-	if c.HasCommandBlock() {
-		list = append(list, c.Command.Installed(c))
-	}
-
-	if !c.HasPluginBlock() && !c.HasCommandBlock() {
-		_, err := os.Stat(c.GetHome())
-		list = append(list, err == nil)
-	}
-
-	return allTrue(list)
-}
-
-// HasPluginBlock is
-func (c HTTP) HasPluginBlock() bool {
-	return c.Plugin != nil
-}
-
-// HasCommandBlock is
-func (c HTTP) HasCommandBlock() bool {
-	return c.Command != nil
-}
-
-func (c HTTP) HasReleaseBlock() bool {
-	return false
-}
-
-// GetPluginBlock is
-func (c HTTP) GetPluginBlock() Plugin {
-	if c.HasPluginBlock() {
-		return *c.Plugin
-	}
-	return Plugin{}
-}
-
-// GetCommandBlock is
-func (c HTTP) GetCommandBlock() Command {
-	if c.HasCommandBlock() {
-		return *c.Command
-	}
-	return Command{}
-}
-
-// Uninstall is
 func (c HTTP) Uninstall(ctx context.Context) error {
 	var errs []error
 
@@ -252,27 +187,7 @@ func (c HTTP) Uninstall(ctx context.Context) error {
 	}
 
 	del(c.GetHome())
-
 	return errors.Join(errs...)
-}
-
-// GetName returns a name
-func (c HTTP) GetName() string {
-	return c.Name
-}
-
-// GetHome returns a path
-func (c HTTP) GetHome() string {
-	u, _ := url.Parse(c.URL)
-	return filepath.Join(DataDir(), u.Host, filepath.Dir(u.Path))
-}
-
-func (c HTTP) GetDependsOn() []string {
-	return c.DependsOn
-}
-
-func (c HTTP) GetResource() state.Resource {
-	return getResource(c)
 }
 
 func (c *HTTP) ParseURL() {
@@ -293,3 +208,10 @@ func (c HTTP) Check(ctx context.Context, status chan<- runner.Status) error {
 	status <- runner.Status{Name: c.GetName(), Done: true, Err: false, Message: "(http)", NoColor: true}
 	return nil
 }
+
+// ResourceMeta implementation
+
+func (c HTTP) ResourceType() string         { return "HTTP" }
+func (c HTTP) ResourceID() string           { return c.URL }
+func (c HTTP) ResourceVersion() string      { return "" }
+func (c HTTP) ResourceExtraPaths() []string { return nil }
